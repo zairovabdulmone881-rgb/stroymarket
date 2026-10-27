@@ -233,6 +233,7 @@ function renderProducts() {
       <div class="card-img">${p.emoji}</div>
       <div class="card-body">
         <div class="card-cat">${p.category}</div>
+        <div style="font-size: 11px; color: #888; margin-bottom: 5px;">${p.brand}</div>
         <div class="card-name">${p.name}</div>
         <div class="card-price">${formatPrice(p.price)}</div>
         <button class="btn-add ${cart[p.id] ? 'in-cart' : ''}" data-id="${p.id}">
