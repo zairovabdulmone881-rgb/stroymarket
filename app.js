@@ -1,5 +1,5 @@
 /* ============================================
-   STROY LUXE — Логика каталога + корзина
+   STROY LUXE — Полный движок сайта (142 товара)
 ============================================ */
 
 const PRODUCTS = [
@@ -165,23 +165,21 @@ const PRODUCTS = [
   { id: 141, name: 'Тепловая пушка электрическая 3кВт', category: 'Климатическая техника', brand: 'Ballu', price: 2800, emoji: '🔥' },
   { id: 142, name: 'Осушитель воздуха', category: 'Климатическая техника', brand: 'Ballu', price: 12500, emoji: '💧' }
 ];
-  
+
 const state = { category: 'Все', search: '', sort: 'default' };
 let cart = loadCart();
 
 const $ = (id) => document.getElementById(id);
-const grid = $('grid');
-const filtersEl = $('filters');
-const searchInput = $('searchInput');
-const sortSelect = $('sortSelect');
-const resultsCount = $('resultsCount');
+const app = $('app');
 const cartCount = $('cartCount');
 const cartEl = $('cart');
 const overlay = $('overlay');
 const cartBody = $('cartBody');
 const cartTotal = $('cartTotal');
 const toast = $('toast');
+const searchInput = $('searchInput');
 
+// ===== LOCALSTORAGE =====
 function loadCart() {
   try { return JSON.parse(localStorage.getItem('stroyluxe_cart')) || {}; }
   catch { return {}; }
@@ -190,22 +188,79 @@ function saveCart() {
   localStorage.setItem('stroyluxe_cart', JSON.stringify(cart));
 }
 
-function renderFilters() {
-  const cats = ['Все', ...new Set(PRODUCTS.map(p => p.category))];
-  filtersEl.innerHTML = cats.map(c =>
-    `<button class="chip ${c === state.category ? 'active' : ''}" data-cat="${c}">${c}</button>`
-  ).join('');
-  
-  filtersEl.querySelectorAll('.chip').forEach(btn => {
-    btn.onclick = () => {
-      state.category = btn.dataset.cat;
-      renderFilters();
-      renderProducts();
-    };
-  });
+// ===== РОУТИНГ (Переключение страниц) =====
+function router() {
+  const hash = window.location.hash || '#/';
+  app.innerHTML = ''; 
+  window.scrollTo(0, 0); 
+
+  if (hash === '#/') {
+    renderHomePage();
+  } else if (hash === '#/catalog') {
+    renderCatalogPage();
+  } else if (hash === '#/privacy') {
+    renderPrivacyPage();
+  } else if (hash === '#/delivery') {
+    renderDeliveryPage();
+  } else {
+    app.innerHTML = '<div class="page-section text-page"><h1>404 — Страница не найдена</h1><br><a href="#/" class="btn-gold">На главную</a></div>';
+  }
+  updateCartCount();
 }
 
-function getVisibleProducts() {
+// ===== СТРАНИЦА: ГЛАВНАЯ =====
+function renderHomePage() {
+  app.innerHTML = `
+    <section class="hero">
+      <div class="hero-bg"></div>
+      <div class="hero-content">
+        <h1 class="fade-up">Создайте<br><i>идеальное пространство</i></h1>
+        <p class="fade-up delay-1">Более 142 товаров • Немецкое качество • Элитный инструмент</p>
+        <a href="#/catalog" class="btn-gold fade-up delay-2">Перейти в каталог</a>
+      </div>
+    </section>
+  `;
+}
+
+// ===== СТРАНИЦА: КАТАЛОГ =====
+function renderCatalogPage() {
+  const cats = ['Все', ...new Set(PRODUCTS.map(p => p.category))];
+  const filtersHtml = cats.map(c =>
+    `<button class="chip ${c === state.category ? 'active' : ''}" data-cat="${c}">${c}</button>`
+  ).join('');
+
+  app.innerHTML = `
+    <div class="page-section main-container" style="padding-top: 130px;">
+      <h2 class="page-title fade-up">Каталог товаров</h2>
+      <nav class="filters" id="filters">${filtersHtml}</nav>
+      <div class="toolbar">
+        <span id="resultsCount">Товаров: 0</span>
+        <select id="sortSelect">
+          <option value="default">По умолчанию</option>
+          <option value="price-asc">Цена ↑</option>
+          <option value="price-desc">Цена ↓</option>
+          <option value="name">По названию</option>
+        </select>
+      </div>
+      <div class="grid" id="grid"></div>
+    </div>
+  `;
+
+  document.querySelectorAll('.chip').forEach(btn => {
+    btn.onclick = () => {
+      state.category = btn.dataset.cat;
+      renderCatalogPage(); 
+    };
+  });
+
+  $('sortSelect').onchange = (e) => { state.sort = e.target.value; renderProductsGrid(); };
+  renderProductsGrid();
+}
+
+function renderProductsGrid() {
+  const grid = $('grid');
+  if (!grid) return;
+
   let list = PRODUCTS.filter(p => {
     const byCat = state.category === 'Все' || p.category === state.category;
     const bySearch = p.name.toLowerCase().includes(state.search.toLowerCase());
@@ -216,12 +271,7 @@ function getVisibleProducts() {
   if (state.sort === 'price-desc') list.sort((a, b) => b.price - a.price);
   if (state.sort === 'name')       list.sort((a, b) => a.name.localeCompare(b.name, 'ru'));
 
-  return list;
-}
-
-function renderProducts() {
-  const list = getVisibleProducts();
-  resultsCount.textContent = `Товаров: ${list.length}`;
+  $('resultsCount').textContent = `Найдено: ${list.length}`;
 
   if (!list.length) {
     grid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; padding: 40px; color: #888;">Ничего не найдено 😕</div>`;
@@ -230,6 +280,7 @@ function renderProducts() {
 
   grid.innerHTML = list.map(p => `
     <div class="card">
+      ${p.badge ? `<div class="badge badge-${p.badge === 'Хит' ? 'hit' : p.badge === 'Скидка' ? 'sale' : 'new'}">${p.badge}</div>` : ''}
       <div class="card-img">${p.emoji}</div>
       <div class="card-body">
         <div class="card-cat">${p.category}</div>
@@ -248,11 +299,62 @@ function renderProducts() {
   });
 }
 
+// ===== СТРАНИЦА: ПОЛИТИКА =====
+function renderPrivacyPage() {
+  app.innerHTML = `
+    <div class="text-page fade-up">
+      <h1>Политика конфиденциальности</h1>
+      <p>Настоящая Политика конфиденциальности действует в отношении всей информации, которую сайт STROY LUXE может получить о Пользователе во время использования сайта.</p>
+      
+      <h3>1. Какие данные мы собираем</h3>
+      <p>Мы собираем только те данные, которые вы добровольно оставляете при оформлении заказа: имя, номер телефона, а также данные о товарах в вашей корзине. Корзина сохраняется в локальной памяти вашего браузера (localStorage) и не передается нам до момента оформления заказа.</p>
+      
+      <h3>2. Как мы используем данные</h3>
+      <p>Ваши данные используются исключительно для связи с вами, подтверждения заказа и организации доставки материалов. Мы обязуемся не передавать ваши данные третьим лицам (кроме служб доставки).</p>
+
+      <h3>3. Защита информации</h3>
+      <p>Мы принимаем необходимые организационные и технические меры для защиты персональной информации Пользователя от неправомерного доступа, уничтожения, изменения, блокирования и распространения.</p>
+
+      <h3>4. Контакты</h3>
+      <p>По любым вопросам вы можете связаться с нами по адресу: info@stroyluxe.ru</p>
+      <br>
+      <a href="#/" class="btn-gold">Вернуться на главную</a>
+    </div>
+  `;
+}
+
+// ===== СТРАНИЦА: ДОСТАВКА =====
+function renderDeliveryPage() {
+  app.innerHTML = `
+    <div class="text-page fade-up">
+      <h1>Доставка и оплата</h1>
+      <p>Мы доставляем премиальные строительные материалы и инструменты по всей России.</p>
+      
+      <h3>Способы доставки</h3>
+      <ul>
+        <li><b>Курьерская доставка:</b> от 500 ₽ (в зависимости от веса и габаритов).</li>
+        <li><b>Самовывоз со склада:</b> Бесплатно (г. Москва, ул. Строителей, д. 10).</li>
+        <li><b>Транспортными компаниями:</b> для крупногабаритных грузов в другие регионы.</li>
+      </ul>
+
+      <h3>Способы оплаты</h3>
+      <ul>
+        <li>Наличными курьеру при получении.</li>
+        <li>Оплата картой онлайн (скоро будет доступно).</li>
+        <li>Безналичный расчет для юридических лиц (счет на оплату).</li>
+      </ul>
+      <br>
+      <a href="#/" class="btn-gold">Вернуться на главную</a>
+    </div>
+  `;
+}
+
+// ===== РАБОТА КОРЗИНЫ =====
 function addToCart(id) {
   cart[id] = (cart[id] || 0) + 1;
   saveCart();
   updateCartCount();
-  renderProducts();
+  if (window.location.hash === '#/catalog') renderProductsGrid(); 
   renderCart();
   showToast(`✓ Товар добавлен`);
 }
@@ -263,7 +365,7 @@ function changeQty(id, delta) {
   saveCart();
   updateCartCount();
   renderCart();
-  renderProducts();
+  if (window.location.hash === '#/catalog') renderProductsGrid();
 }
 
 function cartTotalSum() {
@@ -320,35 +422,54 @@ function renderCart() {
   });
 }
 
-function openCart() {
-  cartEl.classList.add('open');
-  overlay.classList.add('open');
-}
-function closeCartPanel() {
-  cartEl.classList.remove('open');
-  overlay.classList.remove('open');
-}
+function openCart() { cartEl.classList.add('open'); overlay.classList.add('open'); }
+function closeCartPanel() { cartEl.classList.remove('open'); overlay.classList.remove('open'); }
+
+// ===== ОФОРМЛЕНИЕ ЗАКАЗА (МОДАЛКА) =====
+$('checkoutBtn').onclick = () => {
+  closeCartPanel();
+  $('checkoutModal').classList.add('open');
+};
+
+$('closeModal').onclick = () => $('checkoutModal').classList.remove('open');
+
+$('orderForm').onsubmit = (e) => {
+  e.preventDefault();
+  const name = $('orderName').value;
+  const total = formatPrice(cartTotalSum());
+  
+  showToast(`Спасибо, ${name}! Заказ на ${total} принят.`);
+  cart = {};
+  saveCart();
+  updateCartCount();
+  renderCart();
+  if (window.location.hash === '#/catalog') renderProductsGrid();
+  
+  $('checkoutModal').classList.remove('open');
+  $('orderForm').reset();
+};
 
 let toastTimer;
 function showToast(msg) {
   toast.textContent = msg;
   toast.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => toast.classList.remove('show'), 2000);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
 }
+function formatPrice(n) { return n.toLocaleString('ru-RU') + ' ₽'; }
 
-function formatPrice(n) {
-  return n.toLocaleString('ru-RU') + ' ₽';
-}
-
-searchInput.oninput = (e) => { state.search = e.target.value; renderProducts(); };
-sortSelect.onchange = (e) => { state.sort = e.target.value; renderProducts(); };
+// ===== СОБЫТИЯ =====
+searchInput.oninput = (e) => { 
+  state.search = e.target.value; 
+  if (window.location.hash !== '#/catalog') window.location.hash = '#/catalog';
+  setTimeout(renderProductsGrid, 10);
+};
 $('cartBtn').onclick = openCart;
 $('closeCart').onclick = closeCartPanel;
 overlay.onclick = closeCartPanel;
-$('checkoutBtn').onclick = () => { showToast('Скоро здесь будет оформление заказа!'); };
 
-renderFilters();
-renderProducts();
+// ===== ЗАПУСК =====
+window.addEventListener('hashchange', router);
+router();
 renderCart();
 updateCartCount();
