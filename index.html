@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>СтройМаркет — стройматериалы и инструмент</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ШАПКА -->
+  <header class="header">
+    <div class="header-inner">
+      <a href="#" class="logo">🏗️ Строй<span>Маркет</span></a>
+      <div class="header-actions">
+        <button class="cart-btn" id="cartBtn">
+          🛒 <span class="cart-count" id="cartCount">0</span>
+        </button>
+      </div>
+    </div>
+    <div class="search-wrap">
+      <input type="search" id="searchInput" placeholder="Поиск товара..." />
+    </div>
+  </header>
+
+  <!-- ФИЛЬТРЫ -->
+  <nav class="filters" id="filters">
+    <!-- кнопки категорий вставит JS -->
+  </nav>
+
+  <!-- СОРТИРОВКА -->
+  <div class="toolbar">
+    <span id="resultsCount">Товаров: 0</span>
+    <select id="sortSelect">
+      <option value="default">По умолчанию</option>
+      <option value="price-asc">Цена ↑</option>
+      <option value="price-desc">Цена ↓</option>
+      <option value="name">По названию</option>
+    </select>
+  </div>
+
+  <!-- КАТАЛОГ -->
+  <main class="grid" id="grid"></main>
+
+  <!-- КОРЗИНА (выезжающая панель) -->
+  <div class="overlay" id="overlay"></div>
+  <aside class="cart" id="cart">
+    <div class="cart-head">
+      <h2>Корзина</h2>
+      <button id="closeCart">✕</button>
+    </div>
+    <div class="cart-body" id="cartBody"></div>
+    <div class="cart-foot">
+      <div class="cart-total">Итого: <b id="cartTotal">0 ₽</b></div>
+      <button class="btn-checkout" id="checkoutBtn">Оформить заказ</button>
+    </div>
+  </aside>
+
+  <!-- УВЕДОМЛЕНИЕ -->
+  <div class="toast" id="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
