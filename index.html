@@ -192,13 +192,14 @@
 
   <script>
     var PRODUCTS = [];
+    // Добавили английские ключевые слова для поиска правильных картинок
     var cats = [
-      { name: 'Стройматериалы', items: ['Цемент М500', 'Кирпич керамический', 'Блок газобетонный', 'Песок строительный', 'Арматура 12мм', 'Брус строганый'] },
-      { name: 'Отделка', items: ['Штукатурка гипсовая', 'Шпаклевка финишная', 'Краска интерьерная', 'Обои флизелиновые', 'Плитка керамическая', 'Ламинат 33 класс'] },
-      { name: 'Инструмент', items: ['Перфоратор SDS', 'Шуруповёрт', 'Болгарка 125', 'Лобзик', 'Уровень лазерный', 'Набор бит'] },
-      { name: 'Электрика', items: ['Кабель ВВГнг', 'Розетка', 'Выключатель', 'Автомат C16', 'Лампа LED', 'Щиток'] },
-      { name: 'Сантехника', items: ['Смеситель', 'Унитаз', 'Раковина', 'Ванна акриловая', 'Труба PPR', 'Полотенцесушитель'] },
-      { name: 'Крепёж', items: ['Саморез', 'Дюбель-гвоздь', 'Анкер', 'Гвозди', 'Уголок', 'Хомут'] }
+      { name: 'Стройматериалы', keyword: 'construction,materials', items: ['Цемент М500', 'Кирпич керамический', 'Блок газобетонный', 'Песок строительный', 'Арматура 12мм', 'Брус строганый'] },
+      { name: 'Отделка', keyword: 'paint,wallpaper', items: ['Штукатурка гипсовая', 'Шпаклевка финишная', 'Краска интерьерная', 'Обои флизелиновые', 'Плитка керамическая', 'Ламинат 33 класс'] },
+      { name: 'Инструмент', keyword: 'tools,drill', items: ['Перфоратор SDS', 'Шуруповёрт', 'Болгарка 125', 'Лобзик', 'Уровень лазерный', 'Набор бит'] },
+      { name: 'Электрика', keyword: 'electrical,wire', items: ['Кабель ВВГнг', 'Розетка', 'Выключатель', 'Автомат C16', 'Лампа LED', 'Щиток'] },
+      { name: 'Сантехника', keyword: 'plumbing,faucet', items: ['Смеситель', 'Унитаз', 'Раковина', 'Ванна акриловая', 'Труба PPR', 'Полотенцесушитель'] },
+      { name: 'Крепёж', keyword: 'screws,hardware', items: ['Саморез', 'Дюбель-гвоздь', 'Анкер', 'Гвозди', 'Уголок', 'Хомут'] }
     ];
     var brands = ['Bosch', 'Makita', 'Knauf', 'Ceresit', 'Tarkett', 'Grohe', 'Schneider', 'Petrovich'];
     var idCounter = 1;
@@ -207,13 +208,17 @@
       for(var i = 0; i < cats[c].items.length; i++) {
         for(var j = 0; j < 6; j++) {
           var b = brands[Math.floor(Math.random() * brands.length)];
+          // ИСПОЛЬЗУЕМ LOREMFLICKR ДЛЯ КАРТИНОК ПО КЛЮЧЕВЫМ СЛОВАМ
+          var imgUrl1 = 'https://loremflickr.com/400/400/' + cats[c].keyword + '/all?lock=' + idCounter;
+          var imgUrl2 = 'https://loremflickr.com/400/400/' + cats[c].keyword + '/all?lock=' + (idCounter + 100);
+          
           PRODUCTS.push({
             id: idCounter,
             name: cats[c].items[i] + ' ' + b,
             category: cats[c].name,
             brand: b,
             price: Math.floor(Math.random() * 10000) + 200,
-            images: ['https://picsum.photos/seed/' + idCounter + 'a/400/400', 'https://picsum.photos/seed/' + idCounter + 'b/400/400'],
+            images: [imgUrl1, imgUrl2],
             desc: 'Высококачественный товар для профессионалов.',
             specs: { 'Производитель': 'Россия', 'Гарантия': '2 года', 'Артикул': 'ART-' + idCounter },
             badge: Math.random() > 0.8 ? ['Хит', 'Скидка', 'Новинка'][Math.floor(Math.random() * 3)] : null
@@ -223,11 +228,11 @@
       }
     }
 
-    var cart = JSON.parse(localStorage.getItem('cart_v7')) || {};
+    var cart = JSON.parse(localStorage.getItem('cart_v8')) || {};
     var state = { cat: 'Все', search: '', sort: 'default' };
     var appEl = document.getElementById('app');
 
-    function saveCart() { localStorage.setItem('cart_v7', JSON.stringify(cart)); updateCart(); }
+    function saveCart() { localStorage.setItem('cart_v8', JSON.stringify(cart)); updateCart(); }
     function updateCart() {
       var count = 0;
       for(var key in cart) { count += cart[key]; }
