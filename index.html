@@ -3,159 +3,174 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>STROY LUXE — Строительный гипермаркет</title>
+  <title>STROY LUXE — Премиальные материалы</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
   
   <style>
-    /* ==== СТИЛЬ В ДУХЕ "СТРОЙ КОМПАС" (СВЕТЛЫЙ, ДЕЛОВОЙ) ==== */
+    /* ==== ПРЕМИАЛЬНЫЙ ТЕМНЫЙ СТИЛЬ (КАК СТРОЙ КОМПАС) ==== */
     :root {
-      --bg: #f8f9fa; --surface: #ffffff; --text: #212529; --text-light: #6c757d;
-      --primary: #1d4ed8; --primary-dark: #1e3a8a; --accent: #f97316;
-      --border: #dee2e6; --radius: 8px; --shadow: 0 2px 4px rgba(0,0,0,0.05);
+      --bg: #0f0e0c; 
+      --surface: #1a1816; 
+      --surface-light: #22201d;
+      --gold: #d4b58e; 
+      --gold-hover: #e8cba5;
+      --text: #ffffff; 
+      --text-muted: #9e9e9e;
+      --border: rgba(255,255,255,0.08); 
+      --radius: 20px;
     }
+    
     * { box-sizing: border-box; margin: 0; padding: 0; scroll-behavior: smooth; }
-    body { font-family: 'Roboto', sans-serif; background-color: var(--bg); color: var(--text); overflow-x: hidden; }
+    body { 
+      font-family: 'Montserrat', sans-serif; 
+      background-color: var(--bg); 
+      color: var(--text); 
+      overflow-x: hidden;
+      background-image: radial-gradient(circle at 50% 0%, #1f1b16 0%, var(--bg) 60%);
+    }
     .container { max-width: 1200px; margin: 0 auto; padding: 0 15px; }
     
     /* ШАПКА */
-    .header { position: sticky; top: 0; z-index: 50; background: var(--surface); border-bottom: 1px solid var(--border); box-shadow: var(--shadow); }
-    .header-top { background: #f1f3f5; border-bottom: 1px solid var(--border); padding: 8px 0; }
-    .header-top-inner { display: flex; justify-content: space-between; align-items: center; }
-    .logo { font-family: 'Inter', sans-serif; font-size: 22px; font-weight: 700; color: var(--text); text-decoration: none; }
-    .logo span { color: var(--primary); }
-    .header-contacts { display: flex; gap: 15px; font-size: 13px; }
-    .header-contacts a { color: var(--text-light); text-decoration: none; font-weight: 500; }
-    .header-main { padding: 12px 0; }
-    .header-main-inner { display: flex; align-items: center; gap: 15px; }
-    .catalog-btn { display: flex; align-items: center; gap: 8px; background: var(--primary); color: #fff; border: none; padding: 10px 15px; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; }
-    .search-wrap { flex: 1; }
-    .search-wrap input { width: 100%; padding: 10px 15px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; outline: none; }
-    .search-wrap input:focus { border-color: var(--primary); }
-    .cart-btn { display: flex; align-items: center; gap: 8px; background: #e9ecef; border: 1px solid var(--border); padding: 10px 15px; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; }
-    .cart-count { background: var(--accent); color: #fff; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 50px; }
-
-    /* КОНТЕНТ */
-    .page-section { padding: 30px 0; min-height: 70vh; }
-    .page-title { font-family: 'Inter', sans-serif; font-size: 24px; font-weight: 700; margin-bottom: 20px; }
+    .header { position: sticky; top: 0; z-index: 50; padding: 15px 0; background: rgba(15,14,12,0.85); backdrop-filter: blur(10px); }
+    .header-inner { display: flex; justify-content: space-between; align-items: center; }
     
-    /* БАННЕР */
-    .hero-banner { background: linear-gradient(135deg, #1e3a8a 0%, #1d4ed8 100%); border-radius: var(--radius); padding: 30px; color: #fff; display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
-    .hero-banner h2 { font-size: 24px; font-weight: 700; margin-bottom: 10px; }
-    .hero-banner p { font-size: 14px; opacity: 0.9; margin-bottom: 15px; }
-    .hero-banner .btn-primary { background: var(--accent); }
-    .hero-banner-img { font-size: 60px; }
+    .logo-pill { 
+      border: 1px solid var(--border); padding: 10px 25px; border-radius: 50px; display: flex; align-items: center; gap: 10px; text-decoration: none;
+    }
+    .logo { font-family: 'Playfair Display', serif; font-size: 20px; font-weight: 600; color: var(--text); letter-spacing: 2px; text-transform: uppercase; }
+    .logo span { color: var(--gold); }
 
-    /* СЕТКА */
-    .filters { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 15px; margin-bottom: 15px; }
+    .menu-btn { width: 45px; height: 45px; border-radius: 50%; border: 1px solid var(--border); background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text); font-size: 20px; }
+    .cart-btn { background: transparent; border: 1px solid var(--border); padding: 10px 20px; border-radius: 50px; color: var(--text); display: flex; align-items: center; gap: 10px; cursor: pointer; font-family: 'Montserrat', sans-serif;}
+    .cart-count { background: var(--gold); color: #000; font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 50px; }
+
+    /* ГЛАВНЫЙ ЭКРАН */
+    .hero { text-align: center; padding: 60px 20px 40px; }
+    .hero h1 { font-family: 'Playfair Display', serif; font-size: clamp(40px, 10vw, 70px); font-weight: 600; line-height: 1.1; color: rgba(255,255,255,0.9); margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px; }
+    .hero p { font-size: 12px; letter-spacing: 4px; color: var(--gold); text-transform: uppercase; margin-bottom: 40px; }
+    
+    /* ПОИСК */
+    .search-wrap { max-width: 600px; margin: 0 auto 40px; }
+    .search-wrap input { width: 100%; padding: 16px 30px; border-radius: 50px; border: 1px solid var(--border); background: rgba(255,255,255,0.03); color: var(--text); font-size: 15px; outline: none; font-family: 'Montserrat', sans-serif;}
+    .search-wrap input:focus { border-color: var(--gold); }
+
+    /* КНОПКИ */
+    .btn-gold { display: inline-block; padding: 16px 40px; background: var(--gold); color: #000; text-decoration: none; border-radius: 50px; font-weight: 600; font-size: 14px; border: none; cursor: pointer; transition: 0.3s; text-align: center; width: 100%; font-family: 'Montserrat', sans-serif; }
+    .btn-gold:hover { background: var(--gold-hover); }
+
+    /* КАТАЛОГ */
+    .page-section { padding: 20px 0 60px; min-height: 60vh; }
+    .page-title { font-family: 'Playfair Display', serif; font-size: 32px; color: var(--gold); margin-bottom: 25px; text-align: center; }
+    
+    .filters { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 20px; margin-bottom: 20px; justify-content: center; }
     .filters::-webkit-scrollbar { display: none; }
-    .chip { flex: 0 0 auto; padding: 8px 14px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); font-size: 13px; cursor: pointer; }
-    .chip.active { background: var(--primary); color: #fff; border-color: var(--primary); }
-    .toolbar { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); margin-bottom: 20px; font-size: 13px; color: var(--text-light); }
+    .chip { flex: 0 0 auto; padding: 10px 20px; border-radius: 50px; border: 1px solid var(--border); background: transparent; color: var(--text-muted); font-size: 13px; cursor: pointer; transition: 0.3s; font-family: 'Montserrat', sans-serif;}
+    .chip.active { border-color: var(--gold); color: var(--gold); }
+    .chip:hover { color: var(--text); border-color: var(--text); }
+
     .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 15px; }
 
     /* КАРТОЧКА */
-    .card { background: var(--surface); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); cursor: pointer; display: flex; flex-direction: column; position: relative; border: 1px solid var(--border); }
-    .card-img { height: 160px; background: #f1f3f5; overflow: hidden; }
-    .card-img img { width: 100%; height: 100%; object-fit: cover; }
-    .card-body { padding: 12px; flex: 1; display: flex; flex-direction: column; }
-    .card-cat { font-size: 10px; color: var(--text-light); text-transform: uppercase; margin-bottom: 4px; }
-    .card-name { font-size: 13px; font-weight: 500; margin-bottom: 8px; flex: 1; }
-    .card-price { font-size: 16px; font-weight: 700; color: var(--primary); margin-bottom: 8px; }
-    .badge { position: absolute; top: 8px; left: 8px; padding: 2px 6px; border-radius: 4px; font-size: 9px; font-weight: 700; text-transform: uppercase; z-index: 2; }
-    .badge-hit { background: var(--accent); color: #fff; }
-    .badge-sale { background: #e74c3c; color: #fff; }
-    .badge-new { background: #2ecc71; color: #000; }
-    .btn-add { width: 100%; padding: 8px; background: #e9ecef; border: 1px solid var(--border); border-radius: 6px; cursor: pointer; font-weight: 500; font-size: 12px; }
-    .btn-add:hover { background: #dee2e6; }
+    .card { background: var(--surface); border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); cursor: pointer; display: flex; flex-direction: column; position: relative; transition: 0.3s; }
+    .card:hover { border-color: rgba(212, 181, 142, 0.4); transform: translateY(-3px); }
+    .card-img { height: 160px; background: #000; overflow: hidden; }
+    .card-img img { width: 100%; height: 100%; object-fit: cover; opacity: 0.9; transition: 0.3s; }
+    .card:hover .card-img img { opacity: 1; transform: scale(1.05); }
     
+    .card-body { padding: 15px; flex: 1; display: flex; flex-direction: column; }
+    .card-cat { font-size: 10px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
+    .card-name { font-size: 14px; font-weight: 400; margin-bottom: 10px; flex: 1; line-height: 1.4; }
+    .card-price { font-family: 'Playfair Display', serif; font-size: 20px; color: var(--gold); margin-bottom: 15px; }
+    
+    .btn-add { width: 100%; padding: 10px; background: transparent; border: 1px solid var(--gold); color: var(--gold); border-radius: 50px; cursor: pointer; font-weight: 500; font-size: 13px; transition: 0.3s; font-family: 'Montserrat', sans-serif;}
+    .btn-add:hover { background: var(--gold); color: #000; }
+
+    .badge { position: absolute; top: 10px; right: 10px; padding: 4px 10px; border-radius: 50px; font-size: 9px; font-weight: 600; text-transform: uppercase; z-index: 2; background: var(--gold); color: #000; }
+
     /* СТРАНИЦА ТОВАРА */
-    .product-page { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+    .product-page { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; padding: 20px 0; }
     @media (max-width: 768px) { .product-page { grid-template-columns: 1fr; } }
-    .product-main-img { width: 100%; height: 300px; border-radius: var(--radius); overflow: hidden; background: #f1f3f5; }
+    .product-main-img { width: 100%; height: 350px; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); }
     .product-main-img img { width: 100%; height: 100%; object-fit: cover; }
-    .product-thumbs { display: flex; gap: 10px; margin-top: 10px; }
-    .product-thumbs img { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; cursor: pointer; border: 2px solid transparent; }
-    .product-thumbs img.active { border-color: var(--primary); }
-    .product-info h1 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
-    .product-brand { font-size: 13px; color: var(--text-light); margin-bottom: 12px; }
-    .product-price { font-size: 26px; font-weight: 700; color: var(--primary); margin-bottom: 15px; }
-    .specs-table { width: 100%; border-collapse: collapse; font-size: 13px; margin-top: 15px; }
-    .specs-table td { padding: 6px 0; border-bottom: 1px solid var(--border); }
-    .specs-table td:first-child { color: var(--text-light); width: 40%; }
-    .product-actions { display: flex; gap: 10px; margin-top: 20px; }
+    
+    .product-info h1 { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: 400; margin-bottom: 10px; }
+    .product-brand { font-size: 13px; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; }
+    .product-price { font-family: 'Playfair Display', serif; font-size: 36px; color: var(--gold); margin-bottom: 20px; }
+    .specs-table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 20px; }
+    .specs-table td { padding: 10px 0; border-bottom: 1px solid var(--border); color: var(--text-muted); }
+    .specs-table td:last-child { color: var(--text); text-align: right; }
+    .product-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 25px; }
 
-    /* КНОПКИ */
-    .btn-primary { padding: 12px 20px; background: var(--primary); color: #fff; border: none; border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-block; text-align: center; width: 100%; }
-    .btn-secondary { padding: 12px 20px; background: var(--surface); color: var(--primary); border: 2px solid var(--primary); border-radius: 6px; font-size: 14px; font-weight: 600; cursor: pointer; width: 100%; }
-
-    /* КОРЗИНА И МОДАЛКА */
-    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); opacity: 0; pointer-events: none; transition: 0.3s; z-index: 90; }
+    /* КОРЗИНА */
+    .overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); opacity: 0; pointer-events: none; transition: 0.3s; z-index: 90; }
     .overlay.open { opacity: 1; pointer-events: auto; }
-    .cart { position: fixed; top: 0; right: 0; bottom: 0; width: min(350px, 100vw); background: var(--surface); z-index: 100; display: flex; flex-direction: column; transform: translateX(100%); transition: transform 0.3s; }
+    .cart { position: fixed; top: 0; right: 0; bottom: 0; width: min(400px, 100vw); background: var(--bg); z-index: 100; display: flex; flex-direction: column; transform: translateX(100%); transition: transform 0.4s ease; border-left: 1px solid var(--border); }
     .cart.open { transform: translateX(0); }
-    .cart-head { padding: 15px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-    .cart-body { flex: 1; overflow-y: auto; padding: 15px; }
-    .cart-item { display: flex; gap: 10px; padding-bottom: 10px; margin-bottom: 10px; border-bottom: 1px solid var(--border); align-items: center; }
-    .cart-item-img { width: 40px; height: 40px; border-radius: 6px; overflow: hidden; }
+    .cart-head { padding: 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .cart-head h2 { font-family: 'Playfair Display', serif; font-weight: 400; color: var(--gold); }
+    .cart-body { flex: 1; overflow-y: auto; padding: 20px; }
+    .cart-item { display: flex; gap: 15px; padding-bottom: 15px; margin-bottom: 15px; border-bottom: 1px solid var(--border); align-items: center; }
+    .cart-item-img { width: 60px; height: 60px; border-radius: 12px; overflow: hidden; border: 1px solid var(--border); }
     .cart-item-img img { width: 100%; height: 100%; object-fit: cover; }
     .cart-item-info { flex: 1; }
-    .cart-item-name { font-size: 12px; font-weight: 500; }
-    .cart-item-price { font-size: 13px; color: var(--primary); font-weight: 600; }
-    .qty { display: flex; align-items: center; gap: 5px; }
-    .qty button { width: 25px; height: 25px; border: 1px solid var(--border); background: var(--surface); border-radius: 4px; cursor: pointer; }
-    .cart-foot { padding: 15px; border-top: 1px solid var(--border); }
-    .cart-total { font-size: 15px; margin-bottom: 10px; display: flex; justify-content: space-between; }
+    .cart-item-name { font-size: 13px; margin-bottom: 5px; }
+    .cart-item-price { font-family: 'Playfair Display', serif; font-size: 16px; color: var(--gold); }
+    .qty { display: flex; align-items: center; gap: 10px; }
+    .qty button { width: 28px; height: 28px; border: 1px solid var(--border); background: transparent; color: var(--text); border-radius: 50%; cursor: pointer; }
+    .cart-foot { padding: 20px; border-top: 1px solid var(--border); }
+    .cart-total { font-size: 16px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;}
+    .cart-total b { font-family: 'Playfair Display', serif; font-size: 28px; color: var(--gold); }
 
-    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 300; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; }
+    /* МОДАЛКА */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 300; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; backdrop-filter: blur(5px); }
     .modal-overlay.open { opacity: 1; pointer-events: auto; }
-    .modal-content { background: var(--surface); padding: 20px; border-radius: var(--radius); width: 90%; max-width: 350px; position: relative; }
-    .modal-content input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid var(--border); border-radius: 6px; }
-    .close-modal { position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 18px; cursor: pointer; }
+    .modal-content { background: var(--surface); padding: 30px; border-radius: var(--radius); width: 90%; max-width: 400px; position: relative; border: 1px solid var(--gold); text-align: center; }
+    .modal-content h2 { font-family: 'Playfair Display', serif; color: var(--gold); margin-bottom: 20px; font-weight: 400;}
+    .modal-content input { width: 100%; padding: 15px 20px; margin-bottom: 15px; border: 1px solid var(--border); border-radius: 50px; background: rgba(255,255,255,0.02); color: var(--text); font-family: 'Montserrat', sans-serif; outline:none;}
+    .close-modal { position: absolute; top: 15px; right: 15px; background: none; border: none; color: var(--text-muted); font-size: 20px; cursor: pointer; }
 
     /* ПОДВАЛ */
-    .footer { background: #212529; color: #adb5bd; padding: 30px 0 15px; margin-top: 40px; }
-    .footer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 20px; }
-    .footer-col h4 { color: #fff; font-size: 15px; margin-bottom: 10px; }
-    .footer-col a { display: block; color: #adb5bd; text-decoration: none; font-size: 13px; margin-bottom: 6px; }
-    .footer-bottom { border-top: 1px solid #343a40; padding-top: 15px; text-align: center; font-size: 12px; color: #6c757d; }
-    .text-page { background: var(--surface); padding: 20px; border-radius: var(--radius); box-shadow: var(--shadow); }
-    .text-page h1 { font-size: 20px; margin-bottom: 10px; }
-    .text-page p, .text-page ul { font-size: 14px; color: var(--text-light); line-height: 1.6; margin-bottom: 10px; }
-    .text-page ul { padding-left: 20px; }
+    .footer { background: #0a0908; border-top: 1px solid var(--border); padding: 40px 0 20px; margin-top: 40px; }
+    .footer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 30px; margin-bottom: 30px; text-align: center;}
+    @media(min-width: 768px) { .footer-grid { text-align: left; } }
+    .footer-col h4 { color: var(--gold); font-family: 'Playfair Display', serif; font-size: 18px; margin-bottom: 15px; font-weight: 400;}
+    .footer-col a { display: block; color: var(--text-muted); text-decoration: none; font-size: 13px; margin-bottom: 10px; transition: 0.2s;}
+    .footer-col a:hover { color: var(--gold); }
+    .footer-bottom { border-top: 1px solid var(--border); padding-top: 20px; text-align: center; font-size: 12px; color: var(--text-muted); }
+
+    /* ПЛАВАЮЩАЯ КНОПКА WHATSAPP */
+    .float-wa { position: fixed; bottom: 20px; right: 20px; background: var(--gold); color: #000; padding: 12px 25px; border-radius: 50px; text-decoration: none; font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 8px; box-shadow: 0 10px 20px rgba(0,0,0,0.5); z-index: 80; }
   </style>
 </head>
 <body>
 
   <header class="header">
-    <div class="header-top">
-      <div class="container header-top-inner">
-        <a href="#/" class="logo">STROY<span>LUXE</span></a>
-        <div class="header-contacts">
-          <a href="tel:+79966889979">+7 (966) 888-99-79</a>
-          <a href="mailto:zairovabdulmone01@gmail.com">zairovabdulmone01@gmail.com</a>
-        </div>
-      </div>
-    </div>
-    <div class="header-main">
-      <div class="container header-main-inner">
-        <button class="catalog-btn" onclick="window.location.hash='#/catalog'">☰ Каталог</button>
-        <div class="search-wrap"><input type="search" id="searchInput" placeholder="Поиск по товарам..." /></div>
-        <button class="cart-btn" id="cartBtn">🛒 <span id="cartCount" class="cart-count">0</span></button>
+    <div class="container header-inner">
+      <a href="#/" class="logo-pill">
+        <div class="logo">STROY <span>LUXE</span></div>
+      </a>
+      <div style="display:flex; gap:10px;">
+        <button class="cart-btn" id="cartBtn">
+          🛒 <span id="cartCount" class="cart-count">0</span>
+        </button>
+        <button class="menu-btn" onclick="window.location.hash='#/catalog'">☰</button>
       </div>
     </div>
   </header>
 
-  <main id="app" class="container page-section"></main>
+  <main id="app">
+    <!-- Сюда JS вставляет контент -->
+  </main>
 
   <div class="overlay" id="overlay"></div>
   <aside class="cart" id="cart">
-    <div class="cart-head"><h2>Корзина</h2><button id="closeCart">✕</button></div>
+    <div class="cart-head"><h2>Корзина</h2><button id="closeCart" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer;">✕</button></div>
     <div class="cart-body" id="cartBody"></div>
     <div class="cart-foot">
       <div class="cart-total">Итого: <b id="cartTotal">0 ₽</b></div>
-      <button class="btn-primary" id="checkoutBtn">Оформить заказ</button>
+      <button class="btn-gold" id="checkoutBtn">Оформить заказ</button>
     </div>
   </aside>
 
@@ -164,17 +179,25 @@
       <h2>Оформление</h2>
       <form id="orderForm">
         <input type="text" id="orderName" placeholder="Ваше имя" required>
-        <input type="tel" id="orderPhone" placeholder="Телефон" required>
-        <button type="submit" class="btn-primary" style="margin-top:5px;">Отправить</button>
+        <input type="tel" id="orderPhone" placeholder="Номер телефона" required>
+        <button type="submit" class="btn-gold">Отправить</button>
       </form>
       <button id="closeModal" class="close-modal">✕</button>
     </div>
   </div>
 
+  <!-- Плавающая кнопка WhatsApp -->
+  <a href="https://wa.me/79966889979" target="_blank" class="float-wa">
+    <span>💬</span> WhatsApp
+  </a>
+
   <footer class="footer">
     <div class="container">
       <div class="footer-grid">
-        <div class="footer-col"><h4>STROY LUXE</h4><p style="color: #adb5bd; font-size: 13px;">Строительный гипермаркет.</p></div>
+        <div class="footer-col">
+          <h4>STROY LUXE</h4>
+          <p style="color: var(--text-muted); font-size: 13px;">Премиальные решения для вашего дома.</p>
+        </div>
         <div class="footer-col">
           <h4>Навигация</h4>
           <a href="#/">Главная</a><a href="#/catalog">Каталог</a><a href="#/delivery">Доставка</a><a href="#/privacy">Политика</a><a href="#/contacts">Контакты</a>
@@ -183,7 +206,6 @@
           <h4>Контакты</h4>
           <a href="tel:+79966889979">+7 (966) 888-99-79</a>
           <a href="mailto:zairovabdulmone01@gmail.com">zairovabdulmone01@gmail.com</a>
-          <a href="https://wa.me/79966889979" target="_blank" style="color: #25D366;">WhatsApp</a>
         </div>
       </div>
       <div class="footer-bottom"><p>© 2026 STROY LUXE.</p></div>
@@ -192,14 +214,24 @@
 
   <script>
     var PRODUCTS = [];
-    // Добавили английские ключевые слова для поиска правильных картинок
+    
+    // Картинки (надежные)
+    var catImages = {
+      'Стройматериалы': ['https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=400&q=80', 'https://images.unsplash.com/photo-1518085250840-4b301bed7a7f?w=400&q=80'],
+      'Отделка': ['https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=400&q=80', 'https://images.unsplash.com/photo-1562663474-6cbb3eaa4d14?w=400&q=80'],
+      'Инструмент': ['https://images.unsplash.com/photo-1530124566582-a61cef2176e0?w=400&q=80', 'https://images.unsplash.com/photo-1572981779307-38b8cabb2407?w=400&q=80'],
+      'Электрика': ['https://images.unsplash.com/photo-1558449028-b53a39d100fc?w=400&q=80', 'https://images.unsplash.com/photo-1544724569-5f546fd6f2b5?w=400&q=80'],
+      'Сантехника': ['https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=400&q=80', 'https://images.unsplash.com/photo-1507089947368-19c1da9775ae?w=400&q=80'],
+      'Крепёж': ['https://images.unsplash.com/photo-1605810230434-7631ac76ec81?w=400&q=80', 'https://images.unsplash.com/photo-1530124566582-a61cef2176e0?w=400&q=80']
+    };
+
     var cats = [
-      { name: 'Стройматериалы', keyword: 'construction,materials', items: ['Цемент М500', 'Кирпич керамический', 'Блок газобетонный', 'Песок строительный', 'Арматура 12мм', 'Брус строганый'] },
-      { name: 'Отделка', keyword: 'paint,wallpaper', items: ['Штукатурка гипсовая', 'Шпаклевка финишная', 'Краска интерьерная', 'Обои флизелиновые', 'Плитка керамическая', 'Ламинат 33 класс'] },
-      { name: 'Инструмент', keyword: 'tools,drill', items: ['Перфоратор SDS', 'Шуруповёрт', 'Болгарка 125', 'Лобзик', 'Уровень лазерный', 'Набор бит'] },
-      { name: 'Электрика', keyword: 'electrical,wire', items: ['Кабель ВВГнг', 'Розетка', 'Выключатель', 'Автомат C16', 'Лампа LED', 'Щиток'] },
-      { name: 'Сантехника', keyword: 'plumbing,faucet', items: ['Смеситель', 'Унитаз', 'Раковина', 'Ванна акриловая', 'Труба PPR', 'Полотенцесушитель'] },
-      { name: 'Крепёж', keyword: 'screws,hardware', items: ['Саморез', 'Дюбель-гвоздь', 'Анкер', 'Гвозди', 'Уголок', 'Хомут'] }
+      { name: 'Стройматериалы', items: ['Цемент М500', 'Кирпич керамический', 'Блок газобетонный', 'Песок строительный', 'Арматура 12мм', 'Брус строганый'] },
+      { name: 'Отделка', items: ['Штукатурка гипсовая', 'Шпаклевка финишная', 'Краска интерьерная', 'Обои флизелиновые', 'Плитка керамическая', 'Ламинат 33 класс'] },
+      { name: 'Инструмент', items: ['Перфоратор SDS', 'Шуруповёрт', 'Болгарка 125', 'Лобзик', 'Уровень лазерный', 'Набор бит'] },
+      { name: 'Электрика', items: ['Кабель ВВГнг', 'Розетка', 'Выключатель', 'Автомат C16', 'Лампа LED', 'Щиток'] },
+      { name: 'Сантехника', items: ['Смеситель', 'Унитаз', 'Раковина', 'Ванна акриловая', 'Труба PPR', 'Полотенцесушитель'] },
+      { name: 'Крепёж', items: ['Саморез', 'Дюбель-гвоздь', 'Анкер', 'Гвозди', 'Уголок', 'Хомут'] }
     ];
     var brands = ['Bosch', 'Makita', 'Knauf', 'Ceresit', 'Tarkett', 'Grohe', 'Schneider', 'Petrovich'];
     var idCounter = 1;
@@ -208,31 +240,24 @@
       for(var i = 0; i < cats[c].items.length; i++) {
         for(var j = 0; j < 6; j++) {
           var b = brands[Math.floor(Math.random() * brands.length)];
-          // ИСПОЛЬЗУЕМ LOREMFLICKR ДЛЯ КАРТИНОК ПО КЛЮЧЕВЫМ СЛОВАМ
-          var imgUrl1 = 'https://loremflickr.com/400/400/' + cats[c].keyword + '/all?lock=' + idCounter;
-          var imgUrl2 = 'https://loremflickr.com/400/400/' + cats[c].keyword + '/all?lock=' + (idCounter + 100);
-          
+          var imgs = catImages[cats[c].name];
           PRODUCTS.push({
-            id: idCounter,
-            name: cats[c].items[i] + ' ' + b,
-            category: cats[c].name,
-            brand: b,
-            price: Math.floor(Math.random() * 10000) + 200,
-            images: [imgUrl1, imgUrl2],
-            desc: 'Высококачественный товар для профессионалов.',
-            specs: { 'Производитель': 'Россия', 'Гарантия': '2 года', 'Артикул': 'ART-' + idCounter },
-            badge: Math.random() > 0.8 ? ['Хит', 'Скидка', 'Новинка'][Math.floor(Math.random() * 3)] : null
+            id: idCounter, name: cats[c].items[i] + ' ' + b, category: cats[c].name, brand: b,
+            price: Math.floor(Math.random() * 15000) + 500, images: imgs,
+            desc: 'Премиальный товар для безупречного ремонта. Высшее качество и надежность.',
+            specs: { 'Производитель': 'Россия', 'Гарантия': '3 года', 'Артикул': 'ART-' + idCounter },
+            badge: Math.random() > 0.85 ? ['Хит', 'Новинка'][Math.floor(Math.random() * 2)] : null
           });
           idCounter++;
         }
       }
     }
 
-    var cart = JSON.parse(localStorage.getItem('cart_v8')) || {};
-    var state = { cat: 'Все', search: '', sort: 'default' };
+    var cart = JSON.parse(localStorage.getItem('cart_v10')) || {};
+    var state = { cat: 'Все', search: '' };
     var appEl = document.getElementById('app');
 
-    function saveCart() { localStorage.setItem('cart_v8', JSON.stringify(cart)); updateCart(); }
+    function saveCart() { localStorage.setItem('cart_v10', JSON.stringify(cart)); updateCart(); }
     function updateCart() {
       var count = 0;
       for(var key in cart) { count += cart[key]; }
@@ -242,36 +267,42 @@
 
     function router() {
       var hash = window.location.hash || '#/';
-      appEl.innerHTML = '';
-      window.scrollTo(0,0);
+      appEl.innerHTML = ''; window.scrollTo(0,0);
       if (hash === '#/') { renderHome(); }
       else if (hash === '#/catalog') { renderCatalog(); }
       else if (hash.indexOf('#/product/') === 0) { renderProduct(parseInt(hash.split('/')[2])); }
       else if (hash === '#/contacts') { renderContacts(); }
       else if (hash === '#/privacy') { renderInfo('Политика конфиденциальности', 'Мы собираем только имя и телефон для связи. Данные не передаются третьим лицам.'); }
       else if (hash === '#/delivery') { renderInfo('Доставка и оплата', 'Доставка курьером от 500 руб. Самовывоз бесплатно. Оплата наличными или картой.'); }
-      else { appEl.innerHTML = '<h2>404 Страница не найдена</h2>'; }
+      else { appEl.innerHTML = '<h2 style="text-align:center; padding:50px;">404 Страница не найдена</h2>'; }
     }
 
     function renderHome() {
-      var html = '<div class="hero-banner"><div><h2>🔥 Грандиозная распродажа!</h2><p>Скидки до 40% на инструмент и материалы.</p><a href="#/catalog" class="btn-primary" style="width:auto; padding:10px 20px;">В каталог</a></div><div class="hero-banner-img">🛠️</div></div>';
-      html += '<h2 class="page-title">Популярные товары</h2><div class="grid">';
+      var html = '<section class="hero"><h1>STROY<br>LUXE</h1><p>Стройматериалы и инструмент</p>';
+      html += '<div class="search-wrap"><input type="search" id="searchInput" placeholder="Поиск по каталогу..." /></div>';
+      html += '<div style="padding: 0 20px;"><a href="#/catalog" class="btn-gold" style="display:inline-block; width:auto;">Перейти в каталог</a></div>';
+      html += '</section>';
+      
+      html += '<div class="container page-section"><h2 class="page-title">Популярное</h2><div class="grid">';
       for(var i = 0; i < 8; i++) { html += createCard(PRODUCTS[i]); }
-      html += '</div>';
+      html += '</div></div>';
       appEl.innerHTML = html;
+      bindSearch();
     }
 
     function renderCatalog() {
       var catsList = ['Все'];
       for(var i = 0; i < PRODUCTS.length; i++) { if(catsList.indexOf(PRODUCTS[i].category) === -1) catsList.push(PRODUCTS[i].category); }
-      var html = '<h2 class="page-title">Каталог</h2><div class="filters">';
+      var html = '<div class="container page-section"><h2 class="page-title">Каталог</h2><div class="search-wrap"><input type="search" id="searchInput" placeholder="Поиск..." /></div>';
+      html += '<div class="filters">';
       for(var i = 0; i < catsList.length; i++) {
         var activeClass = (state.cat === catsList[i]) ? 'active' : '';
         html += '<button class="chip ' + activeClass + '" onclick="setCat(\'' + catsList[i] + '\')">' + catsList[i] + '</button>';
       }
-      html += '</div><div class="toolbar"><span id="count">Найдено: 0</span></div><div class="grid" id="grid"></div>';
+      html += '</div><div class="grid" id="grid"></div></div>';
       appEl.innerHTML = html;
       renderGrid();
+      bindSearch();
     }
 
     function setCat(c) { state.cat = c; renderCatalog(); }
@@ -286,19 +317,13 @@
         if(p.name.toLowerCase().indexOf(state.search.toLowerCase()) === -1) continue;
         list.push(p);
       }
-      document.getElementById('count').innerText = 'Найдено: ' + list.length;
       var html = '';
-      var limit = list.length > 60 ? 60 : list.length;
-      for(var i = 0; i < limit; i++) { html += createCard(list[i]); }
+      for(var i = 0; i < (list.length > 60 ? 60 : list.length); i++) { html += createCard(list[i]); }
       grid.innerHTML = html;
     }
 
     function createCard(p) {
-      var badgeHtml = '';
-      if(p.badge) {
-        var bClass = p.badge === 'Хит' ? 'hit' : (p.badge === 'Скидка' ? 'sale' : 'new');
-        badgeHtml = '<div class="badge badge-' + bClass + '">' + p.badge + '</div>';
-      }
+      var badgeHtml = p.badge ? '<div class="badge">' + p.badge + '</div>' : '';
       return '<div class="card" onclick="window.location.hash=\'#/product/' + p.id + '\'">' +
         badgeHtml +
         '<div class="card-img"><img src="' + p.images[0] + '" loading="lazy"></div>' +
@@ -314,38 +339,28 @@
       var p = null;
       for(var i=0; i<PRODUCTS.length; i++) { if(PRODUCTS[i].id === id) { p = PRODUCTS[i]; break; } }
       if(!p) return;
-      var thumbs = '';
-      for(var i=0; i<p.images.length; i++) {
-        var active = i === 0 ? 'active' : '';
-        thumbs += '<img src="' + p.images[i] + '" class="' + active + '" onclick="document.getElementById(\'mainImg\').src=\'' + p.images[i] + '\'; changeThumb(this);">';
-      }
       var specs = '';
       for(var key in p.specs) { specs += '<tr><td>' + key + '</td><td>' + p.specs[key] + '</td></tr>'; }
-      appEl.innerHTML = '<div class="product-page">' +
-        '<div><div class="product-main-img"><img id="mainImg" src="' + p.images[0] + '"></div><div class="product-thumbs">' + thumbs + '</div></div>' +
-        '<div><div class="product-brand">' + p.brand + ' | Арт: ' + p.specs['Артикул'] + '</div>' +
+      
+      appEl.innerHTML = '<div class="container page-section"><div class="product-page">' +
+        '<div class="product-main-img"><img src="' + p.images[0] + '"></div>' +
+        '<div class="product-info">' +
+        '<div class="product-brand">' + p.brand + '</div>' +
         '<h1>' + p.name + '</h1><div class="product-price">' + p.price.toLocaleString() + ' ₽</div>' +
-        '<p style="font-size:14px; color:#6c757d;">' + p.desc + '</p>' +
-        '<div class="product-actions"><button class="btn-primary" onclick="addToCart(' + p.id + ', event)">В корзину</button>' +
-        '<button class="btn-secondary" onclick="addToCart(' + p.id + ', event); openCart();">Купить сейчас</button></div>' +
-        '<h3 style="margin-top:20px; font-size:16px;">Характеристики</h3><table class="specs-table">' + specs + '</table></div></div>';
-    }
-
-    function changeThumb(el) {
-      var imgs = document.querySelectorAll('.product-thumbs img');
-      for(var i=0; i<imgs.length; i++) { imgs[i].classList.remove('active'); }
-      el.classList.add('active');
+        '<p style="font-size:14px; color:var(--text-muted); line-height: 1.6;">' + p.desc + '</p>' +
+        '<div class="product-actions"><button class="btn-gold" onclick="addToCart(' + p.id + ', event)">В корзину</button>' +
+        '<button class="btn-add" style="padding: 15px; font-size:14px;" onclick="addToCart(' + p.id + ', event); openCart();">Купить сейчас</button></div>' +
+        '<h3 style="margin-top:30px; font-family:\'Playfair Display\', serif; font-weight:400; color:var(--gold);">Характеристики</h3><table class="specs-table">' + specs + '</table></div></div></div>';
     }
 
     function renderContacts() {
-      appEl.innerHTML = '<h2 class="page-title">Контакты</h2>' +
-        '<div style="background:#fff; padding:20px; border-radius:8px; margin-bottom:15px; border:1px solid #dee2e6; box-shadow:0 2px 4px rgba(0,0,0,0.05);"><h3>📞 Телефон</h3><a href="tel:+79966889979" style="font-size:20px; font-weight:bold; color:#212529;">+7 (966) 888-99-79</a></div>' +
-        '<div style="background:#fff; padding:20px; border-radius:8px; margin-bottom:15px; border:1px solid #dee2e6; box-shadow:0 2px 4px rgba(0,0,0,0.05);"><h3>💬 WhatsApp</h3><a href="https://wa.me/79966889979" target="_blank" style="display:inline-block; padding:10px 20px; background:#25D366; color:#fff; border-radius:6px; text-decoration:none; font-weight:bold; margin-top:10px;">Написать</a></div>' +
-        '<div style="background:#fff; padding:20px; border-radius:8px; border:1px solid #dee2e6; box-shadow:0 2px 4px rgba(0,0,0,0.05);"><h3>✉️ Email</h3><a href="mailto:zairovabdulmone01@gmail.com" style="color:#1d4ed8;">zairovabdulmone01@gmail.com</a></div>';
+      appEl.innerHTML = '<div class="container page-section"><h2 class="page-title">Контакты</h2>' +
+        '<div style="border:1px solid var(--border); padding:30px; border-radius:20px; margin-bottom:20px; text-align:center;"><h3 style="color:var(--gold); margin-bottom:15px; font-family:\'Playfair Display\',serif; font-weight:400;">Телефон</h3><a href="tel:+79966889979" style="font-size:24px; color:#fff; text-decoration:none;">+7 (966) 888-99-79</a></div>' +
+        '<div style="border:1px solid var(--border); padding:30px; border-radius:20px; margin-bottom:20px; text-align:center;"><h3 style="color:var(--gold); margin-bottom:15px; font-family:\'Playfair Display\',serif; font-weight:400;">Email</h3><a href="mailto:zairovabdulmone01@gmail.com" style="font-size:18px; color:#fff; text-decoration:none;">zairovabdulmone01@gmail.com</a></div></div>';
     }
 
     function renderInfo(title, text) {
-      appEl.innerHTML = '<div class="text-page"><h1>' + title + '</h1><p>' + text + '</p><br><a href="#/" class="btn-primary" style="width:auto; padding:10px 20px;">На главную</a></div>';
+      appEl.innerHTML = '<div class="container page-section"><div style="border:1px solid var(--border); padding:30px; border-radius:20px;"><h1 style="font-family:\'Playfair Display\',serif; font-weight:400; color:var(--gold); margin-bottom:20px;">' + title + '</h1><p style="font-size:15px; color:var(--text-muted); line-height:1.8;">' + text + '</p><br><a href="#/" class="btn-gold" style="width:auto; padding:12px 30px;">На главную</a></div></div>';
     }
 
     function addToCart(id, e) {
@@ -363,20 +378,17 @@
     function renderCart() {
       var body = document.getElementById('cartBody');
       var totalEl = document.getElementById('cartTotal');
-      var total = 0;
-      var html = '';
-      var hasItems = false;
+      var total = 0; var html = ''; var hasItems = false;
       for(var id in cart) {
         var p = null;
         for(var i=0; i<PRODUCTS.length; i++) { if(PRODUCTS[i].id == id) { p = PRODUCTS[i]; break; } }
         if(!p) continue;
-        hasItems = true;
-        total += p.price * cart[id];
+        hasItems = true; total += p.price * cart[id];
         html += '<div class="cart-item"><div class="cart-item-img"><img src="' + p.images[0] + '"></div>' +
           '<div class="cart-item-info"><div class="cart-item-name">' + p.name + '</div><div class="cart-item-price">' + p.price + ' ₽</div></div>' +
           '<div class="qty"><button onclick="changeQty(' + id + ', -1)">-</button><span>' + cart[id] + '</span><button onclick="changeQty(' + id + ', 1)">+</button></div></div>';
       }
-      if(!hasItems) { body.innerHTML = '<p style="text-align:center; color:#adb5bd; margin-top:20px;">Корзина пуста</p>'; }
+      if(!hasItems) { body.innerHTML = '<p style="text-align:center; color:var(--text-muted); margin-top:20px;">Корзина пуста</p>'; }
       else { body.innerHTML = html; }
       totalEl.innerText = total.toLocaleString() + ' ₽';
     }
@@ -387,24 +399,26 @@
       saveCart();
     }
 
-    document.getElementById('searchInput').oninput = function(e) {
-      state.search = e.target.value;
-      if(window.location.hash !== '#/catalog') window.location.hash = '#/catalog';
-      setTimeout(renderGrid, 50);
-    };
+    function bindSearch() {
+      var si = document.getElementById('searchInput');
+      if(si) {
+        si.value = state.search;
+        si.oninput = function(e) {
+          state.search = e.target.value;
+          if(window.location.hash !== '#/catalog') window.location.hash = '#/catalog';
+          setTimeout(renderGrid, 50);
+        };
+      }
+    }
 
     document.getElementById('checkoutBtn').onclick = function() {
-      document.getElementById('cart').classList.remove('open');
-      document.getElementById('overlay').classList.remove('open');
+      document.getElementById('cart').classList.remove('open'); document.getElementById('overlay').classList.remove('open');
       document.getElementById('checkoutModal').classList.add('open');
     };
     document.getElementById('closeModal').onclick = function() { document.getElementById('checkoutModal').classList.remove('open'); };
     document.getElementById('orderForm').onsubmit = function(e) {
-      e.preventDefault();
-      alert('Спасибо! Заказ принят.');
-      cart = {}; saveCart();
-      document.getElementById('checkoutModal').classList.remove('open');
-      document.getElementById('orderForm').reset();
+      e.preventDefault(); alert('Спасибо! Заказ принят.');
+      cart = {}; saveCart(); document.getElementById('checkoutModal').classList.remove('open'); document.getElementById('orderForm').reset();
     };
 
     window.addEventListener('hashchange', router);
