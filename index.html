@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>STROY LUXE — Премиальные материалы</title>
   <link rel="stylesheet" href="style.css">
-  <!-- Подключаем премиальные шрифты -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
@@ -15,7 +14,7 @@
   <!-- ШАПКА -->
   <header class="header">
     <div class="header-inner">
-      <a href="#" class="logo">STROY<span>LUXE</span></a>
+      <a href="#/" class="logo">STROY<span>LUXE</span></a>
       <div class="header-actions">
         <button class="cart-btn" id="cartBtn">
           🛒 <span class="cart-count" id="cartCount">0</span>
@@ -23,41 +22,14 @@
       </div>
     </div>
     <div class="search-wrap">
-      <input type="search" id="searchInput" placeholder="Поиск премиум-товаров..." />
+      <input type="search" id="searchInput" placeholder="Поиск по каталогу..." />
     </div>
   </header>
 
-  <!-- ГЕРОЙ-СЕКЦИЯ (Впечатляющий экран) -->
-  <section class="hero">
-    <div class="hero-bg"></div>
-    <div class="hero-content">
-      <h1 class="fade-up">Создайте<br><i>идеальное пространство</i></h1>
-      <p class="fade-up delay-1">Премиальные материалы • Немецкое качество • Элитный инструмент</p>
-      <a href="#catalog" class="btn-gold fade-up delay-2">Смотреть каталог</a>
-    </div>
-  </section>
+  <!-- СЮДА ЗАГРУЖАЮТСЯ СТРАНИЦЫ (Главная, Каталог, Политика) -->
+  <main id="app"></main>
 
-  <main id="catalog" class="main-container">
-    
-    <!-- ФИЛЬТРЫ -->
-    <nav class="filters" id="filters"></nav>
-
-    <!-- СОРТИРОВКА -->
-    <div class="toolbar">
-      <span id="resultsCount">Товаров: 0</span>
-      <select id="sortSelect">
-        <option value="default">По умолчанию</option>
-        <option value="price-asc">Цена ↑</option>
-        <option value="price-desc">Цена ↓</option>
-        <option value="name">По названию</option>
-      </select>
-    </div>
-
-    <!-- КАТАЛОГ -->
-    <div class="grid" id="grid"></div>
-  </main>
-
-  <!-- КОРЗИНА -->
+  <!-- КОРЗИНА (Выезжает справа) -->
   <div class="overlay" id="overlay"></div>
   <aside class="cart" id="cart">
     <div class="cart-head">
@@ -71,14 +43,34 @@
     </div>
   </aside>
 
-  <!-- УВЕДОМЛЕНИЕ -->
+  <!-- МОДАЛЬНОЕ ОКНО ОФОРМЛЕНИЯ ЗАКАЗА -->
+  <div class="modal-overlay" id="checkoutModal">
+    <div class="modal-content">
+      <h2>Оформление заказа</h2>
+      <p style="margin-bottom: 15px; color: #aaa; font-size: 13px;">Оставьте контакты, и мы свяжемся с вами для подтверждения.</p>
+      <form id="orderForm">
+        <input type="text" id="orderName" placeholder="Ваше имя" required>
+        <input type="tel" id="orderPhone" placeholder="Номер телефона" required>
+        <button type="submit" class="btn-gold" style="width: 100%; margin-top: 10px;">Отправить заявку</button>
+      </form>
+      <button id="closeModal" class="close-modal">✕</button>
+    </div>
+  </div>
+
+  <!-- УВЕДОМЛЕНИЯ -->
   <div class="toast" id="toast"></div>
 
-  <!-- ПОДВАЛ -->
+  <!-- ПОДВАЛ (Ссылки на страницы) -->
   <footer class="footer">
+    <div class="footer-links">
+      <a href="#/">Главная</a>
+      <a href="#/catalog">Каталог</a>
+      <a href="#/delivery">Доставка и оплата</a>
+      <a href="#/privacy">Политика конфиденциальности</a>
+    </div>
     <p>© 2026 STROY LUXE. Премиальные решения для вашего дома.</p>
   </footer>
 
-  <script src="app.js?v=2"></script>
+  <script src="app.js?v=10"></script>
 </body>
 </html>
