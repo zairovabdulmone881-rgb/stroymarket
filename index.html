@@ -3,74 +3,106 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>STROY LUXE — Премиальные материалы</title>
-  <link rel="stylesheet" href="style.css">
+  <title>STROY LUXE — Строительный гипермаркет</title>
+  <!-- Обновили версию стилей и скрипта, чтобы телефон точно скачал новое -->
+  <link rel="stylesheet" href="style.css?v=30">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Montserrat:wght@300;400;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
   <!-- ШАПКА -->
   <header class="header">
-    <div class="header-inner">
-      <a href="#/" class="logo">STROY<span>LUXE</span></a>
-      <div class="header-actions">
-        <button class="cart-btn" id="cartBtn">
-          🛒 <span class="cart-count" id="cartCount">0</span>
-        </button>
+    <div class="header-top">
+      <div class="container header-top-inner">
+        <a href="#/" class="logo">STROY<span>LUXE</span></a>
+        <div class="header-contacts">
+          <a href="tel:+79966889979">+7 (966) 888-99-79</a>
+          <a href="mailto:zairovabdulmone01@gmail.com">zairovabdulmone01@gmail.com</a>
+        </div>
       </div>
     </div>
-    <div class="search-wrap">
-      <input type="search" id="searchInput" placeholder="Поиск по каталогу..." />
+    <div class="header-main">
+      <div class="container header-main-inner">
+        <button class="catalog-btn" id="catalogBtn">
+          <span class="burger-icon">☰</span> Каталог
+        </button>
+        <div class="search-wrap">
+          <input type="search" id="searchInput" placeholder="Поиск по 200+ товарам..." />
+        </div>
+        <div class="header-actions">
+          <button class="cart-btn" id="cartBtn">
+            🛒 Корзина <span class="cart-count" id="cartCount">0</span>
+          </button>
+        </div>
+      </div>
     </div>
   </header>
 
-  <!-- СЮДА ЗАГРУЖАЮТСЯ СТРАНИЦЫ (Главная, Каталог, Политика) -->
+  <!-- СЮДА ЗАГРУЖАЮТСЯ СТРАНИЦЫ -->
   <main id="app"></main>
 
-  <!-- КОРЗИНА (Выезжает справа) -->
+  <!-- КОРЗИНА -->
   <div class="overlay" id="overlay"></div>
   <aside class="cart" id="cart">
     <div class="cart-head">
-      <h2>Ваша корзина</h2>
+      <h2>Корзина</h2>
       <button id="closeCart">✕</button>
     </div>
     <div class="cart-body" id="cartBody"></div>
     <div class="cart-foot">
       <div class="cart-total">Итого: <b id="cartTotal">0 ₽</b></div>
-      <button class="btn-gold" id="checkoutBtn" style="width:100%; border:none;">Оформить заказ</button>
+      <button class="btn-primary" id="checkoutBtn">Оформить заказ</button>
     </div>
   </aside>
 
-  <!-- МОДАЛЬНОЕ ОКНО ОФОРМЛЕНИЯ ЗАКАЗА -->
+  <!-- МОДАЛЬНОЕ ОКНО ЗАКАЗА -->
   <div class="modal-overlay" id="checkoutModal">
     <div class="modal-content">
       <h2>Оформление заказа</h2>
-      <p style="margin-bottom: 15px; color: #aaa; font-size: 13px;">Оставьте контакты, и мы свяжемся с вами для подтверждения.</p>
+      <p style="color: #64748b; font-size: 14px; margin-bottom: 15px;">Оставьте контакты, и мы свяжемся с вами.</p>
       <form id="orderForm">
         <input type="text" id="orderName" placeholder="Ваше имя" required>
-        <input type="tel" id="orderPhone" placeholder="Номер телефона" required>
-        <button type="submit" class="btn-gold" style="width: 100%; margin-top: 10px;">Отправить заявку</button>
+        <input type="tel" id="orderPhone" placeholder="Телефон" required>
+        <button type="submit" class="btn-primary" style="width:100%;">Отправить</button>
       </form>
       <button id="closeModal" class="close-modal">✕</button>
     </div>
   </div>
 
-  <!-- УВЕДОМЛЕНИЯ -->
+  <!-- УВЕДОМЛЕНИЕ -->
   <div class="toast" id="toast"></div>
 
-  <!-- ПОДВАЛ (Ссылки на страницы) -->
+  <!-- ПОДВАЛ -->
   <footer class="footer">
-    <div class="footer-links">
-      <a href="#/">Главная</a>
-      <a href="#/catalog">Каталог</a>
-      <a href="#/delivery">Доставка и оплата</a>
-      <a href="#/privacy">Политика конфиденциальности</a>
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <h4>STROY LUXE</h4>
+          <p style="color: #94a3b8; font-size: 14px; line-height: 1.5;">Строительный гипермаркет премиальных материалов и инструментов.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Навигация</h4>
+          <a href="#/">Главная</a>
+          <a href="#/catalog">Каталог</a>
+          <a href="#/delivery">Доставка и оплата</a>
+          <a href="#/privacy">Политика конфиденциальности</a>
+          <a href="#/contacts">Контакты</a>
+        </div>
+        <div class="footer-col">
+          <h4>Контакты</h4>
+          <a href="tel:+79966889979">+7 (966) 888-99-79</a>
+          <a href="mailto:zairovabdulmone01@gmail.com">zairovabdulmone01@gmail.com</a>
+          <a href="https://wa.me/79966889979" target="_blank" style="color: #25D366; font-weight: bold;">WhatsApp</a>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© 2026 STROY LUXE. Все права защищены.</p>
+      </div>
     </div>
-    <p>© 2026 STROY LUXE. Премиальные решения для вашего дома.</p>
   </footer>
 
-  <script src="app.js?v=10"></script>
+  <script src="app.js?v=30"></script>
 </body>
 </html>
