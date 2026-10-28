@@ -181,15 +181,69 @@ var CAT_ICON = { 'Стройматериалы': '🧱', 'Отделка': '🎨
 var TYPE_ICON = { 'cement': '🏗️', 'brick': '🧱', 'gasblock': '🧱', 'insulation': '📦', 'armatura': '🔩', 'doska': '🪵', 'shtukaturka': '🪣', 'shpaklevka': '🪣', 'kraska': '🎨', 'laminat': '🪵', 'plitka': '🔲', 'oboi': '🧻', 'perforator': '🛠️', 'shurupovert': '🪛', 'bolgarka': '⚙️', 'lobzik': '🪚', 'nivelir': '📐', 'nabor-bit': '🧰', 'kabel': '🔌', 'rozetka': '🔌', 'vyklyuchatel': '🎚️', 'avtomat': '⚡', 'lampa': '💡', 'shchitok': '🗄️', 'smesitel': '🚰', 'unitaz': '🚽', 'rakovina': '🚰', 'vanna': '🛁', 'truba-ppr': '🔧', 'polotentsesushitel': '♨️', 'samorezy': '🔩', 'dyubel-gvozd': '📌', 'anker': '⚓', 'gvozdi': '🔨', 'ugolok': '📐', 'homut': '⭕' };
 var MORE_ICONS = { 'sand': '🏖️', 'shcheben': '🪨', 'gipsokarton': '⬜', 'osb': '🟫', 'profil': '📏', 'penopolistirol': '🧊', 'gruntovka': '🧴', 'kley-plitki': '🪣', 'zatirka': '🧴', 'plintus': '📏', 'kraska-fasad': '🎨', 'podlozhka': '🧻', 'drel': '🛠️', 'pila': '🪚', 'rubanok': '🪚', 'shlifmashina': '⚙️', 'otvertki': '🪛', 'ruletka': '📏', 'udlinitel': '🔌', 'svetilnik': '💡', 'prozhektor': '🔦', 'uzo': '⚡', 'gofra': '🔌', 'datchik': '📡', 'dush': '🚿', 'sifon': '🚰', 'podvodka': '🔧', 'boyler': '♨️', 'dush-ugolok': '🚿', 'radiator': '♨️', 'shpilka': '🔩', 'bolt': '🔩', 'shayba': '⭕', 'dyubel-univ': '📌', 'skoby': '📎', 'zaklepki': '🔘' };
 for (var mk in MORE_ICONS) { TYPE_ICON[mk] = MORE_ICONS[mk]; }
-function shortT(t) { return t.length > 25 ? t.substring(0, 24) + '…' : t; }
-function placeholder(p) {
-  return 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><defs><radialGradient id="g" cx="50%" cy="40%" r="70%"><stop offset="0" stop-color="#2a241c"/><stop offset="1" stop-color="#14120f"/></radialGradient></defs><rect width="400" height="400" fill="url(#g)"/><text x="200" y="215" font-size="110" text-anchor="middle">' + (TYPE_ICON[p.slug] || CAT_ICON[p.category] || '🏗️') + '</text><text x="200" y="300" fill="#fff" font-size="21" text-anchor="middle" font-family="sans-serif">' + shortT(p.title) + '</text><text x="200" y="338" fill="#d4b58e" font-size="18" text-anchor="middle" font-family="sans-serif">' + p.brand + '</text></svg>');
+
+/* === НОВЫЕ ХЕЛПЕРЫ ДЛЯ ЗАГЛУШКИ === */
+var CAT_COLOR = {
+  'Стройматериалы': '#c98c5a',
+  'Отделка': '#7fa8c9',
+  'Инструмент': '#d4b58e',
+  'Электрика': '#e8c766',
+  'Сантехника': '#7fc1b5',
+  'Крепёж': '#a8a8a8'
+};
+
+function escXml(s) {
+  return String(s).replace(/[&<>"']/g, function (ch) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' }[ch];
+  });
 }
+
+function svgWrap(text, maxLen, maxLines) {
+  var words = String(text).split(' ');
+  var lines = [], cur = '';
+  for (var i = 0; i < words.length; i++) {
+    var test = cur ? cur + ' ' + words[i] : words[i];
+    if (test.length > maxLen && cur) { lines.push(cur); cur = words[i]; }
+    else { cur = test; }
+  }
+  if (cur) { lines.push(cur); }
+  return lines.slice(0, maxLines || 3);
+}
+
+function placeholder(p) {
+  var accent = CAT_COLOR[p.category] || '#d4b58e';
+  var icon = TYPE_ICON[p.slug] || CAT_ICON[p.category] || '🏗️';
+  var lines = svgWrap(p.title, 20, 3);
+  var startY = lines.length === 1 ? 260 : (lines.length === 2 ? 245 : 232);
+  var titleSvg = '';
+  for (var i = 0; i < lines.length; i++) {
+    titleSvg += '<text x="200" y="' + (startY + i * 30) + '" fill="#ffffff" font-size="22" font-weight="500" text-anchor="middle" font-family="Montserrat,Arial,sans-serif">' + escXml(lines[i]) + '</text>';
+  }
+  var brandY = startY + lines.length * 30 + 12;
+  var svg = '<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">' +
+    '<defs>' +
+      '<radialGradient id="bg" cx="50%" cy="35%" r="80%">' +
+        '<stop offset="0" stop-color="#2a241c"/>' +
+        '<stop offset="1" stop-color="#14120f"/>' +
+      '</radialGradient>' +
+    '</defs>' +
+    '<rect width="400" height="400" fill="url(#bg)"/>' +
+    '<rect x="0" y="0" width="400" height="4" fill="' + accent + '"/>' +
+    '<circle cx="200" cy="150" r="72" fill="' + accent + '" opacity="0.1"/>' +
+    '<text x="200" y="183" font-size="80" text-anchor="middle" font-family="Apple Color Emoji,Segoe UI Emoji,Noto Color Emoji,sans-serif">' + icon + '</text>' +
+    titleSvg +
+    '<text x="200" y="' + brandY + '" fill="' + accent + '" font-size="15" letter-spacing="1.5" text-anchor="middle" font-family="Montserrat,Arial,sans-serif">' + escXml(p.brand) + '</text>' +
+    '<text x="200" y="378" fill="#5a5550" font-size="10" letter-spacing="3" text-anchor="middle" font-family="Montserrat,Arial,sans-serif">STROY LUXE</text>' +
+    '</svg>';
+  return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
+}
+
 function imgErr(el, id) {
   var p = PRODUCTS[id - 1];
-  if (!el.getAttribute('data-t') && p) { el.setAttribute('data-t', '1'); el.src = p.fb; }
-  else { el.onerror = null; el.src = p ? placeholder(p) : FALLBACK; }
+  el.onerror = null;
+  el.src = p ? placeholder(p) : FALLBACK;
 }
+/* === КОНЕЦ НОВЫХ ХЕЛПЕРОВ === */
 
 function saveCart() {
   try { localStorage.setItem('cart_v11', JSON.stringify(cart)); } catch (e) {}
@@ -259,7 +313,6 @@ function createCard(p) {
     '<div class="card-price">' + fmt(p.price) + ' <small>/ ' + p.unit + '</small></div>' +
     '<button class="btn-add" onclick="addToCart(' + p.id + ',event,this)">В корзину</button></div></div>';
 }
-
 
 var PAGE = document.body.getAttribute('data-page');
 var appEl = document.getElementById('app');
