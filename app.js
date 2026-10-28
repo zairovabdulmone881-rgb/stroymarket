@@ -1,14 +1,22 @@
+if (window.location.search.indexOf('debug=1') !== -1) {
+  window.onerror = function (msg, src, line) {
+    var d = document.createElement('div');
+    d.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:999;background:#b00020;color:#fff;font:12px monospace;padding:8px;word-break:break-all';
+    d.textContent = 'Ошибка: ' + msg + ' (' + String(src).split('/').pop() + ':' + line + ')';
+    document.body.appendChild(d);
+  };
+}
 
 var PRODUCTS = [];
 var FALLBACK = 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><rect width="400" height="400" fill="#1a1816"/><text x="200" y="210" fill="#d4b58e" font-size="26" text-anchor="middle" font-family="serif">STROY LUXE</text></svg>');
 
 var catImages = {
-  'Стройматериалы': ['https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=600&q=80', 'https://images.unsplash.com/photo-1518085250840-4b301bed7a7f?w=600&q=80'],
-  'Отделка': ['https://images.unsplash.com/photo-1562663474-6cbb3eaa4d14?w=600&q=80', 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=600&q=80'],
-  'Инструмент': ['https://images.unsplash.com/photo-1530124566582-a61cef2176e0?w=600&q=80', 'https://images.unsplash.com/photo-1572981779307-38b8cabb2407?w=600&q=80'],
-  'Электрика': ['https://images.unsplash.com/photo-1558449028-b53a39d100fc?w=600&q=80', 'https://images.unsplash.com/photo-1544724569-5f546fd6f2b5?w=600&q=80'],
-  'Сантехника': ['https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=600&q=80', 'https://images.unsplash.com/photo-1507089947368-19c1da9775ae?w=600&q=80'],
-  'Крепёж': ['https://images.unsplash.com/photo-1605810230434-7631ac76ec81?w=600&q=80', 'https://images.unsplash.com/photo-1530124566582-a61cef2176e0?w=600&q=80']
+  'Стройматериалы': ['https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=480&q=75', 'https://images.unsplash.com/photo-1518085250840-4b301bed7a7f?w=480&q=75'],
+  'Отделка': ['https://images.unsplash.com/photo-1562663474-6cbb3eaa4d14?w=480&q=75', 'https://images.unsplash.com/photo-1589939705384-5185137a7f0f?w=480&q=75'],
+  'Инструмент': ['https://images.unsplash.com/photo-1530124566582-a61cef2176e0?w=480&q=75', 'https://images.unsplash.com/photo-1572981779307-38b8cabb2407?w=480&q=75'],
+  'Электрика': ['https://images.unsplash.com/photo-1558449028-b53a39d100fc?w=480&q=75', 'https://images.unsplash.com/photo-1544724569-5f546fd6f2b5?w=480&q=75'],
+  'Сантехника': ['https://images.unsplash.com/photo-1584622650111-993a426fbf0a?w=480&q=75', 'https://images.unsplash.com/photo-1507089947368-19c1da9775ae?w=480&q=75'],
+  'Крепёж': ['https://images.unsplash.com/photo-1605810230434-7631ac76ec81?w=480&q=75', 'https://images.unsplash.com/photo-1530124566582-a61cef2176e0?w=480&q=75']
 };
 
 var cats = [
@@ -69,32 +77,87 @@ var slugs = [
   ['smesitel', 'unitaz', 'rakovina', 'vanna', 'truba-ppr', 'polotentsesushitel'],
   ['samorezy', 'dyubel-gvozd', 'anker', 'gvozdi', 'ugolok', 'homut']
 ];
+var EXTRA = [
+  [['Песок строительный', 'меш.', 90, 220, ['25 кг', '40 кг', '50 кг'], 'Сеяный песок для растворов, стяжек и подсыпки.'],
+   ['Щебень гранитный', 'меш.', 110, 320, ['5–20 мм', '20–40 мм', '40–70 мм'], 'Фракционный щебень для бетона и дорожек.'],
+   ['Гипсокартон влагостойкий', 'лист', 380, 820, ['9,5 мм', '12,5 мм', '15 мм'], 'ГКЛВ для кухонь и ванных комнат.'],
+   ['OSB-плита', 'лист', 650, 2100, ['9 мм', '12 мм', '18 мм'], 'Влагостойкая плита для обшивки стен, пола и кровли.'],
+   ['Профиль для гипсокартона', 'шт.', 95, 260, ['ПН 27x28', 'ПП 60x27', 'ПН 50x40'], 'Оцинкованный профиль для каркаса.'],
+   ['Пенополистирол экструдированный', 'упак.', 480, 1650, ['20 мм', '30 мм', '50 мм'], 'Утеплитель для фундамента, стен и пола.']],
+  [['Грунтовка глубокого проникновения', 'канистра', 290, 1250, ['5 л', '10 л', '20 л'], 'Укрепляет основание и снижает впитывание.'],
+   ['Клей для плитки', 'меш.', 320, 890, ['5 кг', '25 кг', '30 кг'], 'Цементный клей для керамики и керамогранита.'],
+   ['Затирка для швов', 'упак.', 140, 690, ['2 кг', '5 кг', '10 кг'], 'Влагостойкая затирка межплиточных швов.'],
+   ['Плинтус напольный', 'шт.', 120, 690, ['58 мм', '70 мм', '85 мм'], 'С кабель-каналом, длина 2,5 м.'],
+   ['Краска фасадная', 'банка', 890, 5200, ['2,7 л', '9 л', '18 л'], 'Атмосферостойкая краска для наружных работ.'],
+   ['Подложка под ламинат', 'рулон', 390, 1250, ['2 мм', '3 мм', '5 мм'], 'Выравнивает основание и гасит шум.']],
+  [['Дрель ударная сетевая', 'шт.', 2900, 11900, ['550 Вт', '750 Вт', '1050 Вт'], 'Для сверления дерева, металла и кирпича.'],
+   ['Циркулярная пила', 'шт.', 4900, 22900, ['1200 Вт', '1600 Вт', '2000 Вт'], 'Точный и быстрый рез досок и плит.'],
+   ['Рубанок электрический', 'шт.', 4200, 17900, ['650 Вт', '800 Вт', '1100 Вт'], 'Строгание дерева с регулировкой глубины.'],
+   ['Шлифовальная машина', 'шт.', 2900, 13900, ['250 Вт', '350 Вт', '500 Вт'], 'Подготовка поверхностей под покраску.'],
+   ['Набор отвёрток', 'набор', 390, 3900, ['6 предметов', '12 предметов', '24 предмета'], 'Хромованадиевая сталь, прорезиненные ручки.'],
+   ['Рулетка измерительная', 'шт.', 190, 1250, ['3 м', '5 м', '8 м'], 'С фиксатором и магнитным крюком.']],
+  [['Удлинитель сетевой', 'шт.', 350, 1950, ['3 розетки, 3 м', '5 розеток, 5 м', '5 розеток, 10 м'], 'С заземлением и защитными шторками.'],
+   ['Светильник светодиодный потолочный', 'шт.', 590, 5900, ['12 Вт', '24 Вт', '36 Вт'], 'Ровный свет без мерцания.'],
+   ['Прожектор светодиодный', 'шт.', 690, 4900, ['30 Вт', '50 Вт', '100 Вт'], 'Влагозащищённый, для улицы и склада.'],
+   ['УЗО', 'шт.', 1100, 3900, ['25 А', '40 А', '63 А'], 'Защита от утечки тока, монтаж на DIN-рейку.'],
+   ['Гофра для кабеля', 'м', 12, 65, ['16 мм', '20 мм', '25 мм'], 'Защитная ПВХ-труба с протяжкой.'],
+   ['Датчик движения', 'шт.', 450, 2900, ['180°', '360°', 'потолочный'], 'Автоматически включает свет.']],
+  [['Душевая система', 'шт.', 4900, 29900, ['хром', 'чёрный матовый', 'с тропическим душем'], 'Стойка со смесителем и верхним душем.'],
+   ['Сифон для раковины', 'шт.', 250, 1950, ['бутылочный', 'с переливом', 'трубный'], 'Хромированный или пластиковый.'],
+   ['Гибкая подводка', 'шт.', 120, 690, ['0,5 м', '1 м', '1,5 м'], 'Для смесителей и бачков.'],
+   ['Водонагреватель накопительный', 'шт.', 6900, 32900, ['30 л', '50 л', '80 л'], 'Эмалированный бак, защита от перегрева.'],
+   ['Душевой уголок', 'шт.', 9900, 39900, ['80x80 см', '90x90 см', '100x80 см'], 'Закалённое стекло 6 мм.'],
+   ['Радиатор биметаллический', 'шт.', 650, 1950, ['4 секции', '8 секций', '10 секций'], 'Выдерживает давление до 20 атм.']],
+  [['Шпилька резьбовая', 'шт.', 45, 290, ['M8', 'M10', 'M12'], 'Оцинкованная сталь, длина 1 м.'],
+   ['Болт с гайкой', 'упак.', 90, 690, ['M8x60', 'M10x80', 'M12x100'], 'Оцинкованный, класс прочности 8.8.'],
+   ['Шайба плоская', 'упак.', 45, 390, ['M8', 'M10', 'M12'], 'Оцинкованная сталь.'],
+   ['Дюбель универсальный', 'упак.', 90, 520, ['6x37 мм', '8x50 мм', '10x61 мм'], 'Для бетона, кирпича и гипсокартона.'],
+   ['Скобы для степлера', 'упак.', 50, 310, ['6 мм', '10 мм', '14 мм'], 'Закалённые, 1000 шт. в упаковке.'],
+   ['Заклёпки алюминиевые', 'упак.', 70, 420, ['3,2x8 мм', '4,0x10 мм', '4,8x12 мм'], 'Для соединения листового металла.']]
+];
+var EXTRA_SLUGS = [
+  ['sand', 'shcheben', 'gipsokarton', 'osb', 'profil', 'penopolistirol'],
+  ['gruntovka', 'kley-plitki', 'zatirka', 'plintus', 'kraska-fasad', 'podlozhka'],
+  ['drel', 'pila', 'rubanok', 'shlifmashina', 'otvertki', 'ruletka'],
+  ['udlinitel', 'svetilnik', 'prozhektor', 'uzo', 'gofra', 'datchik'],
+  ['dush', 'sifon', 'podvodka', 'boyler', 'dush-ugolok', 'radiator'],
+  ['shpilka', 'bolt', 'shayba', 'dyubel-univ', 'skoby', 'zaklepki']
+];
+for (var ex = 0; ex < EXTRA.length; ex++) {
+  for (var ey = 0; ey < EXTRA[ex].length; ey++) { cats[ex].items.push(EXTRA[ex][ey]); slugs[ex].push(EXTRA_SLUGS[ex][ey]); }
+}
 var brandCountry = { 'Bosch': 'Германия', 'Makita': 'Япония', 'DeWalt': 'США', 'Hilti': 'Лихтенштейн', 'Rockwool': 'Дания', 'Knauf': 'Германия', 'Dulux': 'Великобритания', 'Tikkurila': 'Финляндия', 'Grohe': 'Германия', 'Rehau': 'Германия', 'Roca': 'Испания', 'Ideal Standard': 'Италия', 'Schneider Electric': 'Франция', 'Legrand': 'Франция', 'Fischer': 'Германия', 'Spax': 'Германия', 'Wavin': 'Нидерланды', 'Ceresit': 'Германия' };
+var seed = 20261028;
+function rnd() { seed = (seed * 1664525 + 1013904223) % 4294967296; return seed / 4294967296; }
 var idCounter = 1;
 
 for (var c = 0; c < cats.length; c++) {
-  var cat = cats[c];
+  var cat = cats[c], nb = cat.brands.length, catStart = idCounter - 1, catCount = cat.items.length * nb * 3;
   for (var i = 0; i < cat.items.length; i++) {
-    var it = cat.items[i];
-    for (var j = 0; j < 6; j++) {
-      var br = cat.brands[j % cat.brands.length];
-      var vr = it[4][j % it[4].length];
-      var pr = it[2] + Math.random() * (it[3] - it[2]);
+    var it = cat.items[i], nv = it[4].length, span = it[3] - it[2];
+    for (var j = 0; j < nb * nv; j++) {
+      var bi = j % nb, vi = Math.floor(j / nb);
+      var br = cat.brands[bi], vr = it[4][vi];
+      var pr = (it[2] + span * (0.1 + 0.6 * vi / (nv - 1)) + span * 0.05 * rnd()) * (0.9 + 0.1 * bi);
       if (pr >= 100) { pr = Math.round(pr / 10) * 10 - 1; } else { pr = Math.round(pr); }
       if (pr < it[2]) { pr = it[2]; }
       var warranty = (cat.name === 'Инструмент' || cat.name === 'Сантехника') ? '2 года' : '12 месяцев';
       PRODUCTS.push({
         id: idCounter,
         name: it[0] + ' ' + br + ' ' + vr,
+        title: it[0],
         category: cat.name,
         brand: br,
         price: pr,
         unit: it[1],
         img: 'img/' + slugs[c][i] + '.jpg',
+        slug: slugs[c][i],
         fb: catImages[cat.name][idCounter % 2],
         desc: it[5],
+        cs: catStart,
+        cn: catCount,
         specs: { 'Артикул': String(82000000 + idCounter * 73), 'Производитель': br, 'Вариант': vr, 'Страна производства': (brandCountry[br] || 'Россия'), 'Гарантия': warranty, 'Единица продажи': it[1] },
-        badge: Math.random() > 0.85 ? ['Хит', 'Новинка'][Math.floor(Math.random() * 2)] : null
+        badge: rnd() > 0.88 ? ['Хит', 'Новинка'][Math.floor(rnd() * 2)] : null
       });
       idCounter++;
     }
@@ -114,9 +177,18 @@ function fmt(n) {
   }
   return r + ' ₽';
 }
+var CAT_ICON = { 'Стройматериалы': '🧱', 'Отделка': '🎨', 'Инструмент': '🔧', 'Электрика': '💡', 'Сантехника': '🚿', 'Крепёж': '🔩' };
+var TYPE_ICON = { 'cement': '🏗️', 'brick': '🧱', 'gasblock': '🧱', 'insulation': '📦', 'armatura': '🔩', 'doska': '🪵', 'shtukaturka': '🪣', 'shpaklevka': '🪣', 'kraska': '🎨', 'laminat': '🪵', 'plitka': '🔲', 'oboi': '🧻', 'perforator': '🛠️', 'shurupovert': '🪛', 'bolgarka': '⚙️', 'lobzik': '🪚', 'nivelir': '📐', 'nabor-bit': '🧰', 'kabel': '🔌', 'rozetka': '🔌', 'vyklyuchatel': '🎚️', 'avtomat': '⚡', 'lampa': '💡', 'shchitok': '🗄️', 'smesitel': '🚰', 'unitaz': '🚽', 'rakovina': '🚰', 'vanna': '🛁', 'truba-ppr': '🔧', 'polotentsesushitel': '♨️', 'samorezy': '🔩', 'dyubel-gvozd': '📌', 'anker': '⚓', 'gvozdi': '🔨', 'ugolok': '📐', 'homut': '⭕' };
+var MORE_ICONS = { 'sand': '🏖️', 'shcheben': '🪨', 'gipsokarton': '⬜', 'osb': '🟫', 'profil': '📏', 'penopolistirol': '🧊', 'gruntovka': '🧴', 'kley-plitki': '🪣', 'zatirka': '🧴', 'plintus': '📏', 'kraska-fasad': '🎨', 'podlozhka': '🧻', 'drel': '🛠️', 'pila': '🪚', 'rubanok': '🪚', 'shlifmashina': '⚙️', 'otvertki': '🪛', 'ruletka': '📏', 'udlinitel': '🔌', 'svetilnik': '💡', 'prozhektor': '🔦', 'uzo': '⚡', 'gofra': '🔌', 'datchik': '📡', 'dush': '🚿', 'sifon': '🚰', 'podvodka': '🔧', 'boyler': '♨️', 'dush-ugolok': '🚿', 'radiator': '♨️', 'shpilka': '🔩', 'bolt': '🔩', 'shayba': '⭕', 'dyubel-univ': '📌', 'skoby': '📎', 'zaklepki': '🔘' };
+for (var mk in MORE_ICONS) { TYPE_ICON[mk] = MORE_ICONS[mk]; }
+function shortT(t) { return t.length > 25 ? t.substring(0, 24) + '…' : t; }
+function placeholder(p) {
+  return 'data:image/svg+xml;utf8,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400"><defs><radialGradient id="g" cx="50%" cy="40%" r="70%"><stop offset="0" stop-color="#2a241c"/><stop offset="1" stop-color="#14120f"/></radialGradient></defs><rect width="400" height="400" fill="url(#g)"/><text x="200" y="215" font-size="110" text-anchor="middle">' + (TYPE_ICON[p.slug] || CAT_ICON[p.category] || '🏗️') + '</text><text x="200" y="300" fill="#fff" font-size="21" text-anchor="middle" font-family="sans-serif">' + shortT(p.title) + '</text><text x="200" y="338" fill="#d4b58e" font-size="18" text-anchor="middle" font-family="sans-serif">' + p.brand + '</text></svg>');
+}
 function imgErr(el, id) {
-  if (!el.getAttribute('data-t') && PRODUCTS[id - 1]) { el.setAttribute('data-t', '1'); el.src = PRODUCTS[id - 1].fb; }
-  else { el.onerror = null; el.src = FALLBACK; }
+  var p = PRODUCTS[id - 1];
+  if (!el.getAttribute('data-t') && p) { el.setAttribute('data-t', '1'); el.src = p.fb; }
+  else { el.onerror = null; el.src = p ? placeholder(p) : FALLBACK; }
 }
 
 function saveCart() {
@@ -220,7 +292,7 @@ function renderHome() {
   for (var c = 0; c < cats.length; c++) { html += '<a class="chip" href="catalog.html?cat=' + encodeURIComponent(cats[c].name) + '">' + cats[c].name + '</a>'; }
   html += '</div><div style="padding:10px 20px 0"><a href="catalog.html" class="btn-gold" style="width:auto">Перейти в каталог</a></div></section>';
   html += '<div class="container page-section"><h2 class="page-title">Популярное</h2><div class="grid">';
-  for (var i = 0; i < 8; i++) { html += createCard(PRODUCTS[i * 27]); }
+  for (var i = 0; i < 8; i++) { html += createCard(PRODUCTS[i * Math.floor(PRODUCTS.length / 8)]); }
   html += '</div><div class="contact-grid" style="margin-top:50px">' +
     '<div class="contact-card"><div class="ic">🚚</div><small>Доставка</small><b>От 500 ₽ по городу</b></div>' +
     '<div class="contact-card"><div class="ic">🛡️</div><small>Гарантия</small><b>От 12 месяцев</b></div>' +
@@ -290,8 +362,8 @@ function renderProduct() {
   document.title = p.name + ' — STROY LUXE';
   var rows = '<tr><td>Категория</td><td>' + p.category + '</td></tr>';
   for (var k in p.specs) { rows += '<tr><td>' + k + '</td><td>' + p.specs[k] + '</td></tr>'; }
-  var start = Math.floor((p.id - 1) / 36) * 36, rel = '';
-  for (var r = 1; r <= 4; r++) { rel += createCard(PRODUCTS[start + ((p.id - 1 - start) + 6 * r) % 36]); }
+  var rel = '';
+  for (var r = 1; r <= 4; r++) { rel += createCard(PRODUCTS[p.cs + ((p.id - 1 - p.cs) + 15 * r) % p.cn]); }
   appEl.innerHTML = '<div class="container page-section"><a href="catalog.html" class="back">← Назад в каталог</a><div class="product-page">' +
     '<div class="product-img">' + favBtn(p.id) + '<img src="' + p.img + '" alt="" onerror="imgErr(this,' + p.id + ')"></div>' +
     '<div class="product-info"><div class="product-brand">' + p.brand + '</div><h1>' + p.name + '</h1>' +
@@ -390,6 +462,12 @@ if (SHOP.payPublicId) {
   document.getElementById('payOnlineLbl').innerText = 'Банковской картой онлайн — скоро будет доступно';
 }
 document.addEventListener('keydown', function (e) { if (e.key === 'Escape') { closeCart(); closeCheckout(); } });
+
+function toggleMenu(e) { if (e) { e.stopPropagation(); } document.getElementById('mmenu').classList.toggle('open'); }
+document.addEventListener('click', function (e) {
+  var m = document.getElementById('mmenu');
+  if (m && !m.contains(e.target)) { m.classList.remove('open'); }
+});
 
 updateCart();
 updateFavCount();

@@ -138,3 +138,10 @@ a{color:inherit}
 .sum div{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
 .sum b{color:var(--gold);font-family:'Playfair Display',serif;font-size:22px}
 .reqs{text-align:center;color:var(--muted);font-size:13px;line-height:1.8;margin-top:35px}
+
+.mmenu{display:none;position:absolute;top:100%;left:15px;right:15px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:8px;box-shadow:0 15px 30px rgba(0,0,0,.6);z-index:60}
+.mmenu.open{display:block}
+.mmenu a{display:block;padding:13px 16px;color:var(--text);text-decoration:none;font-size:14px;border-radius:12px}
+.mmenu a:hover{background:rgba(255,255,255,.05);color:var(--gold)}
+@media(min-width:900px){.menu-btn{display:none}.mmenu{display:none!important}}
+@media(max-width:600px){.hdr-right>a[href^="tel"]{display:none}.logo{font-size:14px;letter-spacing:1px}.header-inner .pill{padding:8px 12px}.header-inner .menu-btn{padding:0;width:40px;height:40px}.hdr-right{gap:6px}.header-inner{gap:6px}}
