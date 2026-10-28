@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Политика конфиденциальности — STROY LUXE</title>
+<meta name="description" content="Политика обработки персональных данных STROY LUXE">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Montserrat:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body data-page="privacy">
+
+<header class="header">
+  <div class="container header-inner">
+    <a href="index.html" class="pill"><span class="logo">STROY <span>LUXE</span></span></a>
+    <nav class="nav"><a href="index.html" data-n="home">Главная</a><a href="catalog.html" data-n="catalog">Каталог</a><a href="delivery.html" data-n="delivery">Доставка</a><a href="contacts.html" data-n="contacts">Контакты</a></nav>
+    <div class="hdr-right">
+      <a href="mailto:zairovabdulmone01@gmail.com" class="pill hdr-email">✉ zairovabdulmone01@gmail.com</a>
+      <a href="tel:+79966889979" class="pill"><span class="ph-i">📞</span><span class="ph-t">+7 (966) 888-99-79</span></a>
+      <a href="favorites.html" class="pill">♥ <span id="favCount" class="cart-count">0</span></a>
+      <button class="pill" id="cartBtn">🛒 <span id="cartCount" class="cart-count">0</span></button>
+      <button class="pill menu-btn" onclick="window.location.href='catalog.html'">☰</button>
+    </div>
+  </div>
+</header>
+
+<main id="app"><div class="container page-section"><h2 class="page-title">Политика конфиденциальности</h2><div class="info-box"><p>Дата публикации: 28 октября 2026 г.</p><h3>1. Общие положения</h3><p>Настоящая политика описывает, как сайт STROY LUXE (далее — «Оператор») обрабатывает персональные данные посетителей в соответствии с Федеральным законом от 27.07.2006 № 152-ФЗ «О персональных данных». Оператор: <b>индивидуальный предприниматель Заиров Абдулмонеъ Хасанович, ИНН 547303303920, ОГРНИП 326547600081931</b>. Оформляя заказ и ставя отметку о согласии, вы принимаете условия этой политики.</p><h3>2. Какие данные мы обрабатываем</h3><ul><li>имя, номер телефона и адрес доставки (если выбран курьер), которые вы указываете в форме заказа;</li><li>состав заказа и его сумма;</li><li>данные корзины и избранного — они хранятся только в вашем браузере (localStorage) и не отправляются на сервер.</li></ul><h3>3. Цели обработки</h3><p>Приём и подтверждение заказов, связь с вами по вопросам заказа, организация доставки или самовывоза, ответы на обращения.</p><h3>4. Правовое основание</h3><p>Ваше согласие на обработку персональных данных, а также необходимость исполнить заказ.</p><h3>5. Передача третьим лицам</h3><p>Мы не продаём и не передаём ваши данные в рекламных целях. Заказ отправляется через мессенджер WhatsApp, поэтому сообщение обрабатывается этим сервисом по его правилам. При оплате картой онлайн платёж проводит платёжный сервис CloudPayments: данные карты вводятся только на его защищённой форме и Оператору не передаются. Для исполнения заказа данные могут получить службы доставки.</p><h3>6. Сроки хранения и защита</h3><p>Данные хранятся не дольше, чем нужно для целей обработки, затем удаляются. Мы принимаем организационные и технические меры, чтобы защитить их от неправомерного доступа.</p><h3>7. Ваши права</h3><p>Вы можете запросить сведения о своих данных, потребовать их уточнения, блокировки или удаления, а также отозвать согласие. Для этого напишите на <a href="mailto:zairovabdulmone01@gmail.com">zairovabdulmone01@gmail.com</a> или позвоните <a href="tel:+79966889979">+7 (966) 888-99-79</a>. Отзыв согласия не влияет на законность обработки до его получения.</p><h3>8. Изменения</h3><p>Актуальная версия политики всегда размещена на этой странице.</p></div></div></main>
+
+<div class="overlay" id="overlay"></div>
+<aside class="cart" id="cart">
+  <div class="cart-head"><h2>Корзина</h2><button class="x-btn" id="closeCart">✕</button></div>
+  <div class="cart-body" id="cartBody"></div>
+  <div class="cart-foot">
+    <div class="cart-total">Итого: <b id="cartTotal">0 ₽</b></div>
+    <button class="btn-gold" id="checkoutBtn">Оформить заказ</button>
+  </div>
+</aside>
+
+<div class="modal-overlay" id="checkoutModal">
+  <div class="modal-content">
+    <h2>Оформление заказа</h2>
+    <form id="orderForm">
+        <input type="text" id="orderName" placeholder="Ваше имя" required>
+        <input type="tel" id="orderPhone" placeholder="Номер телефона" required>
+        <div class="opt-title">Получение</div>
+        <label class="opt"><input type="radio" name="ship" value="pickup" checked><span>Самовывоз — бесплатно</span></label>
+        <label class="opt"><input type="radio" name="ship" value="courier"><span id="courierLbl">Доставка курьером</span></label>
+        <input type="text" id="orderAddr" placeholder="Адрес доставки" style="display:none">
+        <div class="opt-title">Оплата</div>
+        <label class="opt"><input type="radio" name="pay" value="online" id="payOnline"><span id="payOnlineLbl">Банковской картой онлайн</span></label>
+        <label class="opt"><input type="radio" name="pay" value="cod" checked><span>При получении (наличными или картой)</span></label>
+        <div class="sum" id="orderSum"></div>
+        <label class="agree"><input type="checkbox" required><span>Согласен на обработку персональных данных и с <a href="privacy.html" target="_blank">политикой конфиденциальности</a></span></label>
+        <button type="submit" class="btn-gold" id="orderBtn">Оформить заказ</button>
+      </form>
+    <button id="closeModal" class="x-btn close-modal">✕</button>
+  </div>
+</div>
+
+<a href="https://wa.me/79966889979" target="_blank" rel="noopener" class="float-wa"><span>💬</span> WhatsApp</a>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div class="footer-col"><h4>STROY LUXE</h4><p>Премиальные решения для вашего дома.</p></div>
+      <div class="footer-col"><h4>Навигация</h4><a href="index.html">Главная</a><a href="catalog.html">Каталог</a><a href="delivery.html">Доставка</a><a href="favorites.html">Избранное</a><a href="privacy.html">Политика конфиденциальности</a><a href="contacts.html">Контакты</a></div>
+      <div class="footer-col"><h4>Контакты</h4><a href="tel:+79966889979">+7 (966) 888-99-79</a><a href="mailto:zairovabdulmone01@gmail.com">zairovabdulmone01@gmail.com</a><a href="https://wa.me/79966889979" target="_blank" rel="noopener">WhatsApp</a></div>
+    </div>
+    <div class="footer-bottom">© 2026 STROY LUXE<br>ИП Заиров Абдулмонеъ Хасанович · ИНН 547303303920 · ОГРНИП 326547600081931</div>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
