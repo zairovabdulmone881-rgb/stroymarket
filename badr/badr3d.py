@@ -241,6 +241,10 @@ def s_final(c):
     text(c,540,1020,"БАДР",250+12*math.sin(c.t*3),GOLD); chip(c,540,1190,"ПЕРВОЕ КРУПНОЕ СРАЖЕНИЕ",36,WHITE); chip(c,540,1270,"МУСУЛЬМАН И КУРАЙШИТОВ",36,WHITE)
     for i in range(6): fig(c,(i*230+c.t*100)%1500-120,1650,0.9,MUS,i)
     for i in range(6): fig(c,1400-((i*230+c.t*100)%1500),1840,0.9,QUR,i,dirn=-1)
+REFLECT=True; BLOOM=True; PAPER=False; PREFIX=''; FILL=(6,8,18,255)
+def CAM(t): return 1.1,0.0,120.0
+def backdrop(c):
+    b=BASE.copy(); b.alpha_composite(RAYS); b.alpha_composite(bokeh(c.t)); return b
 SC=[s_date,s_chase,s_turn,s_army,s_count,s_wells,s_duel,s_battle,s_stats,s_teach,s_final]
 def caption(img,txt,k):
     d=ImageDraw.Draw(img); words=txt.split(); key=max(words,key=len)
@@ -273,7 +277,7 @@ def frame(t,TM):
     for i,(a,b) in enumerate(TM["lines"]):
         if t>=a-0.05: idx=i
     a,b=TM["lines"][idx]; c.lt=max(0,t-(a-0.05)); c.p=max(0,min(1,(t-a)/max(0.1,b+0.3-a)))
-    c.B=BASE.copy(); c.B.alpha_composite(RAYS); c.B.alpha_composite(bokeh(t))
+    c.B=backdrop(c)
     c.F=Image.new("RGBA",(W,H),(0,0,0,0)); c.T=Image.new("RGBA",(W,H),(0,0,0,0))
     c.dB=ImageDraw.Draw(c.B); c.dF=ImageDraw.Draw(c.F); c.dT=ImageDraw.Draw(c.T); c.gy=1400
     SC[idx](c)
@@ -281,16 +285,19 @@ def frame(t,TM):
     S=Image.new("RGBA",(W,H),(0,0,0,0)); ds=ImageDraw.Draw(S)
     for x,fy,r in c.SH: ds.ellipse((x-r*1.2,fy-r*0.22,x+r*1.2,fy+r*0.22),fill=(0,0,0,150))
     c.B.alpha_composite(S.filter(ImageFilter.GaussianBlur(7)))
-    # отражение в полу
-    gy=c.gy; R_=c.F.transform((W,H),Image.AFFINE,(1,0,0,0,-1,2*gy+6),Image.BILINEAR)
-    arr=np.array(R_); al=arr[...,3].astype(np.float32); yy=np.arange(H)[:,None]
-    fade=np.clip(1-(yy-gy)/380,0,1)*0.3*(yy>gy); arr[...,3]=(al*fade).astype(np.uint8)
-    R_=Image.fromarray(arr,"RGBA").filter(ImageFilter.GaussianBlur(2)); c.B.alpha_composite(R_)
+    if REFLECT:
+        # отражение в полу
+        gy=c.gy; R_=c.F.transform((W,H),Image.AFFINE,(1,0,0,0,-1,2*gy+6),Image.BILINEAR)
+        arr=np.array(R_); al=arr[...,3].astype(np.float32); yy=np.arange(H)[:,None]
+        fade=np.clip(1-(yy-gy)/380,0,1)*0.3*(yy>gy); arr[...,3]=(al*fade).astype(np.uint8)
+        R_=Image.fromarray(arr,"RGBA").filter(ImageFilter.GaussianBlur(2)); c.B.alpha_composite(R_)
+    if PAPER:
+        A=np.array(c.F)[...,3]; Sh=Image.new('RGBA',(W,H),(0,0,0,0)); Sh.putalpha(Image.fromarray(A).transform((W,H),Image.AFFINE,(1,0,-7,0,1,-11))); Sh=Image.composite(Image.new('RGBA',(W,H),(10,12,20,110)),Image.new('RGBA',(W,H),(0,0,0,0)),Sh.split()[3]); c.B.alpha_composite(Sh.filter(ImageFilter.GaussianBlur(3)))
     c.B.alpha_composite(c.F); c.B.alpha_composite(c.T); img=c.B
-    z=1.1; img=img.transform((W,H),Image.AFFINE,(1/z,0,540-540/z,0,1/z,1500+(120-1500)/z),Image.BILINEAR,fillcolor=(6,8,18,255))
-    # блум
-    sm_=img.convert("RGB").resize((W//4,H//4),Image.BILINEAR).filter(ImageFilter.GaussianBlur(9)).resize((W,H),Image.BICUBIC)
-    sm_=sm_.point(lambda v:int(v*0.55)); img=ImageChops.add(img.convert("RGB"),sm_).convert("RGBA")
+    z,dx,dy=CAM(t); img=img.transform((W,H),Image.AFFINE,(1/z,0,540-(540+dx)/z,0,1/z,1500+(dy-1500)/z),Image.BILINEAR,fillcolor=FILL)
+    if BLOOM:
+      sm_=img.convert("RGB").resize((W//4,H//4),Image.BILINEAR).filter(ImageFilter.GaussianBlur(9)).resize((W,H),Image.BICUBIC)
+      sm_=sm_.point(lambda v:int(v*0.55)); img=ImageChops.add(img.convert("RGB"),sm_).convert("RGBA")
     if c.lt<0.25: img=Image.blend(img,Image.new("RGBA",(W,H),(0,0,0,255)),0.6*(1-c.lt/0.25))
     ci=None
     for i,(a,b) in enumerate(TM["lines"]):
@@ -299,16 +306,18 @@ def frame(t,TM):
     if ci: img=caption(img,LINES[ci[0]][1],min(1,(ci[1]+0.05)/0.2))
     if c.shake: img=img.transform((W,H),Image.AFFINE,(1,0,random.uniform(-c.shake,c.shake),0,1,random.uniform(-c.shake,c.shake)))
     return img.convert("RGB")
-if __name__=="__main__":
+def main(argv):
     TM=json.load(open("timing.json"))
-    if sys.argv[1]=="preview":
+    if argv[0]=="preview":
         ts=[(a+b)/2 for a,b in TM["lines"]]
         ims=[frame(t,TM).resize((300,533)) for t in ts]; cols=6; rows=(len(ims)+cols-1)//cols
-        sh=Image.new("RGB",(300*cols,533*rows)); [sh.paste(im,((i%cols)*300,(i//cols)*533)) for i,im in enumerate(ims)]; sh.save("preview.png")
-    elif sys.argv[1]=="one":
-        frame(float(sys.argv[2]),TM).save("one.png")
+        sh=Image.new("RGB",(300*cols,533*rows)); [sh.paste(im,((i%cols)*300,(i//cols)*533)) for i,im in enumerate(ims)]; sh.save(PREFIX+"preview.png")
+    elif argv[0]=="one":
+        frame(float(argv[1]),TM).save(PREFIX+"one.png")
     else:
-        n=int(TM["dur"]*FPS); k=int(sys.argv[2]); N=int(sys.argv[3]); a=n*k//N; b=n*(k+1)//N
-        pr=subprocess.Popen(["ffmpeg","-y","-loglevel","error","-f","rawvideo","-pix_fmt","rgb24","-s",f"{W}x{H}","-r",str(FPS),"-i","-","-c:v","libx264","-pix_fmt","yuv420p","-crf","17",f"seg_{k}.mp4"],stdin=subprocess.PIPE)
+        n=int(TM["dur"]*FPS); k=int(argv[1]); N=int(argv[2]); a=n*k//N; b=n*(k+1)//N
+        pr=subprocess.Popen(["ffmpeg","-y","-loglevel","error","-f","rawvideo","-pix_fmt","rgb24","-s",f"{W}x{H}","-r",str(FPS),"-i","-","-c:v","libx264","-pix_fmt","yuv420p","-crf","17",f"{PREFIX}seg_{k}.mp4"],stdin=subprocess.PIPE)
         for i in range(a,b): pr.stdin.write(frame(i/FPS,TM).tobytes())
         pr.stdin.close(); pr.wait()
+
+if __name__=="__main__": main(sys.argv[1:])
