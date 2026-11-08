@@ -1,0 +1,30 @@
+0 retry 0
+0 retry 1
+0 retry 2
+0 retry 3
+0 retry 4
+ok 0
+1 retry 0
+1 retry 1
+ok 1
+ok 2
+ok 3
+ok 4
+ok 5
+6 retry 0
+6 retry 1
+6 retry 2
+ok 6
+7 retry 0
+ok 7
+8 retry 0
+8 retry 1
+8 retry 2
+8 retry 3
+ok 8
+9 retry 0
+9 retry 1
+9 retry 2
+9 retry 3
+ok 9
+ok 10
