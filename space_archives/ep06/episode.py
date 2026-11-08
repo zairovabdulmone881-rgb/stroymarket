@@ -36,7 +36,7 @@ def scene(kind, p, t, n):
     L = Image.new("RGBA",(W,H),(0,0,0,0)); d = ImageDraw.Draw(L)
     if kind=="intro":
         ctext(d,540,490,"ВЫПУСК",CREAM,130); d.text((540,1010),str(EPISODE),font=F(900),fill=CREAM,anchor="mm")
-        d.rounded_rectangle((100,1445,980,1540),30,fill=(168,26,44)); ctext(d,540,1470,"КАТЕГОРИЯ 2: НАУКА И ФИЗИКА",CREAM,40)
+        d.rounded_rectangle((100,1445,980,1540),30,fill=(168,26,44)); ctext(d,540,1470,"КАТЕГОРИЯ 1: СТРАШНЫЕ И ПУГАЮЩИЕ",CREAM,34)
         ctext(d,540,1668,"КОСМИЧЕСКИЕ АРХИВЫ",GOLD,40)
     elif kind=="astro_q":
         astronaut(d); 
