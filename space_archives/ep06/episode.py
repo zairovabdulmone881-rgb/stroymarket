@@ -1,7 +1,7 @@
 import sys, json, math, random, subprocess
 import numpy as np
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
-from script_ep import EPISODE, LINES, SCENES
+from script_ep import EPISODE, LINES, SCENES, CATEGORY
 W, H, FPS = 1080, 1920, 30
 GOLD=(244,188,66); CREAM=(255,238,204); GREY=(206,196,178); RED=(214,40,56); BLUE=(84,170,240); ORANGE=(242,132,42)
 def F(s, w=800):
@@ -15,6 +15,7 @@ BG = bg(); random.seed(6)
 STARS = [(random.randint(0,W),random.randint(0,H),random.random()*6.28,random.choice([1,1,2,2,3]),random.random()<.12) for _ in range(190)]
 def ctext(d, x, y, s, fill, size, w=800, stroke=0, track=0):
     f = F(size, w); tw = d.textlength(s, font=f)
+    while tw>1000 and size>30: size-=2; f=F(size,w); tw=d.textlength(s,font=f)
     d.text((x-tw/2, y), s, font=f, fill=fill, stroke_width=stroke, stroke_fill=(0,0,0))
 def astronaut(d, cx=470, cy=690, r=168):
     d.rounded_rectangle((cx-r*.95, cy+r*.7, cx+r*.95, cy+r*3), 70, fill=(235,235,240))
@@ -35,8 +36,8 @@ def glow(layer, cx, cy, r, col):
 def scene(kind, p, t, n):
     L = Image.new("RGBA",(W,H),(0,0,0,0)); d = ImageDraw.Draw(L)
     if kind=="intro":
-        ctext(d,540,490,"ВЫПУСК",CREAM,130); d.text((540,1010),str(EPISODE),font=F(900),fill=CREAM,anchor="mm")
-        d.rounded_rectangle((100,1445,980,1540),30,fill=(168,26,44)); ctext(d,540,1470,"КАТЕГОРИЯ 1: СТРАШНЫЕ И ПУГАЮЩИЕ",CREAM,34)
+        ctext(d,540,490,"ВЫПУСК",CREAM,130); d.text((540,1010),str(EPISODE),font=F(900 if EPISODE<10 else 560),fill=CREAM,anchor="mm")
+        d.rounded_rectangle((100,1445,980,1540),30,fill=(168,26,44)); ctext(d,540,1470,CATEGORY,CREAM,34)
         ctext(d,540,1668,"КОСМИЧЕСКИЕ АРХИВЫ",GOLD,40)
     elif kind=="astro_q":
         astronaut(d); 
@@ -63,6 +64,13 @@ def scene(kind, p, t, n):
     elif kind=="icon":
         d.ellipse((520-340,720-340,520+340,720+340),outline=RED,width=44); ctext(d,520,560,"!",RED,420)
         ctext(d,540,1260,p["t"][0],GOLD,96); ctext(d,540,1370,p["t"][1],GOLD,96)
+    elif kind=="clock":
+        d.ellipse((240,440,840,1040),outline=CREAM,width=10)
+        d.pieslice((240,440,840,1040),-90-90,-90,fill=RED)
+        for a in range(12):
+            x=540+math.sin(a/12*6.283)*270; y=740-math.cos(a/12*6.283)*270; d.ellipse((x-6,y-6,x+6,y+6),fill=CREAM)
+        d.line((540,740,540,500),fill=GOLD,width=10)
+        ctext(d,540,1150,p["t"][0],GOLD,100); ctext(d,540,1260,p["t"][1],CREAM,70)
     elif kind=="final":
         ctext(d,540,330,"КОСМИЧЕСКИЕ",GOLD,96); ctext(d,540,520,"АРХИВЫ",CREAM,170)
         d.rounded_rectangle((170,790,910,915),50,fill=RED); ctext(d,540,825,"ПОДПИСАТЬСЯ",CREAM,56)

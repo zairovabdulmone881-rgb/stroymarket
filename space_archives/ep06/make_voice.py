@@ -1,4 +1,6 @@
-import asyncio, os, time, certifi
+import asyncio, os, time, certifi, subprocess
+def valid(f):
+    return os.path.exists(f) and subprocess.run(["ffprobe","-v","error","-i",f,"-f","null","-"],capture_output=True).returncode==0 and subprocess.run(["ffmpeg","-v","error","-i",f,"-f","null","-"],capture_output=True).stderr==b""
 certifi.where = lambda *a, **k: "/root/.ccr/ca-bundle.crt"
 import edge_tts
 from script_ep import INTRO_LINE, LINES
@@ -13,6 +15,6 @@ async def one(i, t):
     raise SystemExit(f"fail {i}")
 async def main():
     for i, t in enumerate(texts):
-        if not os.path.exists(f"voice/line_{i:02d}.mp3"): await one(i, t)
+        if not valid(f"voice/line_{i:02d}.mp3"): await one(i, t)
         print("ok", i)
 asyncio.run(main())
