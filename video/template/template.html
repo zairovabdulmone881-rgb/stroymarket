@@ -1,0 +1,233 @@
+<title>{{NAME}}</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Montserrat:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,700;1,500&display=swap">
+<style>
+/* Layout: one 16:9 stage (1920×1080, scaled to width) — scene left, text block right; controls and storyboard below. Single dark look, taken from the user's template. */
+:root{
+  color-scheme:dark;
+  --bg:#0F0E0C; --block:#1A1816; --gold:#D4B58E; --sand:#E8CBA5; --white:#FFFFFF; --grey:#9E9E9E;
+  --line:rgba(212,181,142,.28); --ink:#070605; --red:#8E2F2B;
+  --display:"Playfair Display","Amiri",Georgia,"Times New Roman",serif;
+  --text:"Montserrat","Amiri","Segoe UI",Roboto,Arial,sans-serif;
+  --arabic:"Amiri","Traditional Arabic","Geeza Pro",serif;
+}
+html,body{background:var(--bg)}
+body{color:var(--white);font-family:var(--text);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
+.page{max-width:1280px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+.eyebrow{font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--gold);font-weight:600}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(26px,5vw,44px);margin:6px 0 0;text-wrap:balance}
+.pills{display:flex;flex-wrap:wrap;gap:8px}
+.pills span{border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-size:12px;color:var(--sand)}
+
+/* ---------- stage ---------- */
+.wrap{position:relative;width:100%;max-width:100%;aspect-ratio:16/9;overflow:hidden;border-radius:10px;background:var(--bg);border:1px solid rgba(212,181,142,.18)}
+.wrap:fullscreen{border:0;border-radius:0;display:flex;align-items:center;justify-content:center;aspect-ratio:auto}
+.stage{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0;
+  background:radial-gradient(900px 420px at 50% -6%,#2a221b 0,transparent 70%),linear-gradient(#141210,#0F0E0C 40%,#0c0b09)}
+.hd{position:absolute;left:56px;right:56px;top:48px;display:flex;justify-content:space-between;align-items:baseline}
+.hd .l{display:flex;align-items:baseline;gap:26px}
+.hd .ser{font-size:20px;letter-spacing:.18em;color:var(--sand);font-weight:700;border:1.5px solid var(--line);border-radius:999px;padding:7px 18px;font-variant-numeric:tabular-nums;position:relative;top:-3px}
+.hd .sec{font-size:22px;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);font-weight:600}
+.hd .num{font-family:var(--display);font-size:34px;color:var(--gold)}
+.hd .num i{font-style:normal;color:rgba(212,181,142,.45)}
+.bar{position:absolute;left:56px;right:56px;top:104px;height:3px;background:rgba(255,255,255,.08);border-radius:2px}
+.bar b{display:block;height:100%;width:0;background:var(--gold);border-radius:2px}
+.main{position:absolute;left:56px;top:130px;width:1808px;height:800px;display:flex;gap:32px;transition:opacity .5s}
+.main.out{opacity:0}
+.scene{position:relative;width:1060px;height:800px;border-radius:30px;overflow:hidden;border:1.5px solid rgba(212,181,142,.45);background:#0a0908;flex:none}
+.scene svg{position:absolute;inset:0;width:100%;height:100%;display:block}
+.overlay{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:18px;padding:0 60px}
+.overlay .t1{font-family:var(--display);font-weight:700;font-size:92px;letter-spacing:.04em;text-transform:uppercase;line-height:1.08}
+.overlay .t2{font-family:var(--display);font-style:italic;font-size:44px;color:var(--gold)}
+.overlay .t3{font-size:22px;letter-spacing:.34em;text-transform:uppercase;color:var(--grey);font-weight:500}
+.overlay .t0{font-size:20px;letter-spacing:.34em;text-transform:uppercase;color:var(--gold);font-weight:600}
+.overlay .a1{font-family:var(--arabic);font-size:96px;color:var(--sand);direction:rtl;line-height:1.5}
+.tb{width:716px;height:800px;flex:none;background:var(--block);border-radius:30px;border:1px solid rgba(255,255,255,.06);padding:44px 48px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:center;gap:26px;overflow:hidden;animation:fin .7s .5s both}
+.tb .ar{font-family:var(--arabic);direction:rtl;text-align:right;color:var(--sand);font-size:54px;line-height:1.85}
+.tb .rule{height:1px;background:var(--line)}
+.tb .ru{font-size:33px;line-height:1.42;font-weight:500}
+.tb .src{font-size:19px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:700;line-height:1.5}
+.tb .note{font-size:21px;line-height:1.5;color:var(--grey)}
+.tb .tag{font-size:19px;letter-spacing:.32em;text-transform:uppercase;color:var(--gold);font-weight:600}
+.tb.long .ar{font-size:38px;line-height:1.8}
+.tb.long .ru{font-size:27px}
+.tb.long{gap:20px}
+.ft{position:absolute;left:0;right:0;top:958px;text-align:center}
+.ft .n{font-family:var(--display);font-weight:700;font-size:28px;letter-spacing:.34em;color:var(--gold);text-transform:uppercase}
+.ft .s{font-size:17px;letter-spacing:.12em;color:rgba(158,158,158,.75);margin-top:8px}
+
+/* ---------- scene animation ---------- */
+.lab{font-family:var(--text);font-weight:600;letter-spacing:.2em;text-transform:uppercase}
+.tw{animation:tw 3.4s var(--d,0s) infinite ease-in-out}
+.fin{animation:fin 1.2s var(--d,0s) both}
+.fall{animation:fall 1.4s var(--d,0s) both cubic-bezier(.6,0,.9,.5)}
+.rise{animation:rise 3s var(--d,0s) both cubic-bezier(.2,.7,.2,1)}
+.move{animation:move 12s linear both}
+.draw{stroke-dasharray:1;stroke-dashoffset:1;animation:draw 3s var(--d,0s) forwards ease-in-out}
+.snap{transform-box:fill-box;transform-origin:50% 100%;animation:snap .7s var(--d,0s) both ease-in}
+.pulse{transform-box:fill-box;transform-origin:center;animation:pulse 3s var(--d,0s) infinite ease-in-out}
+.shim{animation:shim 4s infinite ease-in-out}
+@keyframes tw{50%{opacity:.15}}
+@keyframes fin{from{opacity:0}to{opacity:1}}
+@keyframes fall{from{transform:rotate(0)}to{transform:rotate(84deg);opacity:.35}}
+@keyframes rise{from{transform:translateY(var(--y,260px));opacity:.2}to{transform:none;opacity:1}}
+@keyframes move{from{transform:translateX(-260px)}to{transform:translateX(120px)}}
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes snap{from{transform:none}to{transform:translate(26px,58px) rotate(52deg);opacity:.5}}
+@keyframes pulse{50%{transform:scale(1.12);opacity:.75}}
+@keyframes shim{50%{opacity:.72}}
+.paused .stage *{animation-play-state:paused!important}
+@media (prefers-reduced-motion:reduce){.stage *{animation-duration:.01s!important;animation-delay:0s!important}.main{transition:none}}
+
+/* ---------- controls ---------- */
+.ctl{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ctl button{font:600 14px var(--text);color:var(--bg);background:var(--gold);border:0;border-radius:999px;padding:10px 18px;cursor:pointer}
+.ctl button.ghost[aria-pressed=false]{opacity:.6}
+.ctl button.ghost{background:transparent;color:var(--sand);border:1px solid var(--line);padding:10px 14px}
+.ctl button:focus-visible,.ctl input:focus-visible,.sb button:focus-visible{outline:2px solid var(--white);outline-offset:2px}
+.ctl input[type=range]{flex:1 1 180px;min-width:0;accent-color:var(--gold)}
+.ctl .time{font-size:13px;color:var(--grey);font-variant-numeric:tabular-nums}
+.hint{font-size:13px;line-height:1.55;color:var(--grey);max-width:70ch}
+h2{font-family:var(--display);font-size:22px;font-weight:700;margin:14px 0 0}
+.sb{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:8px}
+.sb button{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:auto 1fr;gap:4px 12px;padding:12px 14px;background:var(--block);border-radius:12px;border:1px solid transparent;min-width:0}
+.sb button.on{border-color:var(--gold)}
+.sb .k{font-family:var(--display);font-size:20px;color:var(--gold);grid-row:span 2;font-variant-numeric:tabular-nums}
+.sb .t{font-size:14px;font-weight:600}
+.sb .m{font-size:12px;color:var(--grey);line-height:1.4}
+</style>
+
+<div class="page">
+  <div>
+    <div class="eyebrow" id="eyebrow"></div>
+    <h1 id="h1"></h1>
+  </div>
+  <div class="pills" id="pills"></div>
+
+  <div class="wrap paused" id="wrap">
+    <div class="stage" id="stage">
+      <div class="hd"><div class="l"><span class="ser" id="ser"></span><span class="sec" id="sec"></span></div><div class="num" id="num"></div></div>
+      <div class="bar"><b id="prog"></b></div>
+      <div class="main" id="main"></div>
+      <div class="ft"><div class="n" id="ftn"></div><div class="s" id="fts"></div></div>
+    </div>
+  </div>
+
+  <div class="ctl">
+    <button id="play" type="button">▶ Смотреть</button>
+    <button id="prev" class="ghost" type="button" aria-label="Предыдущий кадр">‹</button>
+    <button id="next" class="ghost" type="button" aria-label="Следующий кадр">›</button>
+    <input id="seek" type="range" min="0" max="1000" value="0" aria-label="Перемотка">
+    <span class="time" id="time"></span>
+    <button id="snd" class="ghost" type="button" aria-pressed="true">Звук: вкл</button>
+    <button id="fs" class="ghost" type="button">На весь экран</button>
+  </div>
+  <p class="hint">Диктор начинает через секунду после смены кадра. Смена кадров идёт с затемнением 0,5 секунды, текст появляется через полсекунды после сцены.</p>
+
+  <h2>Раскадровка</h2>
+  <div class="sb" id="sb"></div>
+</div>
+
+<script>
+/* ===== 1. Общие заготовки для сцен (поле сцены 1060×800) ===== */
+const W=1060,H=800,INK='#070605';
+function rnd(seed){let s=seed;return()=>(s=(s*16807)%2147483647)/2147483647}
+function stars(n,seed,maxY){const r=rnd(seed);let o='';for(let i=0;i<n;i++)o+=`<circle cx="${(r()*W).toFixed(0)}" cy="${(r()*maxY).toFixed(0)}" r="${(r()*1.7+.6).toFixed(1)}" fill="#fff" opacity="${(r()*.6+.2).toFixed(2)}" class="tw" style="--d:${(r()*4).toFixed(1)}s"/>`;return o}
+function sky(id,top,bot){return `<defs><linearGradient id="${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${top}"/><stop offset="1" stop-color="${bot}"/></linearGradient></defs><rect width="${W}" height="${H}" fill="url(#${id})"/>`}
+function glow(id,cx,cy,r,color,op,cls=''){return `<defs><radialGradient id="${id}"><stop offset="0" stop-color="${color}" stop-opacity="${op}"/><stop offset="1" stop-color="${color}" stop-opacity="0"/></radialGradient></defs><circle cx="${cx}" cy="${cy}" r="${r}" fill="url(#${id})" class="${cls}"/>`}
+function man(x,y,s=1,spear=true){return `<g transform="translate(${x} ${y}) scale(${s})"><circle cx="0" cy="-62" r="9" fill="${INK}"/><rect x="-9" y="-52" width="18" height="52" rx="8" fill="${INK}"/>${spear?`<line x1="16" y1="0" x2="16" y2="-96" stroke="${INK}" stroke-width="3"/><path d="M16-110l-5 15h10z" fill="${INK}"/>`:''}</g>`}
+function row(x0,x1,y,n,s=1,spear=true){let o='';for(let i=0;i<n;i++)o+=man(x0+(x1-x0)*i/(n-1),y,s,spear);return o}
+function rider(x,y,s=1){return `<g transform="translate(${x} ${y}) scale(${s})"><ellipse cx="0" cy="-40" rx="34" ry="13" fill="${INK}"/><path d="M28-46l18-22 9 6-13 23z" fill="${INK}"/><path d="M-22-32v32M-10-30v30M12-30v30M24-32v32" stroke="${INK}" stroke-width="5" fill="none"/><path d="M-34-42q-12 6-10 22" stroke="${INK}" stroke-width="4" fill="none"/><circle cx="-2" cy="-78" r="8" fill="${INK}"/><rect x="-9" y="-70" width="15" height="26" rx="6" fill="${INK}"/><line x1="10" y1="-40" x2="10" y2="-122" stroke="${INK}" stroke-width="2.5"/></g>`}
+function flag(x,y,h,color,cls='',d=0){return `<g class="${cls}" style="transform-origin:${x}px ${y}px;--d:${d}s"><line x1="${x}" y1="${y}" x2="${x}" y2="${y-h}" stroke="#0b0a08" stroke-width="6"/><path d="M${x} ${y-h}h84q-12 22 0 44h-84z" fill="${color}"/></g>`}
+function sword(x,y,len,broken,i){
+  const h=len*.46;
+  const blade=broken
+    ? `<path d="M-7 0v${-h}l6-9 8 7v${h+2}z" fill="#bdb6a8"/><g class="snap" style="--d:${(1+i*.6).toFixed(1)}s"><path d="M-7 ${-h-8}l6-9 8 7v${-(len*.4)}l-7-22-7 22z" fill="#bdb6a8"/></g>`
+    : `<path d="M-8 0v${-len+24}l8-26 8 26v${len-24}z" fill="#f3ead8"/>`;
+  return `<g transform="translate(${x} ${y})">${blade}<rect x="-24" y="0" width="48" height="8" rx="3" fill="#D4B58E"/><rect x="-5" y="8" width="10" height="36" rx="3" fill="#3a2f22"/><circle cx="0" cy="50" r="7" fill="#D4B58E"/></g>`}
+function label(x,y,t,size=20,fill='#D4B58E',anchor='middle',cls=''){return `<text x="${x}" y="${y}" font-size="${size}" fill="${fill}" text-anchor="${anchor}" class="lab ${cls}">${t}</text>`}
+function svg(inner){return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">${inner}</svg>`}
+
+/* ===== 2. Данные выпуска (подставляет build.py из episodes/NNN-имя/episode.js) ===== */
+{{EPISODE_JS}}
+
+/* ===== 3. Общие сцены серии: титул и финал ===== */
+const SERIES={name:'Сподвижники Пророка ﷺ\u200E', /* \u200E удерживает порядок слов после арабского знака */ total:100,tagline:'по достоверной Сунне'};
+const N3=String(EPISODE.num).padStart(3,'0');
+SCENES.title=()=>svg(sky('s1','#050506','#0b0a09')+stars(70,7,560)+`<ellipse cx="530" cy="640" rx="620" ry="70" fill="#E8CBA5" opacity=".18" class="shim"/><ellipse cx="530" cy="640" rx="300" ry="26" fill="#fff3dc" opacity=".35" class="shim"/><rect y="640" width="${W}" height="160" fill="#040403"/>`)+
+  `<div class="overlay"><div class="t0 fin" style="--d:.2s">${SERIES.name} · № ${EPISODE.num} из ${SERIES.total}</div><div class="t1 fin" style="--d:.6s">${EPISODE.titleHtml||EPISODE.name}</div><div class="t2 fin" style="--d:1.5s">${EPISODE.epithetFull||EPISODE.epithet||''}</div><div class="t3 fin" style="--d:2.3s">${SERIES.tagline}</div></div>`;
+SCENES.final=()=>svg(sky('s13','#040405','#17120d')+stars(80,5,760))+
+  `<div class="overlay"><div class="a1 fin" style="--d:.6s">${EPISODE.gender==='f'?'رضي الله عنها':'رضي الله عنه'}</div><div class="t2 fin" style="--d:1.8s">Да будет доволен ${EPISODE.gender==='f'?'ею':'им'} Аллах</div></div>`;
+
+/* ===== 4. Движок: таймлайн, озвучка, управление ===== */
+const DUR={{DUR}};          /* длина каждого кадра, сек: max(t, озвучка + 2,2) */
+const HAS_VOICE={{HAS_VOICE}}; /* есть ли voice/NN.mp3 рядом со страницей */
+const LEAD=1;               /* диктор вступает через секунду после смены кадра */
+const $=id=>document.getElementById(id);
+const wrap=$('wrap'),stage=$('stage'),main=$('main');
+const starts=[];let TOTAL=0;DUR.forEach(d=>{starts.push(TOTAL);TOTAL+=d});
+const fmt=s=>{s=Math.floor(s);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
+let cur=-1,elapsed=0,playing=false,last=0,swapTimer=null,soundOn=HAS_VOICE;
+const clips=HAS_VOICE?FRAMES.map((f,i)=>{const a=new Audio();a.preload='metadata';a.src='voice/'+String(i+1).padStart(2,'0')+'.mp3';return a}):[];
+function syncAudio(){ /* держит звук кадра в ногу с таймлайном */
+  const i=frameAt(elapsed),off=elapsed-starts[i]-LEAD;
+  clips.forEach((a,k)=>{
+    if(k!==i||!playing||!soundOn||off<0||(a.duration&&off>=a.duration)){if(!a.paused)a.pause();return}
+    if(a.paused){try{a.currentTime=off}catch(e){}const p=a.play();if(p&&p.catch)p.catch(()=>{})}
+    else if(Math.abs(a.currentTime-off)>.5){try{a.currentTime=off}catch(e){}}})}
+
+function frameAt(t){for(let i=FRAMES.length-1;i>=0;i--)if(t>=starts[i])return i;return 0}
+function html(f){
+  const tb=f.fact
+    ? `<div class="tb"><div class="tag">Факт</div><div class="rule"></div><div class="ru">${f.ru}</div><div class="src">${f.src}</div>${f.note?`<div class="note">${f.note}</div>`:''}</div>`
+    : `<div class="tb${f.long?' long':''}"><div class="ar" lang="ar">${f.ar}</div><div class="rule"></div><div class="ru">${f.ru}</div><div class="src">${f.src}</div>${f.note?`<div class="note">${f.note}</div>`:''}</div>`;
+  return `<div class="scene">${SCENES[f.scene]()}</div>${tb}`}
+function render(i,instant){
+  if(i===cur)return;cur=i;const f=FRAMES[i];
+  const apply=()=>{main.innerHTML=html(f);main.classList.remove('out');
+    $('sec').textContent=f.sec;$('num').innerHTML=String(i+1).padStart(2,'0')+' <i>/ '+FRAMES.length+'</i>';
+    document.querySelectorAll('#sb button').forEach((b,k)=>b.classList.toggle('on',k===i))};
+  clearTimeout(swapTimer);
+  if(instant||!main.innerHTML){apply()}else{main.classList.add('out');swapTimer=setTimeout(apply,500)}}
+function paint(){
+  $('prog').style.width=(elapsed/TOTAL*100)+'%';
+  $('seek').value=Math.round(elapsed/TOTAL*1000);
+  $('time').textContent=fmt(elapsed)+' / '+fmt(TOTAL)}
+function tick(now){
+  if(!playing)return;
+  elapsed+=(now-last)/1000;last=now;
+  if(elapsed>=TOTAL){elapsed=TOTAL;paint();setPlaying(false);return}
+  const i=frameAt(elapsed+.5>=TOTAL?elapsed:elapsed+.5); /* start fade .5s before the cut */
+  render(i,false);paint();syncAudio();requestAnimationFrame(tick)}
+function setPlaying(p){
+  playing=p;wrap.classList.toggle('paused',!p);
+  $('play').textContent=p?'❚❚ Пауза':(elapsed>=TOTAL?'↻ Сначала':'▶ Смотреть');
+  if(p){last=performance.now();requestAnimationFrame(tick)}
+  syncAudio()}
+function jump(t,instant=true){elapsed=Math.max(0,Math.min(TOTAL-.01,t));cur=-1;render(frameAt(elapsed),instant);paint();if(!playing)$('play').textContent='▶ Смотреть';syncAudio()}
+
+$('play').onclick=()=>{if(!playing&&elapsed>=TOTAL-.02)jump(0);setPlaying(!playing)};
+$('prev').onclick=()=>jump(starts[Math.max(0,frameAt(elapsed)-1)]);
+$('next').onclick=()=>jump(starts[Math.min(FRAMES.length-1,frameAt(elapsed)+1)]);
+$('seek').oninput=e=>jump(e.target.value/1000*TOTAL);
+$('fs').onclick=()=>{try{const p=document.fullscreenElement?document.exitFullscreen():wrap.requestFullscreen();if(p&&p.catch)p.catch(()=>{})}catch(e){}};
+
+function fit(){
+  const fs=document.fullscreenElement===wrap;
+  const w=fs?window.innerWidth:wrap.clientWidth,h=fs?window.innerHeight:wrap.clientWidth*9/16;
+  const k=Math.min(w/1920,h/1080);
+  stage.style.transform=`scale(${k})`;
+  stage.style.left=fs?((w-1920*k)/2)+'px':'0';stage.style.top=fs?((h-1080*k)/2)+'px':'0';
+  if(fs)stage.style.position='absolute'}
+new ResizeObserver(fit).observe(wrap);addEventListener('resize',fit);document.addEventListener('fullscreenchange',()=>setTimeout(fit,60));
+
+$('sb').innerHTML=FRAMES.map((f,i)=>`<button type="button" data-i="${i}"><span class="k">${String(i+1).padStart(2,'0')}</span><span class="t">${f.title}</span><span class="m">${fmt(starts[i])}–${fmt(starts[i]+DUR[i])} · ${f.src}</span></button>`).join('');
+$('sb').onclick=e=>{const b=e.target.closest('button');if(b)jump(starts[+b.dataset.i])};
+$('snd').hidden=!HAS_VOICE;
+$('snd').onclick=()=>{soundOn=!soundOn;$('snd').setAttribute('aria-pressed',String(soundOn));$('snd').textContent=soundOn?'Звук: вкл':'Звук: выкл';syncAudio()};
+$('eyebrow').textContent=SERIES.name+' · выпуск '+EPISODE.num+' из '+SERIES.total;
+$('h1').textContent=EPISODE.name;$('ftn').textContent=EPISODE.name;$('ser').textContent='№ '+N3;
+$('fts').textContent=[EPISODE.epithet,SERIES.name,SERIES.tagline].filter(Boolean).join(' · ');
+$('pills').innerHTML=[EPISODE.epithet,fmt(TOTAL),FRAMES.length+' кадров','1920×1080 · 16:9','только достоверные сообщения'].filter(Boolean).map(x=>'<span>'+x+'</span>').join('');
+fit();render(0,true);paint();
+</script>

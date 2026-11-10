@@ -1,14 +1,13 @@
-name: Озвучка ролика (Дмитрий)
+name: Озвучка роликов (Дмитрий)
 
+# Записывает недостающие voice/NN.mp3 для всех выпусков и кладёт их в ту же ветку.
 on:
   workflow_dispatch:
   push:
-    branches: [claude/artifact-session-pgflvd]
     paths:
-      - video/khalid/lines.json
-      - video/khalid/tts.py
-      - video/khalid/samples.py
-      - .github/workflows/khalid-voice.yml
+      - video/episodes/*/lines.json
+      - video/tools/tts.py
+      - .github/workflows/video-voice.yml
 
 permissions:
   contents: write
@@ -22,13 +21,12 @@ jobs:
         with:
           python-version: "3.12"
       - run: pip install edge-tts
-      - run: python video/khalid/tts.py
-      - run: python video/khalid/samples.py
+      - run: python video/tools/tts.py
       - name: Сохранить аудио в ветку
         if: always()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add video/khalid/voice video/khalid/samples
-          git diff --cached --quiet || git commit -m "Add voiceover audio for the Khalid video"
+          git add video/episodes
+          git diff --cached --quiet || git commit -m "Add voiceover audio"
           git push

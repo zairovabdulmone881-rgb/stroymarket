@@ -1,0 +1,273 @@
+<title>100 сподвижников</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Montserrat:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,500;0,700;1,500&display=swap">
+<style>
+/* Layout: one column — series header and progress, the frame template drawn to scale, design sheet, then the numbered list of 100. Single dark look shared with the videos. */
+:root{
+  color-scheme:dark;
+  --bg:#0F0E0C; --block:#1A1816; --gold:#D4B58E; --sand:#E8CBA5; --white:#FFFFFF; --grey:#9E9E9E;
+  --line:rgba(212,181,142,.28); --faint:rgba(255,255,255,.07);
+  --display:"Playfair Display","Amiri",Georgia,"Times New Roman",serif;
+  --text:"Montserrat","Amiri","Segoe UI",Roboto,Arial,sans-serif;
+  --arabic:"Amiri","Traditional Arabic","Geeza Pro",serif;
+}
+html,body{background:var(--bg)}
+body{color:var(--white);font-family:var(--text);font-size:15px;line-height:1.55;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 56px}
+.page{max-width:1120px;margin:0 auto;display:flex;flex-direction:column;gap:44px}
+section{display:flex;flex-direction:column;gap:16px;min-width:0}
+.eyebrow{font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--gold);font-weight:600}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(34px,7vw,64px);line-height:1.05;margin:10px 0 0;text-wrap:balance}
+h1 em{font-style:italic;font-weight:500;color:var(--gold)}
+h2{font-family:var(--display);font-size:clamp(22px,3.4vw,30px);font-weight:700;margin:0;text-wrap:balance}
+h3{font-size:12px;letter-spacing:.24em;text-transform:uppercase;color:var(--gold);font-weight:600;margin:0}
+p{margin:0;max-width:68ch;color:var(--sand)}
+p.dim{color:var(--grey);font-size:13.5px}
+.prog{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.prog .n{font-family:var(--display);font-size:30px;color:var(--gold);font-variant-numeric:tabular-nums}
+.prog .n i{font-style:normal;color:rgba(212,181,142,.45)}
+.prog .bar{flex:1 1 220px;height:3px;background:var(--faint);border-radius:2px;min-width:0}
+.prog .bar b{display:block;height:100%;background:var(--gold);border-radius:2px;min-width:6px}
+
+/* frame template, drawn to scale: all sizes in cqw of a 1920-wide stage */
+.mock{container-type:inline-size;width:100%;max-width:100%;aspect-ratio:16/9;position:relative;border-radius:10px;border:1px solid rgba(212,181,142,.18);overflow:hidden;
+  background:radial-gradient(47cqw 22cqw at 50% -6%,#2a221b 0,transparent 70%),linear-gradient(#141210,#0F0E0C 40%,#0c0b09)}
+.mock>*{position:absolute}
+.m-hd{left:2.9cqw;right:2.9cqw;top:2.5cqw;display:flex;justify-content:space-between;align-items:baseline}
+.m-hd .l{display:flex;align-items:baseline;gap:1.35cqw}
+.m-ser{font-size:1.04cqw;letter-spacing:.18em;color:var(--sand);font-weight:700;border:.08cqw solid var(--line);border-radius:99cqw;padding:.36cqw .94cqw}
+.m-sec{font-size:1.15cqw;letter-spacing:.3em;text-transform:uppercase;color:var(--gold);font-weight:600}
+.m-num{font-family:var(--display);font-size:1.77cqw;color:var(--gold)}
+.m-num i{font-style:normal;color:rgba(212,181,142,.45)}
+.m-bar{left:2.9cqw;right:2.9cqw;top:5.42cqw;height:.16cqw;background:rgba(255,255,255,.08)}
+.m-bar b{display:block;width:44%;height:100%;background:var(--gold)}
+.m-scene{left:2.9cqw;top:6.77cqw;width:55.2cqw;height:41.67cqw;border-radius:1.56cqw;border:.08cqw solid rgba(212,181,142,.45);background:radial-gradient(26cqw 20cqw at 50% 70%,rgba(232,203,165,.2),transparent 70%),linear-gradient(#0b0b10,#3a2a1c);display:flex;align-items:center;justify-content:center}
+.m-tb{left:59.8cqw;top:6.77cqw;width:37.3cqw;height:41.67cqw;border-radius:1.56cqw;background:var(--block);border:.05cqw solid rgba(255,255,255,.06);padding:2.3cqw 2.5cqw;box-sizing:border-box;display:flex;flex-direction:column;justify-content:center;gap:1.35cqw}
+.m-ar{font-family:var(--arabic);direction:rtl;text-align:right;color:var(--sand);font-size:2.8cqw;line-height:1.85}
+.m-rule{height:.05cqw;min-height:1px;background:var(--line)}
+.m-ru{font-size:1.72cqw;line-height:1.42;font-weight:500}
+.m-src{font-size:.99cqw;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:700}
+.m-note{font-size:1.09cqw;line-height:1.5;color:var(--grey)}
+.m-ft{left:0;right:0;top:49.9cqw;text-align:center}
+.m-ft .n{font-family:var(--display);font-weight:700;font-size:1.46cqw;letter-spacing:.34em;color:var(--gold);text-transform:uppercase}
+.m-ft .s{font-size:.89cqw;letter-spacing:.12em;color:rgba(158,158,158,.75);margin-top:.4cqw}
+.zone{font-size:max(1.05cqw,9px);letter-spacing:.2em;text-transform:uppercase;color:rgba(232,203,165,.6);font-weight:600;text-align:center;padding:0 2cqw}
+.legend{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px 28px;margin:0;padding:0;list-style:none}
+.legend li{min-width:0;font-size:14px;color:var(--sand)}
+.legend b{display:block;color:var(--white);font-weight:600}
+
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:28px 40px}
+.cols>div{display:flex;flex-direction:column;gap:14px;min-width:0}
+.sw{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px;margin:0;padding:0;list-style:none}
+.sw li{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--sand);min-width:0}
+.sw i{flex:none;width:34px;height:34px;border-radius:8px;border:1px solid var(--line)}
+.sw span{min-width:0}.sw code{display:block;color:var(--grey);font:500 11.5px ui-monospace,SFMono-Regular,Menlo,monospace}
+.type{display:flex;flex-direction:column;gap:12px}
+.type .d{font-family:var(--display);font-weight:700;font-size:30px;line-height:1.1}
+.type .t{font-size:16px;font-weight:500}
+.type .a{font-family:var(--arabic);font-size:30px;color:var(--sand);direction:rtl;text-align:right;line-height:1.6}
+.type small{display:block;font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--grey);font-weight:600}
+ol.steps,ul.rules{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px;color:var(--sand);max-width:68ch}
+ol.steps li::marker{color:var(--gold);font-weight:700}ul.rules li::marker{color:var(--gold)}
+code.p{font:500 12.5px ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--gold);overflow-wrap:anywhere}
+
+.list{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:0 28px;margin:0;padding:0;list-style:none}
+.list li{min-width:0;border-bottom:1px solid var(--faint)}
+.list li,.list li a{display:flex;align-items:baseline;gap:14px}
+.list li:not(.done){padding:9px 0}
+.list li a{padding:9px 0;color:inherit;text-decoration:none;flex:1;min-width:0}
+.list li a:focus-visible{outline:2px solid var(--white);outline-offset:2px}
+.list .k{font-family:var(--display);font-size:17px;color:rgba(212,181,142,.55);font-variant-numeric:tabular-nums;flex:none;width:36px}
+.list .nm{min-width:0;font-size:14.5px;color:var(--sand)}
+.list .done .k{color:var(--gold)}.list .done .nm{color:var(--white);font-weight:600}
+.list .done a:hover .nm{text-decoration:underline;text-underline-offset:3px}
+.chip{margin-left:auto;flex:none;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;color:var(--bg);background:var(--gold);border-radius:999px;padding:3px 9px}
+</style>
+
+<div class="page">
+  <section>
+    <div>
+      <div class="eyebrow">Серия роликов · 16:9 · по достоверной Сунне</div>
+      <h1>100 сподвижников <em>Пророка ﷺ</em></h1>
+    </div>
+    <p>Сто жизнеописаний, по одному ролику на каждого. У всех выпусков один шаблон, одно оформление и один диктор, меняются только сцены и тексты.</p>
+    <div class="prog"><span class="n">1 <i>/ 100</i></span><span class="bar"><b style="width:1%"></b></span></div>
+  </section>
+
+  <section>
+    <h2>Шаблон кадра</h2>
+    <div class="mock" role="img" aria-label="Схема кадра 1920 на 1080: сверху номер выпуска, раздел и счётчик кадров, слева сцена, справа текст, внизу имя сподвижника">
+      <div class="m-hd"><div class="l"><span class="m-ser">№ 044</span><span class="m-sec">Битва при Му’те</span></div><span class="m-num">05 <i>/ 13</i></span></div>
+      <div class="m-bar"><b></b></div>
+      <div class="m-scene"><span class="zone">Сцена · рисованная анимация</span></div>
+      <div class="m-tb">
+        <div class="m-ar" lang="ar">حتى أخذ الراية سيف من سيوف الله، حتى فتح الله عليهم</div>
+        <div class="m-rule"></div>
+        <div class="m-ru">«…пока знамя не взял меч из мечей Аллаха, и Аллах даровал им победу».</div>
+        <div class="m-src">Сахих аль-Бухари, 4262 · от Анаса</div>
+        <div class="m-note">Примечание: обстоятельства, дата, пояснение.</div>
+      </div>
+      <div class="m-ft"><div class="n">Халид ибн аль-Валид</div><div class="s">Сайфуллах · Сподвижники Пророка ﷺ · по достоверной Сунне</div></div>
+    </div>
+    <ul class="legend">
+      <li><b>Шапка</b>Номер выпуска в серии, раздел биографии, счётчик кадров и линия прогресса.</li>
+      <li><b>Сцена, слева</b>Силуэты, карты и символы. Лица и фигуры Пророка ﷺ и сподвижников не изображаются.</li>
+      <li><b>Текст, справа</b>Арабский текст, перевод, источник с номером хадиса, короткое примечание.</li>
+      <li><b>Подвал</b>Имя сподвижника, прозвище и название серии — на каждом кадре.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Оформление</h2>
+    <div class="cols">
+      <div>
+        <h3>Цвета</h3>
+        <ul class="sw">
+          <li><i style="background:#0F0E0C"></i><span>Фон<code>#0F0E0C</code></span></li>
+          <li><i style="background:#1A1816"></i><span>Блок текста<code>#1A1816</code></span></li>
+          <li><i style="background:#D4B58E"></i><span>Золото<code>#D4B58E</code></span></li>
+          <li><i style="background:#E8CBA5"></i><span>Песок<code>#E8CBA5</code></span></li>
+          <li><i style="background:#FFFFFF"></i><span>Перевод<code>#FFFFFF</code></span></li>
+          <li><i style="background:#9E9E9E"></i><span>Примечания<code>#9E9E9E</code></span></li>
+        </ul>
+      </div>
+      <div class="type">
+        <h3>Шрифты</h3>
+        <div><small>Playfair Display · имена и заголовки</small><div class="d">Меч из мечей Аллаха</div></div>
+        <div><small>Montserrat · перевод и подписи</small><div class="t">«Не ругайте никого из моих сподвижников!»</div></div>
+        <div><small>Amiri · арабский текст</small><div class="a" lang="ar">رضي الله عنهم</div></div>
+      </div>
+      <div>
+        <h3>Правила серии</h3>
+        <ul class="rules">
+          <li>Только достоверные сообщения, у каждого кадра указан источник.</li>
+          <li>12–14 кадров: титул, жизнь по порядку, достоинства, кончина, финал.</li>
+          <li>Два вида кадра: цитата с арабским текстом и «Факт» без него.</li>
+          <li>Формат 1920×1080, 30 кадров в секунду, 3–4 минуты.</li>
+          <li>Диктор — голос Дмитрий, вступает через секунду после смены кадра.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Как делается выпуск</h2>
+    <ol class="steps">
+      <li>Выбираем номер из списка ниже и собираем достоверные сообщения о сподвижнике.</li>
+      <li>Пишем файл выпуска: имя, прозвище, сцены и кадры с текстом диктора. <code class="p">video/episodes/NNN-имя/episode.js</code></li>
+      <li>GitHub записывает озвучку каждого кадра и кладёт её в папку выпуска.</li>
+      <li>Собираем страницу выпуска, снимаем кадры и сводим со звуком в mp4.</li>
+      <li>Отмечаем выпуск готовым в списке серии. <code class="p">video/series.json</code></li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>Список выпусков</h2>
+    <p class="dim">Нумерация — порядок выпусков серии, а не степень достоинства. Номера 1–10 — десять обрадованных Раем, в порядке их перечисления в хадисе.</p>
+    <h3>1–10 · Десять обрадованных Раем</h3>
+    <ol class="list">
+<li><span class="k">001</span><span class="nm">Абу Бакр ас-Сиддик</span></li>
+<li><span class="k">002</span><span class="nm">Умар ибн аль-Хаттаб</span></li>
+<li><span class="k">003</span><span class="nm">Усман ибн Аффан</span></li>
+<li><span class="k">004</span><span class="nm">Али ибн Абу Талиб</span></li>
+<li><span class="k">005</span><span class="nm">Тальха ибн Убайдуллах</span></li>
+<li><span class="k">006</span><span class="nm">Аз-Зубайр ибн аль-Аввам</span></li>
+<li><span class="k">007</span><span class="nm">Абдуррахман ибн Ауф</span></li>
+<li><span class="k">008</span><span class="nm">Са‘д ибн Абу Ваккас</span></li>
+<li><span class="k">009</span><span class="nm">Са‘ид ибн Зайд</span></li>
+<li><span class="k">010</span><span class="nm">Абу Убайда ибн аль-Джаррах</span></li>
+    </ol>
+    <h3>11–100</h3>
+    <ol class="list">
+<li><span class="k">011</span><span class="nm">Хамза ибн Абд аль-Мутталиб</span></li>
+<li><span class="k">012</span><span class="nm">Джа‘фар ибн Абу Талиб</span></li>
+<li><span class="k">013</span><span class="nm">Зайд ибн Хариса</span></li>
+<li><span class="k">014</span><span class="nm">Мус‘аб ибн Умайр</span></li>
+<li><span class="k">015</span><span class="nm">Билял ибн Рабах</span></li>
+<li><span class="k">016</span><span class="nm">Аммар ибн Ясир</span></li>
+<li><span class="k">017</span><span class="nm">Абдуллах ибн Мас‘уд</span></li>
+<li><span class="k">018</span><span class="nm">Сальман аль-Фариси</span></li>
+<li><span class="k">019</span><span class="nm">Абу Зарр аль-Гифари</span></li>
+<li><span class="k">020</span><span class="nm">Сухайб ар-Руми</span></li>
+<li><span class="k">021</span><span class="nm">Хаббаб ибн аль-Аратт</span></li>
+<li><span class="k">022</span><span class="nm">Аль-Микдад ибн аль-Асвад</span></li>
+<li><span class="k">023</span><span class="nm">Са‘д ибн Му‘аз</span></li>
+<li><span class="k">024</span><span class="nm">Усайд ибн Худайр</span></li>
+<li><span class="k">025</span><span class="nm">Са‘д ибн Убада</span></li>
+<li><span class="k">026</span><span class="nm">Му‘аз ибн Джабаль</span></li>
+<li><span class="k">027</span><span class="nm">Убайй ибн Ка‘б</span></li>
+<li><span class="k">028</span><span class="nm">Зайд ибн Сабит</span></li>
+<li><span class="k">029</span><span class="nm">Абу ад-Дарда</span></li>
+<li><span class="k">030</span><span class="nm">Убада ибн ас-Самит</span></li>
+<li><span class="k">031</span><span class="nm">Абу Айюб аль-Ансари</span></li>
+<li><span class="k">032</span><span class="nm">Абу Тальха аль-Ансари</span></li>
+<li><span class="k">033</span><span class="nm">Анас ибн Малик</span></li>
+<li><span class="k">034</span><span class="nm">Джабир ибн Абдуллах</span></li>
+<li><span class="k">035</span><span class="nm">Абу Са‘ид аль-Худри</span></li>
+<li><span class="k">036</span><span class="nm">Абу Хурайра</span></li>
+<li><span class="k">037</span><span class="nm">Абдуллах ибн Умар</span></li>
+<li><span class="k">038</span><span class="nm">Абдуллах ибн Аббас</span></li>
+<li><span class="k">039</span><span class="nm">Абдуллах ибн Амр ибн аль-Ас</span></li>
+<li><span class="k">040</span><span class="nm">Абдуллах ибн аз-Зубайр</span></li>
+<li><span class="k">041</span><span class="nm">Аль-Хасан ибн Али</span></li>
+<li><span class="k">042</span><span class="nm">Аль-Хусейн ибн Али</span></li>
+<li><span class="k">043</span><span class="nm">Усама ибн Зайд</span></li>
+<li class="done"><a href="https://claude.ai/artifact/AtR9Ft4Yndzsthhn7bGoqK" target="_blank" rel="noopener"><span class="k">044</span><span class="nm">Халид ибн аль-Валид</span><span class="chip">готов</span></a></li>
+<li><span class="k">045</span><span class="nm">Амр ибн аль-Ас</span></li>
+<li><span class="k">046</span><span class="nm">Абу Муса аль-Аш‘ари</span></li>
+<li><span class="k">047</span><span class="nm">Хузайфа ибн аль-Яман</span></li>
+<li><span class="k">048</span><span class="nm">Абу Дуджана</span></li>
+<li><span class="k">049</span><span class="nm">Абдуллах ибн Раваха</span></li>
+<li><span class="k">050</span><span class="nm">Хассан ибн Сабит</span></li>
+<li><span class="k">051</span><span class="nm">Ка‘б ибн Малик</span></li>
+<li><span class="k">052</span><span class="nm">Аль-Бара ибн Малик</span></li>
+<li><span class="k">053</span><span class="nm">Аль-Бара ибн Азиб</span></li>
+<li><span class="k">054</span><span class="nm">Анас ибн ан-Надр</span></li>
+<li><span class="k">055</span><span class="nm">Абдуллах ибн Джахш</span></li>
+<li><span class="k">056</span><span class="nm">Абдуллах ибн Умм Мактум</span></li>
+<li><span class="k">057</span><span class="nm">Усман ибн Маз‘ун</span></li>
+<li><span class="k">058</span><span class="nm">Аль-Аркам ибн Абу аль-Аркам</span></li>
+<li><span class="k">059</span><span class="nm">Абу Саляма</span></li>
+<li><span class="k">060</span><span class="nm">Абдуллах ибн Хузафа ас-Сахми</span></li>
+<li><span class="k">061</span><span class="nm">Хубайб ибн Ади</span></li>
+<li><span class="k">062</span><span class="nm">Асым ибн Сабит</span></li>
+<li><span class="k">063</span><span class="nm">Ханзаля ибн Абу Амир</span></li>
+<li><span class="k">064</span><span class="nm">Абдуллах ибн Амр ибн Харам</span></li>
+<li><span class="k">065</span><span class="nm">Амр ибн аль-Джамух</span></li>
+<li><span class="k">066</span><span class="nm">Аль-Аббас ибн Абд аль-Мутталиб</span></li>
+<li><span class="k">067</span><span class="nm">Абу Суфьян ибн аль-Харис</span></li>
+<li><span class="k">068</span><span class="nm">Икрима ибн Абу Джахль</span></li>
+<li><span class="k">069</span><span class="nm">Сухайль ибн Амр</span></li>
+<li><span class="k">070</span><span class="nm">Абу Суфьян ибн Харб</span></li>
+<li><span class="k">071</span><span class="nm">Му‘авия ибн Абу Суфьян</span></li>
+<li><span class="k">072</span><span class="nm">Аль-Мугира ибн Шу‘ба</span></li>
+<li><span class="k">073</span><span class="nm">Шурахбиль ибн Хасана</span></li>
+<li><span class="k">074</span><span class="nm">Язид ибн Абу Суфьян</span></li>
+<li><span class="k">075</span><span class="nm">Ан-Ну‘ман ибн Мукаррин</span></li>
+<li><span class="k">076</span><span class="nm">Джарир ибн Абдуллах аль-Баджали</span></li>
+<li><span class="k">077</span><span class="nm">Ади ибн Хатим</span></li>
+<li><span class="k">078</span><span class="nm">Ат-Туфайль ибн Амр ад-Дауси</span></li>
+<li><span class="k">079</span><span class="nm">Сумама ибн Усаль</span></li>
+<li><span class="k">080</span><span class="nm">Тамим ад-Дари</span></li>
+<li><span class="k">081</span><span class="nm">Абдуллах ибн Салям</span></li>
+<li><span class="k">082</span><span class="nm">Салим, вольноотпущенник Абу Хузайфы</span></li>
+<li><span class="k">083</span><span class="nm">Абу Хузайфа ибн Утба</span></li>
+<li><span class="k">084</span><span class="nm">Имран ибн Хусайн</span></li>
+<li><span class="k">085</span><span class="nm">Саляма ибн аль-Аква‘</span></li>
+<li><span class="k">086</span><span class="nm">Абу Катада аль-Ансари</span></li>
+<li><span class="k">087</span><span class="nm">Сахль ибн Са‘д</span></li>
+<li><span class="k">088</span><span class="nm">Зайд ибн аль-Хаттаб</span></li>
+<li><span class="k">089</span><span class="nm">Хадиджа бинт Хувайлид</span></li>
+<li><span class="k">090</span><span class="nm">Аиша бинт Абу Бакр</span></li>
+<li><span class="k">091</span><span class="nm">Фатима бинт Мухаммад</span></li>
+<li><span class="k">092</span><span class="nm">Хафса бинт Умар</span></li>
+<li><span class="k">093</span><span class="nm">Умм Саляма</span></li>
+<li><span class="k">094</span><span class="nm">Асма бинт Абу Бакр</span></li>
+<li><span class="k">095</span><span class="nm">Сумайя бинт Хайят</span></li>
+<li><span class="k">096</span><span class="nm">Умм Сулайм</span></li>
+<li><span class="k">097</span><span class="nm">Нусайба бинт Ка‘б</span></li>
+<li><span class="k">098</span><span class="nm">Сафийя бинт Абд аль-Мутталиб</span></li>
+<li><span class="k">099</span><span class="nm">Умм Айман</span></li>
+<li><span class="k">100</span><span class="nm">Аль-Ханса</span></li>
+    </ol>
+  </section>
+</div>
