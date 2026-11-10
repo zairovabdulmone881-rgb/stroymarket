@@ -7,6 +7,7 @@ on:
     paths:
       - video/khalid/lines.json
       - video/khalid/tts.py
+      - video/khalid/samples.py
       - .github/workflows/khalid-voice.yml
 
 permissions:
@@ -22,11 +23,12 @@ jobs:
           python-version: "3.12"
       - run: pip install edge-tts
       - run: python video/khalid/tts.py
+      - run: python video/khalid/samples.py
       - name: Сохранить аудио в ветку
         if: always()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add video/khalid/voice
-          git diff --cached --quiet || git commit -m "Add Dmitry voiceover audio for the Khalid video"
+          git add video/khalid/voice video/khalid/samples
+          git diff --cached --quiet || git commit -m "Add voiceover audio for the Khalid video"
           git push
