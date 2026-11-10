@@ -1,0 +1,31 @@
+name: Озвучка ролика (Дмитрий)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [claude/artifact-session-pgflvd]
+    paths:
+      - video/khalid/lines.json
+      - video/khalid/tts.py
+      - .github/workflows/khalid-voice.yml
+
+permissions:
+  contents: write
+
+jobs:
+  voice:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install edge-tts
+      - run: python video/khalid/tts.py
+      - name: Сохранить аудио в ветку
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add video/khalid/voice
+          git diff --cached --quiet || git commit -m "Add Dmitry voiceover audio for the Khalid video"
+          git push
