@@ -8,7 +8,7 @@ VOICE = "ru-RU-DmitryNeural"
 
 async def say(text):
     """Один кусок текста -> mp3-байты; сервис иногда молчит, поэтому повторяем."""
-    for attempt in range(6):
+    for attempt in range(12):
         try:
             data = b""
             async for chunk in edge_tts.Communicate(text, VOICE).stream():
@@ -18,7 +18,7 @@ async def say(text):
                 return data
         except Exception as e:
             print(f"   попытка {attempt + 1}: {e}", flush=True)
-        await asyncio.sleep(4 * (attempt + 1))
+        await asyncio.sleep(min(4 * (attempt + 1), 15))
     return None
 
 
@@ -28,6 +28,8 @@ async def main():
     out.mkdir(exist_ok=True)
     failed = []
     for i, text in enumerate(lines, 1):
+        if (out / f"{i:02d}.mp3").exists():  # уже озвучен прошлым запуском
+            continue
         data = await say(text)
         if data is None:  # целиком не вышло — читаем по предложениям
             data = b""
