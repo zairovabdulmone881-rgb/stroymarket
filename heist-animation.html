@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ограбление века</title>
+<!--
+  Вертикальная анимация 9:16 (1080×1920), 12 секунд, 30 fps.
+  Библиотек не требуется: чистый HTML/CSS/JS + SVG + Canvas.
+  Экспорт в MP4: см. export/README.md  (node export/render.js heist-animation.html 12 heist.mp4 audio/heist.wav)
+-->
+<style>
+  :root { --black:#0a0a0a; --navy:#111a2b; --gold:#ffd700; --gold-d:#b8960b; --cream:#f3e6c4; }
+  * { box-sizing:border-box; margin:0; }
+  html, body { height:100%; background:#000; overflow:hidden; font-family:"Segoe UI",system-ui,"Helvetica Neue",Arial,sans-serif; }
+  body { display:grid; place-items:center; }
+  #stage { position:relative; width:1080px; height:1920px; overflow:hidden; transform-origin:center; background:var(--black); color:var(--cream); }
+  #world { position:absolute; inset:0; }
+  .abs { position:absolute; }
+  .layer { position:absolute; inset:0; opacity:0; }
+
+  /* ---------- Текст ---------- */
+  .txt { position:absolute; left:70px; right:70px; text-align:center; opacity:0; }
+  #c1 { top:1175px; font-size:82px; line-height:1.15; font-weight:900; color:var(--gold); letter-spacing:2px;
+        text-shadow:0 0 32px rgba(255,215,0,.55), 0 4px 0 rgba(0,0,0,.6); }
+  #s1 { top:1440px; font-size:50px; font-weight:600; color:#d9c78a; letter-spacing:3px; }
+  #c2 { top:150px; font-family:Georgia,"Times New Roman","DejaVu Serif",serif; font-size:90px; line-height:1.12; font-weight:700; color:#fff;
+        text-shadow:0 6px 30px rgba(0,0,0,.8); }
+  #s2 { top:410px; font-family:Georgia,"Times New Roman","DejaVu Serif",serif; font-style:italic; font-size:62px; line-height:1.25; color:#e8e8e8; }
+  #q  { top:690px; font-size:70px; line-height:1.22; font-weight:800; color:var(--cream); }
+  #cta{ top:1070px; font-size:104px; font-weight:900; color:var(--gold); letter-spacing:2px; text-shadow:0 0 40px rgba(255,215,0,.6); }
+  #note{ top:1710px; font-size:42px; line-height:1.3; font-weight:600; color:#a89868; }
+  .cur { display:inline-block; width:.07em; height:.9em; background:var(--gold); margin-left:6px; vertical-align:-.1em; animation:bl .6s steps(1) infinite; }
+  @keyframes bl { 50% { opacity:0; } }
+
+  /* ---------- Сцена 2: касса ---------- */
+  #bg2 { position:absolute; inset:0; background:linear-gradient(180deg,#111a2b 0%,#0e1523 55%,#0a0a0a 100%); }
+  #glass { left:540px; top:1000px; width:500px; height:455px; border:3px solid rgba(255,215,0,.35); border-bottom:0; border-radius:18px 18px 0 0;
+           background:linear-gradient(115deg,rgba(255,255,255,.06) 0%,rgba(255,255,255,0) 35%,rgba(255,215,0,.05) 100%); }
+  #counter { left:0; top:1450px; width:1080px; height:470px; background:linear-gradient(180deg,#0e1523,#05080f); border-top:8px solid var(--gold); box-shadow:0 -10px 60px rgba(255,215,0,.22); }
+  #plate { left:0; right:0; top:1520px; text-align:center; font-size:46px; font-weight:800; letter-spacing:18px; color:var(--gold-d); }
+
+  #phone { left:520px; top:700px; width:510px; opacity:0; background:#070b13; border:4px solid var(--gold); border-radius:44px; padding:28px 30px 34px;
+           box-shadow:0 0 60px rgba(255,215,0,.35); }
+  #phone .hd { display:flex; justify-content:space-between; font-size:26px; letter-spacing:4px; color:#8a7d52; font-weight:700; margin-bottom:18px; }
+  #phone .ttl { font-size:40px; color:#cfc7a8; font-weight:600; }
+  #phone .nm { font-size:58px; line-height:1.05; color:#fff; font-weight:800; margin:6px 0 16px; }
+  #phone .sum { font-size:64px; line-height:1.05; white-space:nowrap; color:var(--gold); font-weight:900; text-shadow:0 0 22px rgba(255,215,0,.5); }
+  #phone .ok { margin-top:14px; font-size:30px; color:#7bd88f; font-weight:700; letter-spacing:3px; }
+
+  /* ---------- Сцена 3 ---------- */
+  #s3bg { position:absolute; inset:0; background:radial-gradient(ellipse at 50% 28%,#111a2b 0%,#0a0a0a 65%); }
+  #logo { left:400px; top:330px; width:280px; height:280px; }
+
+  /* ---------- Эффекты ---------- */
+  #flash { inset:0; z-index:15; pointer-events:none; opacity:0; background:radial-gradient(ellipse at 50% 55%,rgba(255,235,140,1),rgba(255,215,0,.55) 40%,transparent 75%); mix-blend-mode:screen; }
+  #bars { inset:0; z-index:18; pointer-events:none; }
+  #bars div { position:absolute; left:0; right:0; display:none; }
+  #fade { inset:0; background:#000; opacity:1; z-index:30; pointer-events:none; }
+  #vig  { inset:0; z-index:20; pointer-events:none; background:radial-gradient(ellipse at center,transparent 40%,rgba(0,0,0,.72) 100%); }
+  #grain{ inset:-50%; z-index:21; pointer-events:none; opacity:.09; mix-blend-mode:overlay;
+          background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence baseFrequency='.9' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); }
+  canvas#dust { position:absolute; inset:0; z-index:5; pointer-events:none; }
+  #ui { position:fixed; bottom:12px; left:50%; transform:translateX(-50%); display:flex; gap:10px; z-index:50; align-items:center; }
+  #ui button { background:#2b2b2b; color:#e8e4dc; border:1px solid #444; border-radius:10px; padding:9px 16px; font-size:15px; cursor:pointer; }
+  #time { color:#8d8a84; font:14px/1 monospace; min-width:84px; }
+</style>
+</head>
+<body>
+<div id="stage">
+ <div id="world">
+
+  <!-- СЦЕНА 1: СНАРУЖИ -->
+  <div class="layer" id="L1">
+    <svg id="corr" class="abs" style="inset:0" width="1080" height="1920" viewBox="0 0 1080 1920"></svg>
+    <div id="fig1" class="abs" style="left:309px;top:470px;width:462px;height:640px;"></div>
+  </div>
+
+  <!-- СЦЕНА 2: ВНУТРИ -->
+  <div class="layer" id="L2">
+    <div id="bg2"></div>
+    <div id="glass" class="abs"></div>
+    <div id="teller" class="abs" style="left:650px;top:1050px;width:300px;height:400px;"></div>
+    <div id="fig2" class="abs" style="left:100px;top:950px;width:360px;height:500px;"></div>
+    <svg id="env" class="abs" style="left:0;top:0;opacity:0" width="150" height="104" viewBox="0 0 150 104">
+      <rect x="4" y="4" width="142" height="96" rx="8" fill="#f3e6c4" stroke="#b8960b" stroke-width="4"/>
+      <path d="M6 8l69 50 69-50" fill="none" stroke="#b8960b" stroke-width="4"/>
+      <circle cx="75" cy="58" r="9" fill="#ffd700"/></svg>
+    <div id="counter" class="abs"></div><div id="plate" class="abs">КАССА</div>
+    <div id="phone" class="abs">
+      <div class="hd"><span>БАНК</span><span>12:07</span></div>
+      <div class="ttl">Перевод:</div><div class="nm">Детский дом</div>
+      <div class="ttl" style="margin-top:6px">Сумма:</div><div class="sum">5 000 000 ₽</div><div class="ok">✓ ВЫПОЛНЕНО</div>
+    </div>
+  </div>
+
+  <!-- СЦЕНА 3: ФИНАЛ -->
+  <div class="layer" id="L3">
+    <div id="s3bg"></div>
+    <svg id="logo" class="abs" viewBox="0 0 200 200"><defs><linearGradient id="mg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff0a0"/><stop offset="1" stop-color="#ffd700"/></linearGradient></defs>
+      <path d="M100 18C58 18 30 48 30 92c0 38 20 72 52 86 6 3 12 3 18 3s12 0 18-3c32-14 52-48 52-86 0-44-28-74-70-74z" fill="url(#mg)"/>
+      <path d="M52 86q18-18 34 0q-17 12-34 0zM114 86q18-18 34 0q-17 12-34 0z" fill="#0a0a0a"/>
+      <path d="M70 134q30 22 60 0" stroke="#0a0a0a" stroke-width="8" fill="none" stroke-linecap="round"/></svg>
+  </div>
+
+  <canvas id="dust" width="1080" height="1920"></canvas>
+
+  <div id="c1" class="txt"></div><div id="s1" class="txt"></div>
+  <div id="c2" class="txt"></div><div id="s2" class="txt"></div>
+  <div id="q" class="txt"></div><div id="cta" class="txt"></div><div id="note" class="txt"></div>
+ </div>
+ <div id="flash" class="abs"></div>
+ <div id="bars" class="abs"></div>
+ <div id="fade" class="abs"></div><div id="vig" class="abs"></div><div id="grain" class="abs"></div>
+</div>
+<div id="ui"><button id="replay">↻ Заново</button><button id="pause">❚❚ Пауза</button><span id="time"></span></div>
+
+<script>
+/* ================== РАСКАДРОВКА (все тайминги в одном месте) ================== */
+const T = {
+  duration: 12,
+  s1:   { in:[0, 1.4], cut:3.15 },              // сцена 1: плавное проявление, жёсткий обрыв
+  glitch:[3.0, 3.3],                            // резкий глитч (без easing)
+  s2:   { from:3.15, out:8.0 },
+  flash: 1.0,                                   // золотая вспышка при появлении текста
+  c1:   { text:'СНАРУЖИ:\nОграбление века', at:1.0, cps:20, hideAt:3.0 },
+  s1t:  { text:'5 минут до приезда полиции', at:2.2, cps:34 },
+  c2:   { text:'ВНУТРИ:\nЭто не ограбление', fade:[3.45, 4.25] },
+  s2t:  { text:'Он вернул деньги, которые банк украл у сирот', fade:[4.9, 5.8] },
+  env:  [4.0, 5.1],                             // конверт плывёт к кассиру
+  phone:[5.35, 5.95],
+  s3:   { from:8.7 },
+  logo: [8.9, 9.8],
+  q:    { text:'Он преступник или единственный честный человек в этом городе?', at:9.0, cps:34 },
+  cta:  { text:'Пиши в комментах 👇', at:10.75, cps:22 },
+  note: { text:'Продолжение — завтра.\nПодпишись, чтобы не пропустить', fade:[11.0, 11.5] },
+  cutMusic: 11.45                               // слово «комментах» — музыка обрывается
+};
+
+/* ================== ХЕЛПЕРЫ ================== */
+const $ = id => document.getElementById(id);
+const clamp = (v,a=0,b=1)=>Math.min(b,Math.max(a,v));
+const ease = x=>x*x*(3-2*x);                       // smoothstep
+const easeOut = x=>1-Math.pow(1-x,3);
+const lerp = (a,b,k)=>a+(b-a)*k;
+function mulberry(seed){ return ()=>{ seed|=0; seed=seed+0x6D2B79F5|0; let t=Math.imul(seed^seed>>>15,1|seed); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+function typed(text, start, cps, t, cursor){
+  const n = clamp(Math.floor((t-start)*cps), 0, text.length);
+  const shown = t<start ? '' : text.slice(0,n);
+  return (shown + `<span style="visibility:hidden">${text.slice(n)}</span>` + (cursor ? '<span class="cur"></span>' : '')).replace(/\n/g,'<br>');
+}
+const fadeIn = (t,[a,b]) => ease(clamp((t-a)/(b-a)));
+
+/* ================== КОРИДОР БАНКА ================== */
+(function buildCorridor(){
+  const VPx=540, VPy=860, bx0=400, bx1=680, by0=760, by1=960;
+  let s = `<defs>
+    <linearGradient id="fl" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#05070c"/><stop offset=".7" stop-color="#0e1626"/><stop offset="1" stop-color="#16233a"/></linearGradient>
+    <linearGradient id="wl" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#05070c"/><stop offset="1" stop-color="#101a2c"/></linearGradient>
+    <linearGradient id="wr" x1="1" y1="0" x2="0" y2="0"><stop offset="0" stop-color="#05070c"/><stop offset="1" stop-color="#101a2c"/></linearGradient>
+    <radialGradient id="end" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#ffd700" stop-opacity=".55"/><stop offset="1" stop-color="#ffd700" stop-opacity="0"/></radialGradient>
+    <filter id="blur"><feGaussianBlur stdDeviation="14"/></filter></defs>
+    <rect width="1080" height="1920" fill="#06080d"/>
+    <polygon points="0,0 1080,0 ${bx1},${by0} ${bx0},${by0}" fill="#080c14"/>
+    <polygon points="0,1920 1080,1920 ${bx1},${by1} ${bx0},${by1}" fill="url(#fl)"/>
+    <polygon points="0,0 ${bx0},${by0} ${bx0},${by1} 0,1920" fill="url(#wl)"/>
+    <polygon points="1080,0 ${bx1},${by0} ${bx1},${by1} 1080,1920" fill="url(#wr)"/>
+    <rect x="${bx0}" y="${by0}" width="${bx1-bx0}" height="${by1-by0}" fill="#0b1220"/>
+    <rect x="${bx0+40}" y="${by0+30}" width="${bx1-bx0-80}" height="${by1-by0-30}" fill="#050810" stroke="rgba(255,215,0,.5)" stroke-width="3"/>
+    <ellipse cx="540" cy="900" rx="170" ry="140" fill="url(#end)"/>
+    <g stroke="rgba(255,215,0,.22)" stroke-width="3" fill="none">
+      <line x1="0" y1="0" x2="${bx0}" y2="${by0}"/><line x1="1080" y1="0" x2="${bx1}" y2="${by0}"/>
+      <line x1="0" y1="1920" x2="${bx0}" y2="${by1}"/><line x1="1080" y1="1920" x2="${bx1}" y2="${by1}"/></g>`;
+  const P = (a,b,k)=>a+(b-a)*k;
+  for (let i=0;i<7;i++){                             // панели стен, лампы, отражения
+    const k = 1-Math.pow(.62,i+1)*1.1, kk = clamp(k,0,.95);
+    const xl=P(0,bx0,kk), xr=P(1080,bx1,kk), yt=P(0,by0,kk), yb=P(1920,by1,kk);
+    s += `<line x1="${xl}" y1="${yt}" x2="${xl}" y2="${yb}" stroke="rgba(255,215,0,.16)" stroke-width="${3-i*.3}"/>
+          <line x1="${xr}" y1="${yt}" x2="${xr}" y2="${yb}" stroke="rgba(255,215,0,.16)" stroke-width="${3-i*.3}"/>
+          <g class="lamp" data-i="${i}"><rect x="${540-P(150,40,kk)}" y="${yt+4}" width="${P(300,80,kk)}" height="${P(26,6,kk)}" rx="4" fill="#ffe27a"/>
+          <ellipse cx="540" cy="${P(1500,1000,kk)}" rx="${P(420,70,kk)}" ry="${P(60,10,kk)}" fill="rgba(255,215,0,.07)"/></g>`;
+  }
+  $('corr').innerHTML = `<g id="corrG" style="transform-origin:540px 860px">${s}</g>`;
+})();
+const lamps = [...document.querySelectorAll('.lamp')];
+
+/* ================== ПЕРСОНАЖ-СИЛУЭТ ================== */
+function figureSVG(){
+  return `<svg viewBox="0 0 460 640" width="100%" height="100%">
+   <defs><linearGradient id="mk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff0a0"/><stop offset="1" stop-color="#ffd700"/></linearGradient></defs>
+   <g class="glow" style="filter:drop-shadow(0 0 14px rgba(255,215,0,.55))">
+    <g class="armDown"><path d="M326 318Q388 380 396 440" stroke="#ffd700" stroke-width="42" fill="none" stroke-linecap="round"/>
+        <path d="M326 318Q388 380 396 440" stroke="#050505" stroke-width="36" fill="none" stroke-linecap="round"/></g>
+    <g class="armOut"><path d="M326 318L424 368" stroke="#ffd700" stroke-width="42" fill="none" stroke-linecap="round"/>
+        <path d="M326 318L424 368" stroke="#050505" stroke-width="36" fill="none" stroke-linecap="round"/></g>
+    <path d="M100 640V340Q100 250 230 236Q360 250 360 340V640Z" fill="#050505" stroke="#ffd700" stroke-width="4"/>
+    <path d="M196 238L230 300 264 238" fill="none" stroke="#ffd700" stroke-width="3" opacity=".6"/>
+    <ellipse cx="230" cy="162" rx="72" ry="86" fill="#050505" stroke="#ffd700" stroke-width="4"/>
+    <path d="M160 148Q230 124 300 148L294 196Q230 180 166 196Z" fill="url(#mk)"/>
+    <ellipse cx="198" cy="170" rx="17" ry="9" fill="#050505"/><ellipse cx="262" cy="170" rx="17" ry="9" fill="#050505"/>
+    <g class="bag"><path d="M352 462Q340 424 398 418Q456 424 444 462Q482 552 446 628Q396 654 346 628Q312 552 352 462Z" fill="#0c0c0c" stroke="#ffd700" stroke-width="5"/>
+      <path d="M362 440Q398 462 436 440" stroke="#ffd700" stroke-width="5" fill="none"/>
+      <text x="398" y="580" text-anchor="middle" font-size="104" font-weight="900" fill="#ffd700" font-family="Georgia,serif">$</text></g>
+   </g></svg>`;
+}
+function tellerSVG(){
+  return `<svg viewBox="0 0 300 400" width="100%" height="100%"><g style="filter:drop-shadow(0 0 10px rgba(255,215,0,.3))">
+    <path d="M30 400V250Q30 190 150 180Q270 190 270 250V400Z" fill="#060a12" stroke="rgba(255,215,0,.6)" stroke-width="4"/>
+    <circle cx="150" cy="112" r="64" fill="#060a12" stroke="rgba(255,215,0,.6)" stroke-width="4"/>
+    <circle cx="126" cy="116" r="7" fill="#ffd700"/><circle cx="174" cy="116" r="7" fill="#ffd700"/>
+    <path d="M132 148q18 10 36 0" stroke="#ffd700" stroke-width="4" fill="none" stroke-linecap="round"/></g></svg>`;
+}
+$('fig1').innerHTML = figureSVG(); $('fig2').innerHTML = figureSVG(); $('teller').innerHTML = tellerSVG();
+const f2 = $('fig2');
+f2.querySelector('.bag').style.display='none'; f2.querySelector('.armDown').style.display='none';
+$('fig1').querySelector('.armOut').style.display='none';
+
+/* ================== ЧАСТИЦЫ ================== */
+const cv=$('dust'), cx=cv.getContext('2d');
+const rnd = mulberry(1234);
+const PART = Array.from({length:90},()=>({a:rnd()*6.283, R:140+rnd()*560, ph:rnd(), sp:.18+rnd()*.34, sz:2+rnd()*4.5, sx:rnd()*1080, sw:20+rnd()*60}));
+function drawDust(t){
+  cx.clearRect(0,0,1080,1920);
+  let mode = 1;                                    // 1: искры вокруг силуэта, 2: пепел вверх, 3: вокруг логотипа
+  if (t>=T.s2.from && t<T.s3.from) mode=2; else if (t>=T.s3.from) mode=3;
+  if (t>=T.glitch[0] && t<T.s2.from) return;
+  const vis = mode===1 ? fadeIn(t,[.6,1.6]) : mode===2 ? .55 : fadeIn(t,[T.logo[0],T.logo[1]])*.85;
+  for (const p of PART){
+    const age = (t*p.sp + p.ph) % 1, a = Math.sin(Math.PI*age)*vis;
+    let x,y;
+    if (mode===2){ x = p.sx + Math.sin(t*1.3+p.ph*9)*p.sw; y = 1500 - age*1300; }
+    else { const c = mode===1 ? [540,820] : [540,470]; x = c[0]+Math.cos(p.a)*p.R*age; y = c[1]+Math.sin(p.a)*p.R*age*.9 - age*70; }
+    const tw = .6+.4*Math.sin(t*9+p.ph*20);
+    cx.globalAlpha = Math.max(0,a*tw*.95);
+    cx.fillStyle = '#ffd700'; cx.shadowColor = '#ffd700'; cx.shadowBlur = 14;
+    cx.beginPath(); cx.arc(x,y,p.sz*(mode===2?.7:1),0,6.283); cx.fill();
+  }
+  cx.globalAlpha=1; cx.shadowBlur=0;
+}
+
+/* ================== ГЛИТЧ ================== */
+const world=$('world'), bars=$('bars'); for(let i=0;i<10;i++) bars.appendChild(document.createElement('div'));
+function glitch(on, frame){
+  if(!on){ world.style.transform=''; world.style.filter=''; for(const b of bars.children) b.style.display='none'; return; }
+  const r = mulberry(frame*97+5), sx = 10+r()*26;
+  world.style.transform = `translate(${(r()-.5)*110}px,${(r()-.5)*24}px) skewX(${(r()-.5)*9}deg) scale(${1+r()*.04})`;
+  world.style.filter = `drop-shadow(${sx}px 0 0 rgba(255,215,0,.8)) drop-shadow(${-sx}px 0 0 rgba(0,170,255,.7)) contrast(${1.2+r()*.7}) brightness(${.9+r()*.9}) hue-rotate(${(r()-.5)*40}deg)`;
+  for(const b of bars.children){ const s=r()>.25; b.style.display=s?'block':'none'; if(!s) continue;
+    b.style.top=r()*1920+'px'; b.style.height=(10+r()*150)+'px';
+    b.style.background = r()>.35 ? `rgba(255,215,0,${.25+r()*.5})` : (r()>.5 ? 'rgba(255,255,255,.35)' : 'rgba(0,170,255,.3)');
+    b.style.transform=`translateX(${(r()-.5)*260}px)`; }
+}
+
+/* ================== ГЛАВНЫЙ РЕНДЕР ================== */
+const FPS = 30;
+function render(t){
+  // ---- слои сцен ----
+  const L1 = t<T.s1.cut ? fadeIn(t,T.s1.in) : 0;
+  $('L1').style.opacity = L1;
+  $('L2').style.opacity = (t>=T.s2.from && t<T.s3.from) ? 1 : 0;
+  $('L3').style.opacity = t>=T.s3.from ? 1 : 0;
+
+  // ---- сцена 1: коридор, дыхание камеры, лампы, силуэт ----
+  const push = 1 + .09*clamp(t/3);
+  $('corrG').style.transform = `scale(${push})`;
+  lamps.forEach((l,i)=>{ l.style.opacity = .75 + .25*Math.sin(t*3+i*1.7) * (i%3===0 ? Math.sin(t*23) : 1); });
+  const fa = fadeIn(t,[.5,1.5]);
+  $('fig1').style.opacity = fa;
+  $('fig1').style.transform = `translateY(${(1-easeOut(clamp((t-.4)/1.4)))*60 + Math.sin(t*1.6)*4}px) scale(${1+.03*clamp(t/3)})`;
+
+  // ---- текст сцены 1 ----
+  const c1 = T.c1, s1 = T.s1t;
+  $('c1').innerHTML = typed(c1.text, c1.at, c1.cps, t, t>=c1.at && t<c1.at+c1.text.length/c1.cps+.6);
+  $('c1').style.opacity = t<T.glitch[0] ? 1 : 0;
+  $('s1').innerHTML = typed(s1.text, s1.at, s1.cps, t, false);
+  $('s1').style.opacity = t<T.glitch[0] ? 1 : 0;
+
+  // ---- вспышка золота при появлении текста ----
+  const fl = t>=T.flash ? Math.exp(-(t-T.flash)*7)*.9 : 0;
+  $('flash').style.opacity = fl;
+
+  // ---- сцена 2 ----
+  $('c2').innerHTML = T.c2.text.replace(/\n/g,'<br>'); $('c2').style.opacity = (t>=T.s2.from && t<T.s2.out+.6) ? fadeIn(t,T.c2.fade)*(1-ease(clamp((t-T.s2.out)/.6))) : 0;
+  $('s2').innerHTML = T.s2t.text;                    $('s2').style.opacity = (t>=T.s2.from && t<T.s2.out+.6) ? fadeIn(t,T.s2t.fade)*(1-ease(clamp((t-T.s2.out)/.6))) : 0;
+
+  const ep = ease(clamp((t-T.env[0])/(T.env[1]-T.env[0])));
+  const ex = lerp(380, 690, ep), ey = 1195 - Math.sin(ep*Math.PI)*70 + ep*40;
+  const env = $('env'); env.style.transform = `translate(${ex}px,${ey}px) rotate(${(1-ep)*-10}deg)`;
+  env.style.opacity = (t>=T.env[0]-.15 && t<T.env[1]+.2) ? Math.min(1, (t-(T.env[0]-.15))/.2) * (1-ease(clamp((t-T.env[1])/.2))) : 0;
+  const nod = t>T.env[1] ? Math.sin(clamp((t-T.env[1])/.6)*Math.PI)*14 : 0;
+  $('teller').style.transform = `translateY(${nod}px)`;
+  f2.style.transform = `translateX(${Math.sin(t*1.3)*4}px) translateY(${Math.sin(t*1.8)*3}px)`;
+  const pk = easeOut(clamp((t-T.phone[0])/(T.phone[1]-T.phone[0])));
+  $('phone').style.opacity = pk;
+  $('phone').style.transform = `translateX(${(1-pk)*120}px) scale(${.94+.06*pk})`;
+
+  // ---- сцена 3 ----
+  $('logo').style.opacity = fadeIn(t,T.logo);
+  $('logo').style.transform = `scale(${.9+.1*ease(clamp((t-T.logo[0])/1.2))+Math.sin(t*2.2)*.012})`;
+  $('logo').style.filter = `drop-shadow(0 0 ${30+14*Math.sin(t*2.2)}px rgba(255,215,0,.75))`;
+  const q=T.q, cta=T.cta;
+  $('q').innerHTML = t>=T.s3.from ? typed(q.text, q.at, q.cps, t, t<q.at+q.text.length/q.cps+.3) : ''; $('q').style.opacity = t>=T.s3.from?1:0;
+  $('cta').innerHTML = t>=T.s3.from ? typed(cta.text, cta.at, cta.cps, t, false) : ''; $('cta').style.opacity = t>=T.s3.from?1:0;
+  $('note').innerHTML = T.note.text.replace(/\n/g,'<br>'); $('note').style.opacity = t>=T.s3.from ? fadeIn(t,T.note.fade) : 0;
+
+  drawDust(t);
+  glitch(t>=T.glitch[0] && t<T.glitch[1], Math.floor(t*FPS));
+
+  // ---- затемнения ----
+  const toBlack = t>=7.9 && t<T.s3.from ? ease(clamp((t-7.9)/.8)) : 0;
+  $('fade').style.opacity = Math.max(1-ease(clamp(t/.5)), toBlack, ease(clamp((t-(T.duration-.35))/.35)));
+  $('time').textContent = t.toFixed(1)+' / '+T.duration+' с';
+}
+
+/* ================== ПЛЕЕР ================== */
+let t0=performance.now(), offset=0, paused=null, cur=0;
+function loop(now){ if(paused===null){ let t=(now-t0)/1000+offset; if(t>=T.duration){ t0=now; offset=0; t=0; } cur=t; render(t); } requestAnimationFrame(loop); }
+$('replay').onclick=()=>{ t0=performance.now(); offset=0; paused=null; $('pause').textContent='❚❚ Пауза'; };
+$('pause').onclick=()=>{ if(paused===null){ paused=cur; $('pause').textContent='▶ Играть'; } else { offset=paused; t0=performance.now(); paused=null; $('pause').textContent='❚❚ Пауза'; } };
+window.seek = s => { paused=s; cur=s; render(s); };        // используется экспортёром: seek(секунда)
+function fit(){ const s=Math.min(innerWidth/1080,(innerHeight-50)/1920), st=$('stage'); st.style.transform=`scale(${s})`; st.style.margin=`${-(1920*(1-s))/2}px ${-(1080*(1-s))/2}px`; }
+addEventListener('resize',fit); fit(); requestAnimationFrame(loop);
+</script>
+</body>
+</html>
