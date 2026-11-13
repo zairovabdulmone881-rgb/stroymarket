@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Дедлайн — золотой шаблон</title>
+<style>
+  :root { --bg1:#1a1a1a; --bg2:#2b2b2b; --gold:#e8c872; --gold2:#c9a24a; --gold3:#8a6d2b; --cream:#f3e6c4; }
+  * { box-sizing:border-box; margin:0; }
+  html, body { height:100%; background:#000; overflow:hidden; font-family:"Segoe UI",system-ui,sans-serif; }
+  body { display:grid; place-items:center; }
+
+  #stage { position:relative; width:1080px; height:1920px; overflow:hidden; transform-origin:center;
+           background:linear-gradient(170deg,var(--bg2),var(--bg1) 70%); color:var(--cream); }
+  .abs { position:absolute; }
+  #wall { position:absolute; left:0; right:0; top:470px; height:1330px;
+          background:linear-gradient(180deg,rgba(201,162,74,.07),rgba(0,0,0,.25)); border-top:2px solid rgba(201,162,74,.18); }
+
+  /* Шапка */
+  #lead { top:120px; left:0; right:0; text-align:center; font-size:46px; font-weight:800; letter-spacing:9px; color:var(--gold2); }
+  #big  { top:176px; left:0; right:0; text-align:center; font-size:176px; line-height:1.1; font-weight:900; letter-spacing:4px;
+          background:linear-gradient(180deg,#fff0bd,#e8c872 45%,#a98530); -webkit-background-clip:text; background-clip:text; color:transparent;
+          filter:drop-shadow(0 0 28px rgba(232,200,114,.35)); transform-origin:center; }
+
+  /* Дни недели */
+  #tabs { top:395px; left:97px; display:flex; gap:10px; }
+  .tab { width:118px; height:66px; border-radius:16px; border:2px solid #4a4130; background:#1f1c16; color:#8d8165;
+         display:grid; place-items:center; font-weight:800; font-size:28px; letter-spacing:2px; transition:none; }
+  .tab.past { border-color:var(--gold3); color:var(--gold3); }
+  .tab.now  { background:linear-gradient(180deg,#f3d98a,#c9a24a); color:#1a1a1a; border-color:#f3d98a;
+              box-shadow:0 0 36px rgba(232,200,114,.55); }
+  #flag { top:352px; left:872px; font-size:38px; color:var(--gold); filter:drop-shadow(0 0 10px rgba(232,200,114,.6)); }
+
+  /* Окна и часы */
+  .win { top:545px; width:300px; height:330px; }
+  #w1 { left:40px; } #w2 { left:740px; }
+  #clock { left:450px; top:600px; width:180px; height:180px; }
+
+  /* Колонки */
+  .col { top:0; width:360px; height:1920px; }
+  .name { top:935px; width:100%; text-align:center; font-size:32px; font-weight:900; letter-spacing:1px; color:var(--gold); white-space:nowrap; }
+  .prog { top:992px; left:30px; width:300px; }
+  .prog .row { display:flex; justify-content:space-between; font-size:22px; font-weight:700; letter-spacing:3px; color:#9a8b62; margin-bottom:10px; }
+  .prog .row b { color:var(--cream); font-size:26px; letter-spacing:1px; }
+  .track { height:14px; border-radius:8px; background:#3a3426; overflow:hidden; }
+  .fill { height:100%; width:0; border-radius:8px; background:linear-gradient(90deg,#a98530,#f3d98a); box-shadow:0 0 14px rgba(232,200,114,.7); }
+
+  .bubble-zone { top:1085px; left:10px; width:340px; height:150px; display:flex; align-items:flex-end; justify-content:center; }
+  .bubble { position:relative; background:var(--cream); color:#1a1a1a; font-weight:700; font-size:30px; line-height:1.15;
+            padding:14px 26px; border-radius:42px; text-align:center; max-width:340px; margin-bottom:16px; }
+  .bubble::after { content:""; position:absolute; left:50%; bottom:-14px; margin-left:-14px; border:14px solid transparent;
+                   border-top-color:var(--cream); border-bottom:0; }
+
+  .char { top:1205px; left:30px; width:300px; height:300px; filter:drop-shadow(0 0 16px rgba(232,200,114,.45)); }
+  .f { stroke:var(--gold); stroke-width:5; fill:none; stroke-linecap:round; stroke-linejoin:round; }
+  .z { fill:var(--gold); font:800 30px "Segoe UI",sans-serif; animation:zz 2.4s ease-in-out infinite; }
+  @keyframes zz { 0%,100% { transform:translate(0,0); opacity:.4; } 50% { transform:translate(8px,-14px); opacity:1; } }
+
+  /* Столы */
+  .desk-top { top:1500px; left:20px; width:320px; height:20px; background:linear-gradient(180deg,#e0b95a,#b08a34); border-radius:6px 6px 0 0;
+              box-shadow:0 -4px 30px rgba(232,200,114,.25); }
+  .desk-body { top:1520px; left:30px; width:300px; height:300px; background:linear-gradient(180deg,#25211a,#14120e); border:2px solid #3b3220; border-top:0; }
+  #floor { top:1800px; left:0; right:0; height:120px; background:linear-gradient(180deg,#0f0e0b,#000); }
+  .prop { position:absolute; }
+
+  /* Финал */
+  #cta { inset:0; opacity:0; background:rgba(10,9,7,.82); z-index:10; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:0 70px; }
+  #cta svg { width:260px; height:260px; margin-bottom:50px; filter:drop-shadow(0 0 30px rgba(232,200,114,.5)); }
+  #cta .h { font-size:84px; font-weight:900; line-height:1.15; color:var(--gold); text-shadow:0 0 30px rgba(232,200,114,.4); min-height:2.3em; }
+  #cta .s { margin-top:40px; font-size:52px; font-weight:700; line-height:1.3; color:var(--cream); min-height:2.7em; }
+  .cur { display:inline-block; width:.08em; height:.9em; background:var(--gold); margin-left:6px; vertical-align:-.1em; animation:bl .7s steps(1) infinite; }
+  @keyframes bl { 50% { opacity:0; } }
+
+  #fade { inset:0; background:#000; opacity:1; z-index:30; pointer-events:none; }
+  #vig  { inset:0; z-index:20; pointer-events:none; background:radial-gradient(ellipse at center,transparent 45%,rgba(0,0,0,.6) 100%); }
+  #grain{ inset:-50%; z-index:21; pointer-events:none; opacity:.08; mix-blend-mode:overlay;
+          background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence baseFrequency='.9' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); }
+
+  #ui { position:fixed; bottom:12px; left:50%; transform:translateX(-50%); display:flex; gap:10px; z-index:50; align-items:center; }
+  #ui button { background:#2b2b2b; color:#e8e4dc; border:1px solid #444; border-radius:10px; padding:9px 16px; font-size:15px; cursor:pointer; }
+  #time { color:#8d8a84; font:14px/1 monospace; min-width:84px; }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="wall" class="abs"></div>
+
+  <div id="lead" class="abs">ДЕДЛАЙН ЧЕРЕЗ</div>
+  <div id="big" class="abs">7 ДНЕЙ</div>
+  <div id="tabs" class="abs"></div>
+  <div id="flag" class="abs">⚑</div>
+
+  <div id="w1" class="abs win"></div>
+  <div id="w2" class="abs win"></div>
+  <svg id="clock" class="abs" viewBox="0 0 180 180">
+    <circle cx="90" cy="90" r="82" fill="#f3e6c4" stroke="#c9a24a" stroke-width="8"/>
+    <g id="ticks"></g>
+    <line id="hh" x1="90" y1="90" x2="90" y2="48" stroke="#1a1a1a" stroke-width="7" stroke-linecap="round"/>
+    <line id="mh" x1="90" y1="90" x2="90" y2="30" stroke="#1a1a1a" stroke-width="4" stroke-linecap="round"/>
+    <circle cx="90" cy="90" r="6" fill="#c9a24a"/>
+  </svg>
+
+  <!-- колонки собираются скриптом -->
+  <div id="cols"></div>
+  <div id="floor" class="abs"></div>
+
+  <div id="cta" class="abs">
+    <svg viewBox="0 0 200 200"><defs><linearGradient id="mg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f3d98a"/><stop offset="1" stop-color="#a98530"/></linearGradient></defs>
+      <path d="M100 18C58 18 30 48 30 92c0 38 20 72 52 86 6 3 12 3 18 3s12 0 18-3c32-14 52-48 52-86 0-44-28-74-70-74z" fill="url(#mg)"/>
+      <path d="M52 86q18-18 34 0q-17 12-34 0zM114 86q18-18 34 0q-17 12-34 0z" fill="#1a1a1a"/>
+      <path d="M70 134q30 22 60 0" stroke="#1a1a1a" stroke-width="8" fill="none" stroke-linecap="round"/></svg>
+    <div class="h" id="ctaH"></div>
+    <div class="s" id="ctaS"></div>
+  </div>
+
+  <div id="fade" class="abs"></div>
+  <div id="vig" class="abs"></div>
+  <div id="grain" class="abs"></div>
+</div>
+
+<div id="ui"><button id="replay">↻ Заново</button><button id="pause">❚❚ Пауза</button><span id="time"></span></div>
+
+<script>
+/* ================== НАСТРОЙКИ ШАБЛОНА ==================
+   Меняйте тексты, имена и проценты — анимация подстроится сама.
+   days    — подписи вкладок;  dayStart + i*dayLen — когда включается день i
+   chars   — три персонажа: имя, реплики по дням, лицо по дням, прогресс на конец дня */
+const CFG = {
+  duration: 18, loop: true,
+  dayStart: 0.8, dayLen: 2.0, outroAt: 14.8,
+  lead: 'ДЕДЛАЙН ЧЕРЕЗ',
+  days: ['ПН','ВТ','СР','ЧТ','ПТ','СБ','ВС'],
+  countLabels: ['7 ДНЕЙ','6 ДНЕЙ','5 ДНЕЙ','4 ДНЯ','3 ДНЯ','2 ДНЯ','1 ДЕНЬ'],
+  outro: { lead:'ДЕДЛАЙН', big:'СЕГОДНЯ' },
+  cta: { head:'Ты кто из них?', sub:'Контролёр, Прокрастинатор или Паникёр? Напиши в комментариях 👇' },
+  chars: [
+    { name:'КОНТРОЛЁР', look:'tie',
+      says:['По плану','День 2. По плану','Всё по графику','Уже половина','Почти готово','Проверяю','Сдано ✔'],
+      faces:['angry','angry','angry','angry','angry','angry','happy'],
+      prog:[8,22,36,50,66,82,100], shake:[0,0,0,0,0,0,0], prop:'mug' },
+    { name:'ПРОКРАСТИНАТОР', look:'phone',
+      says:['Начну завтра','Время есть','Завтра точно','Сначала отдых','Ещё чуть-чуть','Начинаю…','Только кофе'],
+      faces:['happy','happy','happy','happy','happy','sweat','sweat'],
+      prog:[0,0,0,0,0,12,94], shake:[0,0,0,0,0,2,5], prop:'mug' },
+    { name:'ПАНИКЁР', look:'plain',
+      says:['Z z z','Z z z','Не успею!','Всё пропало','Сколько осталось?!','ААААА','Я не спал'],
+      faces:['sleepy','sleepy','panic','panic','panic','panic','panic'],
+      prog:[0,0,0,4,4,9,31], shake:[0,0,3,4,6,8,12], prop:'alarm' }
+  ]
+};
+
+/* ================== ХЕЛПЕРЫ ================== */
+const $ = id => document.getElementById(id);
+const clamp = (v,a=0,b=1)=>Math.min(b,Math.max(a,v));
+const ease = x=>x*x*(3-2*x);
+const NS = 'http://www.w3.org/2000/svg';
+function typed(text, start, cps, t, cursor){
+  const n = clamp(Math.floor((t-start)*cps), 0, text.length);
+  const shown = t<start ? '' : text.slice(0,n);
+  return shown + `<span style="visibility:hidden">${text.slice(n)}</span>` + (cursor ? '<span class="cur"></span>' : '');
+}
+
+/* ================== ПЕРСОНАЖИ ================== */
+const FACES = {
+  angry: `<path class="f" d="M108 130L142 146M192 130L158 146"/><path class="f" d="M112 160h28M160 160h28"/>`,
+  happy: `<path class="f" d="M114 156l14-14 14 14M158 156l14-14 14 14"/><path class="f" d="M136 178q14 12 28 0"/>`,
+  sleepy:`<path class="f" d="M112 154q16 14 32 0M156 154q16 14 32 0"/><path class="f" d="M140 182q10 6 20 0"/><text class="z" x="214" y="112">z</text><text class="z" x="236" y="80" style="animation-delay:.8s">Z</text>`,
+  panic: `<circle class="f" cx="128" cy="150" r="14"/><circle class="f" cx="172" cy="150" r="14"/><circle cx="128" cy="150" r="4" fill="#e8c872"/><circle cx="172" cy="150" r="4" fill="#e8c872"/><ellipse class="f" cx="150" cy="192" rx="11" ry="15"/><path d="M214 116q11 17 0 26q-11-9 0-26z" fill="#f3e6c4"/>`,
+  sweat: `<circle cx="128" cy="152" r="7" fill="#e8c872"/><circle cx="172" cy="152" r="7" fill="#e8c872"/><path class="f" d="M128 188q11-9 22 0q11 9 22 0"/><path d="M214 116q11 17 0 26q-11-9 0-26z" fill="#f3e6c4"/>`
+};
+function charSVG(look){
+  const tie = look==='tie' ? `<path d="M150 218l-10 14 10 42 10-42z" fill="#e8c872"/>` : '';
+  const phone = look==='phone' ? `<rect x="226" y="226" width="24" height="42" rx="5" fill="#0b0b0b" stroke="#e8c872" stroke-width="3"/><rect x="230" y="232" width="16" height="26" rx="2" fill="#f3d98a"/>` : '';
+  return `<svg viewBox="0 0 300 300" width="300" height="300">
+    <g stroke="#e8c872" stroke-width="5" fill="#0b0b0b" stroke-linejoin="round">
+      <polygon points="116,100 126,58 140,94"/><polygon points="138,92 150,46 162,92"/><polygon points="160,94 174,58 184,100"/>
+    </g>
+    <path d="M96 296Q96 216 150 212Q204 216 204 296Z" fill="#0b0b0b" stroke="#e8c872" stroke-width="4"/>${tie}
+    <circle cx="150" cy="150" r="64" fill="#0b0b0b" stroke="#e8c872" stroke-width="5"/>
+    <g class="face"></g>
+    <rect x="66" y="244" width="168" height="54" rx="7" fill="#d9c9a0"/><circle cx="150" cy="271" r="5" fill="#b7a577"/>${phone}
+  </svg>`;
+}
+function propSVG(kind){
+  if (kind==='alarm') return `<svg class="prop" style="left:250px;top:1440px" width="70" height="64" viewBox="0 0 70 64"><g class="alarm" style="transform-origin:35px 36px">
+      <circle cx="35" cy="36" r="24" fill="#f3e6c4" stroke="#c9a24a" stroke-width="5"/><path d="M35 36V22M35 36l9 5" stroke="#1a1a1a" stroke-width="4" stroke-linecap="round"/>
+      <circle cx="16" cy="12" r="8" fill="#c9a24a"/><circle cx="54" cy="12" r="8" fill="#c9a24a"/></g></svg>`;
+  return `<svg class="prop" style="left:12px;top:1456px" width="56" height="48" viewBox="0 0 56 48"><rect x="6" y="8" width="34" height="38" rx="5" fill="#f3e6c4"/><path d="M40 16q14 0 12 12q-2 10-12 8" fill="none" stroke="#f3e6c4" stroke-width="5"/></svg>`;
+}
+
+const cols = $('cols'), refs = [];
+CFG.chars.forEach((c,i)=>{
+  const col = document.createElement('div');
+  col.className = 'abs col'; col.style.left = (i*360)+'px';
+  col.innerHTML = `
+    <div class="abs name">${c.name}</div>
+    <div class="abs prog"><div class="row"><span>ПРОЕКТ</span><b>0%</b></div><div class="track"><div class="fill"></div></div></div>
+    <div class="abs bubble-zone"><div class="bubble"></div></div>
+    <div class="abs desk-top"></div><div class="abs desk-body"></div>
+    <div class="abs char">${charSVG(c.look)}</div>
+    ${propSVG(c.prop)}`;
+  cols.appendChild(col);
+  refs.push({ pct:col.querySelector('.prog b'), fill:col.querySelector('.fill'), bubble:col.querySelector('.bubble'),
+              char:col.querySelector('.char'), face:col.querySelector('.face'), alarm:col.querySelector('.alarm'), last:null });
+});
+
+/* ================== ВКЛАДКИ ДНЕЙ ================== */
+const tabs = CFG.days.map(d=>{ const e=document.createElement('div'); e.className='tab'; e.textContent=d; $('tabs').appendChild(e); return e; });
+
+/* ================== ОКНА (золотой город) ================== */
+function buildWindow(host, seed){
+  const hs=[130,200,160,240,180,260,150,210], bw=34;
+  let b='';
+  hs.forEach((h,i)=>{ const hh=h*(0.85+((i*seed)%5)/18); b+=`<rect x="${6+i*36}" y="${300-hh}" width="${bw}" height="${hh}" fill="${i%2?'#6e5722':'#5a4519'}"/>`; });
+  let stars=''; for(let i=0;i<14;i++) stars+=`<circle cx="${(i*83*seed)%280+10}" cy="${(i*47*seed)%140+14}" r="${1+(i%3)*.8}" fill="#fff3c9"/>`;
+  host.innerHTML = `<svg viewBox="0 0 300 330" width="300" height="330">
+    <defs><linearGradient id="sky${seed}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f1e0a8"/><stop offset="1" stop-color="#c9a24a"/></linearGradient>
+    <clipPath id="clip${seed}"><rect x="8" y="8" width="284" height="314"/></clipPath></defs>
+    <rect width="300" height="330" fill="#3b3220" stroke="#8a6d2b" stroke-width="6"/>
+    <g clip-path="url(#clip${seed})">
+      <rect width="300" height="330" fill="url(#sky${seed})"/>
+      <g class="stars" opacity="0">${stars}</g>
+      <circle class="sun" cx="60" cy="90" r="26" fill="#fff6d6"/>
+      ${b}
+      <rect class="night" width="300" height="330" fill="#0e0c08" opacity="0"/>
+    </g>
+    <path d="M150 8V322M8 165H292" stroke="#3b3220" stroke-width="10"/>
+    <rect x="2" y="2" width="296" height="326" fill="none" stroke="#8a6d2b" stroke-width="6"/></svg>`;
+  return { sun:host.querySelector('.sun'), night:host.querySelector('.night'), stars:host.querySelector('.stars') };
+}
+const wins = [buildWindow($('w1'),3), buildWindow($('w2'),7)];
+
+let tk=''; for(let i=0;i<12;i++){ const a=i*30*Math.PI/180; tk+=`<line x1="${90+Math.sin(a)*70}" y1="${90-Math.cos(a)*70}" x2="${90+Math.sin(a)*(i%3?76:66)}" y2="${90-Math.cos(a)*(i%3?76:66)}" stroke="#1a1a1a" stroke-width="${i%3?3:5}"/>`; }
+$('ticks').innerHTML = tk;
+
+/* ================== ТАЙМЛАЙН ================== */
+function render(t){
+  const D = CFG, outro = t >= D.outroAt;
+  const idx = clamp(Math.floor((t - D.dayStart)/D.dayLen), 0, D.days.length-1);
+  const dayT = D.dayStart + idx*D.dayLen;
+  const into = t - dayT;
+
+  // шапка и счётчик (с «всплеском» при смене дня)
+  $('lead').textContent = outro ? D.outro.lead : D.lead;
+  $('big').textContent  = outro ? D.outro.big  : D.countLabels[idx];
+  const popT = outro ? t-D.outroAt : into;
+  $('big').style.transform = `scale(${1 + .22*(1-ease(clamp(popT/.4)))})`;
+
+  // вкладки
+  tabs.forEach((e,i)=>{ e.className = 'tab' + (i<idx ? ' past' : i===idx ? ' now' : ''); });
+
+  // персонажи
+  CFG.chars.forEach((c,i)=>{
+    const r = refs[i];
+    const prev = idx>0 ? c.prog[idx-1] : 0;
+    const val  = outro ? c.prog[c.prog.length-1] : prev + (c.prog[idx]-prev)*ease(clamp(into/.9));
+    r.pct.textContent = Math.round(val)+'%';
+    r.fill.style.width = val+'%';
+
+    r.bubble.innerHTML = typed(c.says[idx], dayT+.05, 26, t, false);
+
+    const face = c.faces[idx];
+    if (r.last!==face){ r.face.innerHTML = FACES[face]; r.last=face; }
+
+    const amp = c.shake[idx];
+    const sx = amp ? Math.sin(t*55+i)*amp : 0, sy = amp ? Math.cos(t*47)*amp*.6 : 0;
+    const bob = Math.sin(t*2+i)*3;
+    r.char.style.transform = `translate(${sx}px,${sy+bob}px)`;
+    if (r.alarm) r.alarm.style.transform = idx>=4 ? `rotate(${Math.sin(t*45)*9}deg)` : '';
+  });
+
+  // окна: солнце движется, к концу недели темнеет и появляются звёзды
+  const p = clamp((t-D.dayStart)/(D.outroAt-D.dayStart));
+  const night = ease(clamp((p-.55)/.45));
+  wins.forEach(w=>{
+    w.sun.setAttribute('cx', 40 + p*220);
+    w.sun.setAttribute('cy', 150 - Math.sin(p*Math.PI)*105 + p*40);
+    w.night.setAttribute('opacity', night*.78);
+    w.stars.setAttribute('opacity', clamp((night-.35)/.5));
+  });
+
+  // часы: чем ближе дедлайн, тем быстрее
+  const spin = t*40 + p*p*900;
+  $('mh').setAttribute('transform', `rotate(${spin} 90 90)`);
+  $('hh').setAttribute('transform', `rotate(${spin/12} 90 90)`);
+
+  // финальный призыв
+  const o = ease(clamp((t-D.outroAt-.5)/.7));
+  $('cta').style.opacity = o;
+  $('ctaH').innerHTML = typed(D.cta.head, D.outroAt+1.2, 20, t, t<D.outroAt+2.4);
+  $('ctaS').innerHTML = typed(D.cta.sub,  D.outroAt+2.4, 24, t, t>=D.outroAt+2.4);
+
+  // fade-in / fade-out кадра
+  $('fade').style.opacity = Math.max(1-ease(clamp(t/.5)), ease(clamp((t-(D.duration-.5))/.5)));
+  $('time').textContent = t.toFixed(1)+' / '+D.duration+' с';
+}
+
+/* ================== ПЛЕЕР ================== */
+let t0 = performance.now(), offset = 0, paused = null, cur = 0;
+function loop(now){
+  if (paused===null){
+    let t = (now-t0)/1000 + offset;
+    if (t >= CFG.duration){ if (CFG.loop){ t0=now; offset=0; t=0; } else t=CFG.duration; }
+    cur = t; render(t);
+  }
+  requestAnimationFrame(loop);
+}
+$('replay').onclick = ()=>{ t0=performance.now(); offset=0; paused=null; $('pause').textContent='❚❚ Пауза'; };
+$('pause').onclick = ()=>{ if(paused===null){ paused=cur; $('pause').textContent='▶ Играть'; } else { offset=paused; t0=performance.now(); paused=null; $('pause').textContent='❚❚ Пауза'; } };
+window.seek = s => { paused=s; cur=s; render(s); };
+
+function fit(){ const s=Math.min(innerWidth/1080,(innerHeight-50)/1920); const st=$('stage'); st.style.transform=`scale(${s})`; st.style.margin=`${-(1920*(1-s))/2}px ${-(1080*(1-s))/2}px`; }
+addEventListener('resize',fit); fit();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
