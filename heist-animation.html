@@ -21,9 +21,9 @@
 
   /* ---------- Текст ---------- */
   .txt { position:absolute; left:70px; right:70px; text-align:center; opacity:0; }
-  #c1 { top:1175px; font-size:82px; line-height:1.15; font-weight:900; color:var(--gold); letter-spacing:2px;
+  #c1 { top:1470px; font-size:82px; line-height:1.15; font-weight:900; color:var(--gold); letter-spacing:2px;
         text-shadow:0 0 32px rgba(255,215,0,.55), 0 4px 0 rgba(0,0,0,.6); }
-  #s1 { top:1440px; font-size:50px; font-weight:600; color:#d9c78a; letter-spacing:3px; }
+  #s1 { top:1710px; font-size:50px; font-weight:600; color:#d9c78a; letter-spacing:3px; }
   #c2 { top:150px; font-family:Georgia,"Times New Roman","DejaVu Serif",serif; font-size:90px; line-height:1.12; font-weight:700; color:#fff;
         text-shadow:0 6px 30px rgba(0,0,0,.8); }
   #s2 { top:410px; font-family:Georgia,"Times New Roman","DejaVu Serif",serif; font-style:italic; font-size:62px; line-height:1.25; color:#e8e8e8; }
@@ -35,12 +35,16 @@
 
   /* ---------- Сцена 2: касса ---------- */
   #bg2 { position:absolute; inset:0; background:linear-gradient(180deg,#111a2b 0%,#0e1523 55%,#0a0a0a 100%); }
-  #glass { left:540px; top:1000px; width:500px; height:455px; border:3px solid rgba(255,215,0,.35); border-bottom:0; border-radius:18px 18px 0 0;
+  #glass { left:540px; top:940px; width:500px; height:360px; border:3px solid rgba(255,215,0,.35); border-bottom:0; border-radius:18px 18px 0 0;
            background:linear-gradient(115deg,rgba(255,255,255,.06) 0%,rgba(255,255,255,0) 35%,rgba(255,215,0,.05) 100%); }
-  #counter { left:0; top:1450px; width:1080px; height:470px; background:linear-gradient(180deg,#0e1523,#05080f); border-top:8px solid var(--gold); box-shadow:0 -10px 60px rgba(255,215,0,.22); }
-  #plate { left:0; right:0; top:1520px; text-align:center; font-size:46px; font-weight:800; letter-spacing:18px; color:var(--gold-d); }
+  #counter { left:540px; top:1300px; width:540px; height:620px; background:linear-gradient(180deg,#0e1523,#05080f); border-top:8px solid var(--gold); box-shadow:0 -10px 60px rgba(255,215,0,.22); }
+  #plate { left:540px; right:0; top:1380px; text-align:center; font-size:46px; font-weight:800; letter-spacing:18px; color:var(--gold-d); }
 
-  #phone { left:520px; top:700px; width:510px; opacity:0; background:#070b13; border:4px solid var(--gold); border-radius:44px; padding:28px 30px 34px;
+  .fig { position:absolute; width:300px; height:700px; transform-origin:150px 690px;
+         filter:drop-shadow(3px 0 0 #ffd700) drop-shadow(-3px 0 0 #ffd700) drop-shadow(0 3px 0 #ffd700) drop-shadow(0 -3px 0 #ffd700) drop-shadow(0 0 22px rgba(255,215,0,.5)); }
+  .shadow { position:absolute; border-radius:50%; background:radial-gradient(ellipse,rgba(0,0,0,.85),transparent 70%); }
+  #floor2 { left:0; top:1540px; width:1080px; height:380px; background:linear-gradient(180deg,#0d1422,#05080f); border-top:2px solid rgba(255,215,0,.28); }
+  #phone { left:520px; top:640px; width:510px; opacity:0; background:#070b13; border:4px solid var(--gold); border-radius:44px; padding:28px 30px 34px;
            box-shadow:0 0 60px rgba(255,215,0,.35); }
   #phone .hd { display:flex; justify-content:space-between; font-size:26px; letter-spacing:4px; color:#8a7d52; font-weight:700; margin-bottom:18px; }
   #phone .ttl { font-size:40px; color:#cfc7a8; font-weight:600; }
@@ -73,16 +77,17 @@
   <!-- СЦЕНА 1: СНАРУЖИ -->
   <div class="layer" id="L1">
     <svg id="corr" class="abs" style="inset:0" width="1080" height="1920" viewBox="0 0 1080 1920"></svg>
-    <div id="fig1" class="abs" style="left:309px;top:470px;width:462px;height:640px;"></div>
+    <div id="sh1" class="shadow"></div><div id="fig1" class="fig"></div>
   </div>
 
   <!-- СЦЕНА 2: ВНУТРИ -->
   <div class="layer" id="L2">
     <div id="bg2"></div>
     <div id="glass" class="abs"></div>
-    <div id="teller" class="abs" style="left:650px;top:1050px;width:300px;height:400px;"></div>
-    <div id="fig2" class="abs" style="left:100px;top:950px;width:360px;height:500px;"></div>
-    <svg id="env" class="abs" style="left:0;top:0;opacity:0" width="150" height="104" viewBox="0 0 150 104">
+    <div id="floor2" class="abs"></div>
+    <div id="teller" class="abs" style="left:650px;top:980px;width:300px;height:400px;"></div>
+    <div id="sh2" class="shadow"></div><div id="fig2" class="fig"></div>
+    <svg id="env" class="abs" style="left:0;top:0;opacity:0;transform-origin:0 0" width="150" height="104" viewBox="0 0 150 104">
       <rect x="4" y="4" width="142" height="96" rx="8" fill="#f3e6c4" stroke="#b8960b" stroke-width="4"/>
       <path d="M6 8l69 50 69-50" fill="none" stroke="#b8960b" stroke-width="4"/>
       <circle cx="75" cy="58" r="9" fill="#ffd700"/></svg>
@@ -127,7 +132,7 @@ const T = {
   s1t:  { text:'5 минут до приезда полиции', at:2.2, cps:34 },
   c2:   { text:'ВНУТРИ:\nЭто не ограбление', fade:[3.45, 4.25] },
   s2t:  { text:'Он вернул деньги, которые банк украл у сирот', fade:[4.9, 5.8] },
-  env:  [4.0, 5.1],                             // конверт плывёт к кассиру
+  env:  [3.95, 5.0],                             // конверт плывёт к кассиру
   phone:[5.35, 5.95],
   s3:   { from:8.7 },
   logo: [8.9, 9.8],
@@ -184,23 +189,35 @@ const fadeIn = (t,[a,b]) => ease(clamp((t-a)/(b-a)));
 })();
 const lamps = [...document.querySelectorAll('.lamp')];
 
-/* ================== ПЕРСОНАЖ-СИЛУЭТ ================== */
-function figureSVG(){
-  return `<svg viewBox="0 0 460 640" width="100%" height="100%">
+/* ================== ПЕРСОНАЖ В ПОЛНЫЙ РОСТ (скелетная анимация) ==================
+   Силуэт собран из суставов: голова, торс, плечо→локоть→кисть, бедро→стопа.
+   Контур золотой — от CSS-фильтра .fig. Углы суставов считаются в poseScene1/2. */
+const D = '#050505';
+function rigSVG(){
+  const leg = (x,fx)=>`<g class="leg"><line x1="${x}" y1="365" x2="${x-2}" y2="520" stroke="${D}" stroke-width="54" stroke-linecap="round"/>
+      <line x1="${x-2}" y1="520" x2="${x-3}" y2="655" stroke="${D}" stroke-width="44" stroke-linecap="round"/>
+      <ellipse cx="${fx}" cy="672" rx="38" ry="17" fill="${D}"/></g>`;
+  return `<svg viewBox="0 0 300 700" width="300" height="700" style="overflow:visible">
    <defs><linearGradient id="mk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff0a0"/><stop offset="1" stop-color="#ffd700"/></linearGradient></defs>
-   <g class="glow" style="filter:drop-shadow(0 0 14px rgba(255,215,0,.55))">
-    <g class="armDown"><path d="M326 318Q388 380 396 440" stroke="#ffd700" stroke-width="42" fill="none" stroke-linecap="round"/>
-        <path d="M326 318Q388 380 396 440" stroke="#050505" stroke-width="36" fill="none" stroke-linecap="round"/></g>
-    <g class="armOut"><path d="M326 318L424 368" stroke="#ffd700" stroke-width="42" fill="none" stroke-linecap="round"/>
-        <path d="M326 318L424 368" stroke="#050505" stroke-width="36" fill="none" stroke-linecap="round"/></g>
-    <path d="M100 640V340Q100 250 230 236Q360 250 360 340V640Z" fill="#050505" stroke="#ffd700" stroke-width="4"/>
-    <path d="M196 238L230 300 264 238" fill="none" stroke="#ffd700" stroke-width="3" opacity=".6"/>
-    <ellipse cx="230" cy="162" rx="72" ry="86" fill="#050505" stroke="#ffd700" stroke-width="4"/>
-    <path d="M160 148Q230 124 300 148L294 196Q230 180 166 196Z" fill="url(#mk)"/>
-    <ellipse cx="198" cy="170" rx="17" ry="9" fill="#050505"/><ellipse cx="262" cy="170" rx="17" ry="9" fill="#050505"/>
-    <g class="bag"><path d="M352 462Q340 424 398 418Q456 424 444 462Q482 552 446 628Q396 654 346 628Q312 552 352 462Z" fill="#0c0c0c" stroke="#ffd700" stroke-width="5"/>
-      <path d="M362 440Q398 462 436 440" stroke="#ffd700" stroke-width="5" fill="none"/>
-      <text x="398" y="580" text-anchor="middle" font-size="104" font-weight="900" fill="#ffd700" font-family="Georgia,serif">$</text></g>
+   <g class="root">
+     <g class="L">${leg(128,116)}</g><g class="R">${leg(172,184)}</g>
+     <path d="M98 142Q150 120 202 142Q214 152 212 205L206 372Q150 392 94 372L88 205Q86 152 98 142Z" fill="${D}"/>
+     <path d="M96 340Q150 356 204 340" stroke="#ffd700" stroke-width="4" fill="none" opacity=".55"/>
+     <path d="M126 142L150 190 174 142" stroke="#ffd700" stroke-width="3" fill="none" opacity=".45"/>
+     <rect x="130" y="104" width="40" height="50" fill="${D}"/>
+     <g class="armL"><line x1="62" y1="152" x2="62" y2="258" stroke="${D}" stroke-width="42" stroke-linecap="round"/>
+       <g class="foreL"><line x1="62" y1="258" x2="62" y2="358" stroke="${D}" stroke-width="36" stroke-linecap="round"/><circle cx="62" cy="372" r="21" fill="${D}"/></g></g>
+     <g class="head"><ellipse cx="150" cy="64" rx="48" ry="58" fill="${D}"/>
+       <path d="M103 52Q150 36 197 52L193 88Q150 76 107 88Z" fill="url(#mk)"/>
+       <ellipse cx="128" cy="68" rx="11" ry="6" fill="${D}"/><ellipse cx="172" cy="68" rx="11" ry="6" fill="${D}"/></g>
+     <g class="armR"><line x1="238" y1="152" x2="238" y2="258" stroke="${D}" stroke-width="42" stroke-linecap="round"/>
+       <g class="foreR"><line x1="238" y1="258" x2="238" y2="358" stroke="${D}" stroke-width="36" stroke-linecap="round"/><circle cx="238" cy="372" r="21" fill="${D}"/>
+         <g class="envH"><rect x="212" y="356" width="60" height="42" rx="4" fill="#f3e6c4"/><path d="M214 358l28 22 28-22" stroke="#b8960b" stroke-width="3" fill="none"/></g>
+         <g class="bag"><g transform="translate(238 376) scale(1.25)">
+           <path d="M-18 6Q-30 -14 0 -18Q30 -14 18 6Q54 70 26 142Q0 160 -26 142Q-54 70 -18 6Z" fill="#0c0c0c" stroke="#ffd700" stroke-width="4"/>
+           <path d="M-16 -4Q0 12 16 -4" stroke="#ffd700" stroke-width="4" fill="none"/>
+           <text x="0" y="104" text-anchor="middle" font-size="84" font-weight="900" fill="#ffd700" font-family="Georgia,serif">$</text></g></g>
+       </g></g>
    </g></svg>`;
 }
 function tellerSVG(){
@@ -210,10 +227,61 @@ function tellerSVG(){
     <circle cx="126" cy="116" r="7" fill="#ffd700"/><circle cx="174" cy="116" r="7" fill="#ffd700"/>
     <path d="M132 148q18 10 36 0" stroke="#ffd700" stroke-width="4" fill="none" stroke-linecap="round"/></g></svg>`;
 }
-$('fig1').innerHTML = figureSVG(); $('fig2').innerHTML = figureSVG(); $('teller').innerHTML = tellerSVG();
-const f2 = $('fig2');
-f2.querySelector('.bag').style.display='none'; f2.querySelector('.armDown').style.display='none';
-$('fig1').querySelector('.armOut').style.display='none';
+function buildRig(host){
+  host.innerHTML = rigSVG(); const q = c=>host.querySelector(c);
+  return { root:q('.root'), L:q('.L .leg'), R:q('.R .leg'), armL:q('.armL'), foreL:q('.foreL'), armR:q('.armR'), foreR:q('.foreR'),
+           head:q('.head'), bag:q('.bag'), env:q('.envH') };
+}
+function setRig(r,o){
+  r.root.setAttribute('transform',`translate(0 ${o.bob||0}) rotate(${o.sway||0} 150 365)`);
+  r.L.setAttribute('transform',`translate(128 365) rotate(${o.rotL||0}) scale(1 ${o.sL||1}) translate(-128 -365)`);
+  r.R.setAttribute('transform',`translate(172 365) rotate(${o.rotR||0}) scale(1 ${o.sR||1}) translate(-172 -365)`);
+  r.armL.setAttribute('transform',`rotate(${o.armL||0} 62 152)`);   r.foreL.setAttribute('transform',`rotate(${o.foreL||0} 62 258)`);
+  r.armR.setAttribute('transform',`rotate(${o.armR||0} 238 152)`);  r.foreR.setAttribute('transform',`rotate(${o.foreR||0} 238 258)`);
+  r.head.setAttribute('transform',`rotate(${o.head||0} 150 125)`);
+  r.bag.setAttribute('transform',`rotate(${o.bagRot||0} 238 372)`);
+}
+const rig1 = buildRig($('fig1')), rig2 = buildRig($('fig2'));
+$('teller').innerHTML = tellerSVG();
+rig1.env.style.display='none'; rig2.bag.style.display='none';
+const bump = u => Math.sin(clamp(u)*Math.PI);
+let P1 = {x:540, y:820};
+
+/* Сцена 1: вор идёт по коридору прямо на камеру и останавливается */
+function poseScene1(t){
+  const u = ease(clamp((t-.5)/2.0)), feetY = lerp(985,1425,u), sc = lerp(.46,.84,u);
+  const w = clamp((t-.45)/.25)*(1-ease(clamp((t-2.45)/.4)));
+  const ph = (t-.5)*2*Math.PI*1.3, s = Math.sin(ph), idle = Math.sin(t*2.2);
+  const look = clamp((t-2.5)/.3)*(1-w);
+  setRig(rig1,{ bob:-Math.abs(s)*9*w + idle*2*(1-w), sway:s*2.4*w,
+    rotL:4*s*w, rotR:-4*s*w, sL:1-.16*Math.max(0,s)*w, sR:1-.16*Math.max(0,-s)*w,
+    armL:3-7*s*w, foreL:2, armR:-7+6*s*w, foreR:-3 - 5*look, head:7*Math.sin((t-2.5)*4.5)*look - 3*s*w,
+    bagRot:11*Math.sin(ph-.8)*w + 2.5*idle });
+  const el=$('fig1'); el.style.opacity=fadeIn(t,[.5,1.2]); el.style.left=(540-150)+'px'; el.style.top=(feetY-690)+'px'; el.style.transform=`scale(${sc})`;
+  const sh=$('sh1'); sh.style.opacity=fadeIn(t,[.5,1.2]); sh.style.width=(300*sc)+'px'; sh.style.height=(46*sc)+'px'; sh.style.left=(540-150*sc)+'px'; sh.style.top=(feetY-22*sc)+'px';
+  P1.x=540; P1.y=feetY-330*sc;
+}
+/* Сцена 2: вор заходит, вытягивает руку с конвертом, передаёт кассиру */
+const HAND = [556,1212], SLOT = [790,1272];
+function poseScene2(t){
+  const x = lerp(-90,350,easeOut(clamp((t-3.3)/1.15)));
+  const w = clamp((t-3.3)/.12)*(1-ease(clamp((t-4.1)/.4)));
+  const ph = (t-3.3)*2*Math.PI*1.6, s = Math.sin(ph), idle = Math.sin(t*1.9);
+  const e = ease(clamp((t-T.env[0])/.8))*(1-ease(clamp((t-5.4)/.8)));
+  const head = 9*bump((t-5.0)/.8) + 4*ease(clamp((t-6.5)/1)) + 2*Math.sin(t*1.3);
+  setRig(rig2,{ bob:-Math.abs(s)*9*w + idle*2*(1-w), sway:s*2.4*w + 2*(1-ease(clamp((t-4.2)/.4)))*0,
+    rotL:4*s*w, rotR:-4*s*w, sL:1-.16*Math.max(0,s)*w, sR:1-.16*Math.max(0,-s)*w,
+    armL:3-7*s*w, foreL:2, armR:(-5+6*s*w)*(1-e) + (-35)*e, foreR:-20*e, head });
+  rig2.env.style.display = t<5.0 ? '' : 'none';
+  const el=$('fig2'); el.style.left=(x-150)+'px'; el.style.top=(1540-690)+'px'; el.style.transform='scale(.85)';
+  const sh=$('sh2'); sh.style.width='260px'; sh.style.height='40px'; sh.style.left=(x-130)+'px'; sh.style.top=(1540-20)+'px';
+  // конверт: из руки на стойку кассира
+  const k = ease(clamp((t-5.0)/.55)), env=$('env');
+  const ex = lerp(HAND[0],SLOT[0],k)-40, ey = lerp(HAND[1],SLOT[1],k) - Math.sin(k*Math.PI)*40 - 28;
+  env.style.transform = `translate(${ex}px,${ey}px) scale(.55) rotate(${(1-k)*-12}deg)`;
+  env.style.opacity = t>=5.0 ? 1 : 0;
+  $('teller').style.transform = `translateY(${bump((t-5.6)/.7)*14}px)`;
+}
 
 /* ================== ЧАСТИЦЫ ================== */
 const cv=$('dust'), cx=cv.getContext('2d');
@@ -229,7 +297,7 @@ function drawDust(t){
     const age = (t*p.sp + p.ph) % 1, a = Math.sin(Math.PI*age)*vis;
     let x,y;
     if (mode===2){ x = p.sx + Math.sin(t*1.3+p.ph*9)*p.sw; y = 1500 - age*1300; }
-    else { const c = mode===1 ? [540,820] : [540,470]; x = c[0]+Math.cos(p.a)*p.R*age; y = c[1]+Math.sin(p.a)*p.R*age*.9 - age*70; }
+    else { const c = mode===1 ? [P1.x,P1.y] : [540,470]; x = c[0]+Math.cos(p.a)*p.R*age; y = c[1]+Math.sin(p.a)*p.R*age*.9 - age*70; }
     const tw = .6+.4*Math.sin(t*9+p.ph*20);
     cx.globalAlpha = Math.max(0,a*tw*.95);
     cx.fillStyle = '#ffd700'; cx.shadowColor = '#ffd700'; cx.shadowBlur = 14;
@@ -264,9 +332,7 @@ function render(t){
   const push = 1 + .09*clamp(t/3);
   $('corrG').style.transform = `scale(${push})`;
   lamps.forEach((l,i)=>{ l.style.opacity = .75 + .25*Math.sin(t*3+i*1.7) * (i%3===0 ? Math.sin(t*23) : 1); });
-  const fa = fadeIn(t,[.5,1.5]);
-  $('fig1').style.opacity = fa;
-  $('fig1').style.transform = `translateY(${(1-easeOut(clamp((t-.4)/1.4)))*60 + Math.sin(t*1.6)*4}px) scale(${1+.03*clamp(t/3)})`;
+  poseScene1(t);
 
   // ---- текст сцены 1 ----
   const c1 = T.c1, s1 = T.s1t;
@@ -283,13 +349,7 @@ function render(t){
   $('c2').innerHTML = T.c2.text.replace(/\n/g,'<br>'); $('c2').style.opacity = (t>=T.s2.from && t<T.s2.out+.6) ? fadeIn(t,T.c2.fade)*(1-ease(clamp((t-T.s2.out)/.6))) : 0;
   $('s2').innerHTML = T.s2t.text;                    $('s2').style.opacity = (t>=T.s2.from && t<T.s2.out+.6) ? fadeIn(t,T.s2t.fade)*(1-ease(clamp((t-T.s2.out)/.6))) : 0;
 
-  const ep = ease(clamp((t-T.env[0])/(T.env[1]-T.env[0])));
-  const ex = lerp(380, 690, ep), ey = 1195 - Math.sin(ep*Math.PI)*70 + ep*40;
-  const env = $('env'); env.style.transform = `translate(${ex}px,${ey}px) rotate(${(1-ep)*-10}deg)`;
-  env.style.opacity = (t>=T.env[0]-.15 && t<T.env[1]+.2) ? Math.min(1, (t-(T.env[0]-.15))/.2) * (1-ease(clamp((t-T.env[1])/.2))) : 0;
-  const nod = t>T.env[1] ? Math.sin(clamp((t-T.env[1])/.6)*Math.PI)*14 : 0;
-  $('teller').style.transform = `translateY(${nod}px)`;
-  f2.style.transform = `translateX(${Math.sin(t*1.3)*4}px) translateY(${Math.sin(t*1.8)*3}px)`;
+  poseScene2(t);
   const pk = easeOut(clamp((t-T.phone[0])/(T.phone[1]-T.phone[0])));
   $('phone').style.opacity = pk;
   $('phone').style.transform = `translateX(${(1-pk)*120}px) scale(${.94+.06*pk})`;

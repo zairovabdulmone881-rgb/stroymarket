@@ -19,8 +19,19 @@ def shimmer(d=1.2):
     for k in range(10): put(out, k*.04, tone(2000+k*330, .5, decay=9)*.2)
     return out
 
+def step(g=1.0):
+    out = buf(.16); put(out, 0, kick(.16, 95, 52), .8); put(out, 0, fft_filter(noise(.07), hi=700)*np.exp(-tt(.07)*60), .5)
+    return out*g
+
 def heist():
     b = buf(12)
+    # шаги: сцена 1 (идёт по коридору, ближе — громче) и сцена 2 (заходит к кассе)
+    k = 0
+    while .5 + k/2.6 < 2.45:
+        put(b, .5 + k/2.6, step(.25 + .5*(k/5)), 1.0); k += 1
+    k = 0
+    while 3.3 + k/3.2 < 4.35:
+        put(b, 3.3 + k/3.2, step(.5), 1.0); k += 1
     # --- сцена 1 (0–3): тиканье часов, тёмный гул, пульс-бит, который затихает на глитче
     t = .1
     while t < 3.0:
