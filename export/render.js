@@ -21,7 +21,7 @@ const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'frames-'));
   const browser = await chromium.launch();
   const worker = async (w) => {
     const page = await browser.newPage({ viewport: { width: 1080, height: 1970 }, deviceScaleFactor: 1 });
-    await page.goto('file://' + path.resolve(html));
+    const [file, query] = html.split('?'); await page.goto('file://' + path.resolve(file) + (query ? '?' + query : ''));
     await page.addStyleTag({ content: '#ui{display:none!important}' });
     for (let i = w; i < N; i += THREADS) {
       await page.evaluate(t => window.seek(t), i / FPS);

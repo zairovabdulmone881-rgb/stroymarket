@@ -1,0 +1,417 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Снаружи / Внутри</title>
+<!--
+  Серия «Снаружи / Внутри». Вертикально 9:16 (1080×1920), 20 секунд, 30 fps. Без внешних библиотек.
+    masks-animation.html?v=1   — «Идеальная семья»  (идеальная пара → ночь на кухне)
+    masks-animation.html?v=2   — «Успешный человек» (карьерист → паника в туалете офиса)
+  Экспорт в MP4:  node export/render.js "masks-animation.html?v=1" 20 videos/perfect-family.mp4 audio/perfect-family.wav
+-->
+<style>
+  :root { --black:#0a0a0a; --navy:#111a2b; --gold:#ffd700; --gold-d:#b8960b; --cream:#f3e6c4; }
+  * { box-sizing:border-box; margin:0; }
+  html, body { height:100%; background:#000; overflow:hidden; font-family:"Segoe UI",system-ui,"Helvetica Neue",Arial,sans-serif; }
+  body { display:grid; place-items:center; }
+  #stage { position:relative; width:1080px; height:1920px; overflow:hidden; transform-origin:center; background:var(--black); color:var(--cream); }
+  #world { position:absolute; inset:0; }
+  .abs { position:absolute; }
+  .layer { position:absolute; inset:0; opacity:0; }
+  .outl { filter:drop-shadow(3px 0 0 #ffd700) drop-shadow(-3px 0 0 #ffd700) drop-shadow(0 3px 0 #ffd700) drop-shadow(0 -3px 0 #ffd700) drop-shadow(0 0 22px rgba(255,215,0,.5)); }
+  .fig { position:absolute; width:300px; height:700px; transform-origin:150px 690px; }
+  .shadow { position:absolute; border-radius:50%; background:radial-gradient(ellipse,rgba(0,0,0,.85),transparent 70%); }
+
+  /* Текст */
+  .txt { position:absolute; left:70px; right:70px; text-align:center; opacity:0; }
+  #c1 { top:1470px; font-size:76px; line-height:1.13; font-weight:900; color:var(--gold); letter-spacing:1px; text-shadow:0 0 32px rgba(255,215,0,.55), 0 4px 0 rgba(0,0,0,.6); }
+  #c2 { top:140px; font-family:Georgia,"Times New Roman","DejaVu Serif",serif; font-size:78px; line-height:1.12; font-weight:700; color:#fff; text-shadow:0 6px 30px rgba(0,0,0,.8); }
+  #s2 { top:400px; font-family:Georgia,"Times New Roman","DejaVu Serif",serif; font-style:italic; font-size:60px; line-height:1.25; color:#e8e8e8; }
+  #q  { top:690px; font-size:70px; line-height:1.22; font-weight:800; color:var(--cream); }
+  #cta{ top:1090px; font-size:100px; line-height:1.1; font-weight:900; color:var(--gold); letter-spacing:1px; text-shadow:0 0 40px rgba(255,215,0,.6); }
+  #note{ top:1710px; font-size:42px; line-height:1.3; font-weight:600; color:#a89868; }
+  .cur { display:inline-block; width:.07em; height:.9em; background:var(--gold); margin-left:6px; vertical-align:-.1em; animation:bl .6s steps(1) infinite; }
+  @keyframes bl { 50% { opacity:0; } }
+
+  /* ---------- Вариант 1: пара ---------- */
+  #bg1a { position:absolute; inset:0; background:linear-gradient(180deg,#14203a 0%,#0e1526 55%,#0a0a0a 100%); }
+  #post { left:36px; top:150px; width:1008px; height:1700px; border:3px solid rgba(255,215,0,.35); border-radius:46px; }
+  #postTop { left:70px; top:178px; display:flex; align-items:center; gap:18px; font-size:38px; font-weight:800; color:var(--cream); }
+  #postTop i { width:58px; height:58px; border-radius:50%; background:linear-gradient(180deg,#fff0a0,#ffd700); display:block; }
+  #postBot { left:70px; top:1775px; display:flex; align-items:center; gap:18px; font-size:44px; font-weight:800; color:var(--cream); }
+  #floor1 { left:0; top:1440px; width:1080px; height:480px; background:linear-gradient(180deg,#0d1422,#05080f); border-top:2px solid rgba(255,215,0,.25); }
+  #car { left:400px; top:1180px; width:700px; height:262px; }
+  /* ---------- Вариант 1: кухня ночью ---------- */
+  #bg1b { position:absolute; inset:0; background:linear-gradient(180deg,#0b1220 0%,#070a12 70%,#050608 100%); }
+  #phoneCard { left:150px; top:600px; width:780px; background:#070b13; border:4px solid var(--gold); border-radius:46px; padding:26px 40px 36px; box-shadow:0 0 60px rgba(255,215,0,.3); opacity:0; }
+  #phoneCard .hd { display:flex; justify-content:space-between; font-size:30px; letter-spacing:4px; color:#8a7d52; font-weight:700; }
+  #phoneCard .who { font-size:40px; font-weight:800; margin:14px 0 4px; color:var(--cream); }
+  #phoneCard .seen { font-size:30px; color:#7f8aa3; margin-bottom:20px; }
+  #phoneCard .inp { border:3px solid #2c3550; border-radius:34px; padding:18px 30px; font-size:56px; font-weight:700; color:#fff; min-height:104px; background:#0b111c; white-space:nowrap; }
+  #table { left:0; top:1350px; width:1080px; height:570px; background:linear-gradient(180deg,#171309,#0b0905); border-top:8px solid #8a6d2b; box-shadow:0 -10px 60px rgba(255,215,0,.12); }
+  #fridge { left:790px; top:1000px; width:250px; height:560px; border:6px solid #1d2a44; border-radius:18px; background:linear-gradient(90deg,#0d1424,#101a2e); box-shadow:inset -40px 0 80px rgba(150,200,255,.12); }
+  #fridge::after { content:""; position:absolute; left:-6px; top:60px; width:6px; height:440px; background:#cfe6ff; box-shadow:0 0 40px 16px rgba(150,200,255,.45); }
+  #window1 { left:60px; top:1010px; width:260px; height:300px; border:8px solid #1d2a44; background:linear-gradient(180deg,#0d1730,#16264a); border-radius:10px; overflow:hidden; }
+  #window1 b { position:absolute; width:70px; height:70px; border-radius:50%; background:#f3ecd0; left:150px; top:36px; box-shadow:0 0 50px 14px rgba(243,236,208,.35); }
+  #faceglow { left:400px; top:1090px; width:340px; height:340px; border-radius:50%; background:radial-gradient(circle,rgba(150,200,255,.5),transparent 68%); opacity:0; }
+  #maskTable { left:210px; top:1236px; width:150px; height:150px; opacity:0; transform:rotate(-18deg); }
+
+  /* ---------- Вариант 2: офис ---------- */
+  #bg2a { position:absolute; inset:0; background:linear-gradient(180deg,#111a2b 0%,#0c1320 60%,#0a0a0a 100%); }
+  #glassWall { left:0; top:230px; width:1080px; height:1210px; }
+  #chart { left:70px; top:430px; width:560px; height:380px; border:4px solid rgba(255,215,0,.6); border-radius:26px; background:rgba(8,14,26,.75); }
+  #money { left:70px; top:330px; width:560px; text-align:center; font-size:74px; font-weight:900; color:var(--gold); text-shadow:0 0 30px rgba(255,215,0,.55); white-space:nowrap; }
+  #floor2a { left:0; top:1450px; width:1080px; height:470px; background:linear-gradient(180deg,#0c1220,#05080f); border-top:2px solid rgba(255,215,0,.25); }
+  #desk { left:640px; top:1300px; width:440px; height:150px; background:#14100a; border-top:8px solid var(--gold); }
+  #laptop { left:700px; top:1190px; width:240px; height:112px; }
+  /* ---------- Вариант 2: туалет ---------- */
+  #tiles { position:absolute; inset:0; background:
+      repeating-linear-gradient(0deg,rgba(255,255,255,.05) 0 2px,transparent 2px 130px),
+      repeating-linear-gradient(90deg,rgba(255,255,255,.05) 0 2px,transparent 2px 130px),
+      linear-gradient(180deg,#0e1a2c,#08101c 75%,#05080f); }
+  #mirror { left:240px; top:520px; width:600px; height:700px; border:12px solid var(--gold); border-radius:44px; overflow:hidden; background:linear-gradient(180deg,#14233b,#0c1626);
+            box-shadow:0 0 60px rgba(255,215,0,.3); }
+  #mirror .sheen { position:absolute; inset:0; background:linear-gradient(115deg,rgba(255,255,255,.12) 0%,rgba(255,255,255,0) 30%,rgba(255,255,255,0) 70%,rgba(255,255,255,.06) 100%); z-index:3; }
+  #mirror .fig { left:150px; top:90px; transform-origin:150px 0; }
+  #counter2 { left:0; top:1380px; width:1080px; height:540px; background:linear-gradient(180deg,#121a28,#070a10); border-top:10px solid #8a6d2b; }
+  #faucet { left:500px; top:1300px; width:90px; height:80px; }
+  #drip { left:541px; top:1330px; width:12px; height:18px; border-radius:50% 50% 50% 50%/60% 60% 40% 40%; background:#9fd0ff; opacity:0; }
+  #fluo { left:0; right:0; top:0; height:110px; background:linear-gradient(180deg,rgba(220,235,255,.55),transparent); opacity:.6; }
+  #redv { position:absolute; inset:0; z-index:19; pointer-events:none; opacity:0; background:radial-gradient(ellipse at center,transparent 35%,rgba(210,30,30,.75) 100%); }
+
+  /* ---------- Финал ---------- */
+  #s3bg { position:absolute; inset:0; background:radial-gradient(ellipse at 50% 28%,#111a2b 0%,#0a0a0a 65%); }
+  #logo { left:400px; top:330px; width:280px; height:280px; }
+
+  #flash { inset:0; z-index:15; pointer-events:none; opacity:0; background:radial-gradient(ellipse at 50% 55%,rgba(255,250,220,1),rgba(255,235,140,.7) 45%,transparent 80%); mix-blend-mode:screen; }
+  #bars { inset:0; z-index:18; pointer-events:none; }
+  #bars div { position:absolute; left:0; right:0; display:none; }
+  #fade { inset:0; background:#000; opacity:1; z-index:30; pointer-events:none; }
+  #vig  { inset:0; z-index:20; pointer-events:none; background:radial-gradient(ellipse at center,transparent 40%,rgba(0,0,0,.72) 100%); }
+  #grain{ inset:-50%; z-index:21; pointer-events:none; opacity:.09; mix-blend-mode:overlay;
+          background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence baseFrequency='.9' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); }
+  canvas#dust { position:absolute; inset:0; z-index:5; pointer-events:none; }
+  #ui { position:fixed; bottom:12px; left:50%; transform:translateX(-50%); display:flex; gap:10px; z-index:50; align-items:center; }
+  #ui button { background:#2b2b2b; color:#e8e4dc; border:1px solid #444; border-radius:10px; padding:9px 16px; font-size:15px; cursor:pointer; }
+  #time { color:#8d8a84; font:14px/1 monospace; min-width:84px; }
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute"><defs>
+  <linearGradient id="mk" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff0a0"/><stop offset="1" stop-color="#ffd700"/></linearGradient></defs></svg>
+
+<div id="stage">
+ <div id="world">
+  <div class="layer" id="L1"></div>
+  <div class="layer" id="L2"></div>
+  <div class="layer" id="L3">
+    <div id="s3bg"></div>
+    <svg id="logo" class="abs" viewBox="0 0 200 200"><path d="M100 18C58 18 30 48 30 92c0 38 20 72 52 86 6 3 12 3 18 3s12 0 18-3c32-14 52-48 52-86 0-44-28-74-70-74z" fill="url(#mk)"/>
+      <path d="M52 86q18-18 34 0q-17 12-34 0zM114 86q18-18 34 0q-17 12-34 0z" fill="#0a0a0a"/>
+      <path d="M70 134q30 22 60 0" stroke="#0a0a0a" stroke-width="8" fill="none" stroke-linecap="round"/></svg>
+  </div>
+  <canvas id="dust" width="1080" height="1920"></canvas>
+  <div id="c1" class="txt"></div><div id="c2" class="txt"></div><div id="s2" class="txt"></div>
+  <div id="q" class="txt"></div><div id="cta" class="txt"></div><div id="note" class="txt"></div>
+ </div>
+ <div id="flash" class="abs"></div><div id="redv"></div><div id="bars" class="abs"></div>
+ <div id="fade" class="abs"></div><div id="vig" class="abs"></div><div id="grain" class="abs"></div>
+</div>
+<div id="ui"><button id="replay">↻ Заново</button><button id="pause">❚❚ Пауза</button><span id="time"></span></div>
+
+<script>
+/* ================== ВЫБОР ВАРИАНТА ================== */
+const V = +(new URLSearchParams(location.search).get('v') || 1);
+
+/* ================== РАСКАДРОВКА ================== */
+const T = {
+  duration: 20,
+  s1: { in:[0,.8], cut:4.75 },
+  glitch: [4.6, 4.9],
+  c1: V===1 ? { text:'СНАРУЖИ:\nИдеальная семья.\n10 лет вместе', at:1.0, cps:19 }
+            : { text:'СНАРУЖИ:\nКарьерист. Заработал\nпервый миллион', at:1.0, cps:19 },
+  c2: V===1 ? { text:'ВНУТРИ:\nНочь. Кухня. Тишина.', fade:[5.0,5.7] }
+            : { text:'ВНУТРИ:\nПанические атаки и страх, что завтра всё рухнет', fade:[5.0,5.8] },
+  s2: V===1 ? { text:'Они давно не разговаривают', fade:[6.6,7.3] } : { text:'', fade:[6.6,7.3] },
+  dip: [12.0, 12.8],
+  logo: [12.6, 13.5],
+  q:   V===1 ? { text:'Как думаешь, сколько таких «идеальных» пар прячутся за улыбками?', at:12.9, cps:30 }
+             : { text:'Успех — это всегда счастье? Или это просто маска?', at:12.9, cps:30 },
+  cta: V===1 ? { text:'Пиши в комментах 👇', at:16.6, cps:15 } : { text:'Напиши, что думаешь 👇', at:16.6, cps:18 },
+  note:{ text:'Продолжение — завтра.\nПодпишись, чтобы не пропустить', fade:[18.3,18.9] },
+  flashes: V===1 ? [2.3, 3.7] : [1.2, 2.6],       // вспышки камеры / «успех»
+  maskOff: V===1 ? 6.0 : 6.2,                     // момент, когда маска снимается
+  cutMusic: 17.9
+};
+const MID = (T.dip[0]+T.dip[1])/2;
+
+/* ================== ХЕЛПЕРЫ ================== */
+const $ = id => document.getElementById(id);
+const clamp = (v,a=0,b=1)=>Math.min(b,Math.max(a,v));
+const ease = x=>x*x*(3-2*x), easeOut = x=>1-Math.pow(1-x,3);
+const lerp = (a,b,k)=>a+(b-a)*k;
+const bump = u => Math.sin(clamp(u)*Math.PI);
+const fadeIn = (t,[a,b]) => ease(clamp((t-a)/(b-a)));
+function mulberry(seed){ return ()=>{ seed|=0; seed=seed+0x6D2B79F5|0; let t=Math.imul(seed^seed>>>15,1|seed); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+function typed(text, start, cps, t, cursor){
+  const n = clamp(Math.floor((t-start)*cps), 0, text.length);
+  const shown = t<start ? '' : text.slice(0,n);
+  return (shown + `<span style="visibility:hidden">${text.slice(n)}</span>` + (cursor ? '<span class="cur"></span>' : '')).replace(/\n/g,'<br>');
+}
+
+/* ================== ПЕРСОНАЖ: скелет в полный рост ================== */
+const D = '#050505';
+function rigSVG(kind){
+  const woman = kind==='woman', suit = kind==='suit';
+  const leg = (x,fx)=>`<g class="leg"><line x1="${x}" y1="365" x2="${x-2}" y2="520" stroke="${D}" stroke-width="54" stroke-linecap="round"/>
+      <line x1="${x-2}" y1="520" x2="${x-3}" y2="655" stroke="${D}" stroke-width="44" stroke-linecap="round"/><ellipse cx="${fx}" cy="672" rx="38" ry="17" fill="${D}"/></g>`;
+  const skirt = woman ? `<path d="M96 330L204 330L250 560L50 560Z" fill="${D}"/>` : '';
+  const hairBack = woman ? `<ellipse cx="150" cy="62" rx="58" ry="68" fill="${D}"/><path d="M96 70Q86 170 108 232L132 206Q114 140 118 84Z M204 70Q214 170 192 232L168 206Q186 140 182 84Z" fill="${D}"/>` : '';
+  const suitDet = suit ? `<g class="det"><path d="M126 142L150 214 174 142" stroke="#ffd700" stroke-width="3" fill="none" opacity=".7"/><path d="M150 168l-10 14 10 70 10-70z" fill="#ffd700"/></g>`
+                       : `<path d="M126 142L150 190 174 142" stroke="#ffd700" stroke-width="3" fill="none" opacity=".45"/>`;
+  return `<svg viewBox="0 0 300 700" width="300" height="700" style="overflow:visible"><g class="root">
+     <g class="L">${leg(128,116)}</g><g class="R">${leg(172,184)}</g>${skirt}
+     <path d="M98 142Q150 120 202 142Q214 152 212 205L${woman?196:206} 372Q150 392 ${woman?104:94} 372L${woman?92:88} 205Q86 152 98 142Z" fill="${D}"/>
+     <path d="M96 340Q150 356 204 340" stroke="#ffd700" stroke-width="4" fill="none" opacity=".5"/>${suitDet}
+     <rect x="130" y="104" width="40" height="50" fill="${D}"/>
+     <g class="armL"><line x1="62" y1="152" x2="62" y2="258" stroke="${D}" stroke-width="42" stroke-linecap="round"/>
+       <g class="foreL"><line x1="62" y1="258" x2="62" y2="358" stroke="${D}" stroke-width="36" stroke-linecap="round"/><circle cx="62" cy="372" r="21" fill="${D}"/></g></g>
+     <g class="head">${hairBack}<ellipse cx="150" cy="64" rx="48" ry="58" fill="${D}"/>
+       <g class="mk"><ellipse cx="150" cy="66" rx="44" ry="54" fill="url(#mk)"/>
+         <path d="M122 64q10-13 20 0M158 64q10-13 20 0" stroke="${D}" stroke-width="5" fill="none" stroke-linecap="round"/>
+         <path d="M124 86q26 24 52 0" stroke="${D}" stroke-width="5" fill="none" stroke-linecap="round"/></g>
+       <g class="fc"><circle class="eL" cx="130" cy="66" r="8" fill="#ffd700"/><circle class="eR" cx="170" cy="66" r="8" fill="#ffd700"/>
+         <path class="mouth" d="M132 96q18-12 36 0" stroke="#ffd700" stroke-width="4" fill="none" stroke-linecap="round"/>
+         <path class="tear" d="M176 80q9 15 0 22q-9-7 0-22z" fill="#9fd0ff"/></g></g>
+     <g class="armR"><line x1="238" y1="152" x2="238" y2="258" stroke="${D}" stroke-width="42" stroke-linecap="round"/>
+       <g class="foreR"><line x1="238" y1="258" x2="238" y2="358" stroke="${D}" stroke-width="36" stroke-linecap="round"/><circle cx="238" cy="372" r="21" fill="${D}"/>
+         <g class="phoneH"><rect x="214" y="340" width="48" height="82" rx="9" fill="#0b1522"/><rect x="219" y="347" width="38" height="66" rx="4" fill="#9fd0ff"/></g></g></g>
+  </g></svg>`;
+}
+function buildRig(host, kind){
+  host.innerHTML = rigSVG(kind); const q = c=>host.querySelector(c);
+  return { root:q('.root'), L:q('.L .leg'), R:q('.R .leg'), armL:q('.armL'), foreL:q('.foreL'), armR:q('.armR'), foreR:q('.foreR'),
+           head:q('.head'), det:q('.det'), mk:q('.mk'), fc:q('.fc'), eL:q('.eL'), eR:q('.eR'), tear:q('.tear'), mouth:q('.mouth'), phone:q('.phoneH') };
+}
+function setRig(r,o){
+  r.root.setAttribute('transform',`translate(0 ${o.bob||0}) rotate(${o.sway||0} 150 365)`);
+  r.L.setAttribute('transform',`translate(128 365) rotate(${o.rotL||0}) scale(1 ${o.sL||1}) translate(-128 -365)`);
+  r.R.setAttribute('transform',`translate(172 365) rotate(${o.rotR||0}) scale(1 ${o.sR||1}) translate(-172 -365)`);
+  r.armL.setAttribute('transform',`rotate(${o.armL||0} 62 152)`);   r.foreL.setAttribute('transform',`rotate(${o.foreL||0} 62 258)`);
+  r.armR.setAttribute('transform',`rotate(${o.armR||0} 238 152)`);  r.foreR.setAttribute('transform',`rotate(${o.foreR||0} 238 258)`);
+  r.head.setAttribute('transform',`rotate(${o.head||0} 150 125)`);
+  const maskOn = o.mask!==false, back = !!o.back;
+  r.mk.style.display = (maskOn && !back) ? '' : 'none'; r.fc.style.display = (!maskOn && !back) ? '' : 'none';
+  const ec = o.eye || '#ffd700'; r.eL.setAttribute('fill',ec); r.eR.setAttribute('fill',ec);
+  r.tear.style.display = o.tear ? '' : 'none';
+  if (r.det) r.det.style.display = back ? 'none' : '';
+  r.mouth.setAttribute('d', o.open ? 'M136 94q14 22 28 0q-14-8-28 0z' : 'M132 96q18-12 36 0');
+  r.phone.style.display = o.phone ? '' : 'none';
+}
+/* походка: фаза, амплитуда → углы суставов (вид спереди: нога «поднимается» укорочением) */
+function gait(ph,w,idleT){
+  const s=Math.sin(ph);
+  return { bob:-Math.abs(s)*9*w + Math.sin(idleT)*2*(1-w), sway:s*2.4*w, rotL:4*s*w, rotR:-4*s*w,
+           sL:1-.16*Math.max(0,s)*w, sR:1-.16*Math.max(0,-s)*w, armL:3-7*s*w, foreL:2, armR:-5+6*s*w, foreR:-3 };
+}
+function place(id, shId, x, feetY, sc, op){
+  const el=$(id); el.style.left=(x-150)+'px'; el.style.top=(feetY-690)+'px'; el.style.transform=`scale(${sc})`; el.style.opacity=op;
+  if (shId){ const sh=$(shId); sh.style.width=(300*sc)+'px'; sh.style.height=(46*sc)+'px'; sh.style.left=(x-150*sc)+'px'; sh.style.top=(feetY-22*sc)+'px'; sh.style.opacity=op; }
+}
+const fmtNum = v => Math.round(v).toString().replace(/\B(?=(\d{3})+(?!\d))/g,' ');
+
+/* ================== СЦЕНЫ ВАРИАНТА 1: ИДЕАЛЬНАЯ СЕМЬЯ ================== */
+let rigs = {}, scene1 = ()=>{}, scene2 = ()=>{};
+if (V===1){
+  $('L1').innerHTML = `<div id="bg1a"></div><div id="post" class="abs"></div>
+    <div id="postTop" class="abs"><i></i>@perfect.family</div>
+    <div id="floor1" class="abs"></div>
+    <svg id="car" class="abs outl" viewBox="0 0 700 262">
+      <path d="M12 206V160Q16 126 84 116L190 104Q250 42 336 40L474 42Q548 50 596 104L654 120Q694 132 694 172V206Q694 214 684 214H22Q12 214 12 206Z" fill="#070707"/>
+      <path d="M214 102Q262 56 334 54L402 56V104Z M418 56L472 58Q524 64 562 104H418Z" fill="#16263f"/>
+      <path d="M20 150H690" stroke="#ffd700" stroke-width="3" opacity=".6"/>
+      <circle cx="170" cy="214" r="46" fill="#050505"/><circle cx="170" cy="214" r="22" fill="none" stroke="#ffd700" stroke-width="4"/>
+      <circle cx="540" cy="214" r="46" fill="#050505"/><circle cx="540" cy="214" r="22" fill="none" stroke="#ffd700" stroke-width="4"/>
+      <ellipse cx="686" cy="150" rx="14" ry="8" fill="#fff0a0"/></svg>
+    <div id="shM" class="shadow"></div><div id="figM" class="fig outl"></div>
+    <div id="shW" class="shadow"></div><div id="figW" class="fig outl"></div>
+    <div id="postBot" class="abs"><svg width="52" height="48" viewBox="0 0 24 22"><path d="M12 21C-3 11 3-2 12 5c9-7 15 6 0 16z" fill="#ffd700"/></svg><span id="likes">12 408</span></div>`;
+  $('L2').innerHTML = `<div id="bg1b"></div><div id="window1" class="abs"><b></b></div><div id="fridge" class="abs"></div>
+    <div id="phoneCard" class="abs"><div class="hd"><span>03:07</span><span>●●● LTE</span></div>
+      <div class="who">Муж</div><div class="seen">был в сети 2 дня назад</div><div class="inp" id="inp"></div></div>
+    <div id="shS" class="shadow"></div><div id="figS" class="fig outl"></div>
+    <div id="faceglow" class="abs"></div>
+    <div id="table" class="abs"></div>
+    <svg class="abs outl" style="left:700px;top:1262px" width="100" height="92" viewBox="0 0 100 92"><path d="M10 20H70V64Q70 84 40 84Q10 84 10 64Z" fill="#070707"/><path d="M70 32Q94 32 90 52Q86 66 70 62" fill="none" stroke="#070707" stroke-width="9"/></svg>
+    <svg id="maskTable" class="abs" viewBox="0 0 200 200"><path d="M100 18C58 18 30 48 30 92c0 38 20 72 52 86 6 3 12 3 18 3s12 0 18-3c32-14 52-48 52-86 0-44-28-74-70-74z" fill="url(#mk)"/><path d="M52 86q18-18 34 0q-17 12-34 0zM114 86q18-18 34 0q-17 12-34 0z" fill="#0a0a0a"/><path d="M70 134q30 22 60 0" stroke="#0a0a0a" stroke-width="8" fill="none" stroke-linecap="round"/></svg>`;
+  rigs.M = buildRig($('figM'),'man'); rigs.W = buildRig($('figW'),'woman'); rigs.S = buildRig($('figS'),'woman');
+  scene1 = t=>{
+    const feetY=1440, sc=.8;
+    [['M',360,.4,-220,'figM','shM'],['W',560,.75,-420,'figW','shW']].forEach(([k,xf,t0,xs,id,sh])=>{
+      const x = lerp(xs,xf,easeOut(clamp((t-t0)/1.25)));
+      const w = clamp((t-t0)/.12)*(1-ease(clamp((t-(t0+1.05))/.4)));
+      const o = gait((t-t0)*2*Math.PI*1.6, w, t*1.8+(k==='W'?1:0));
+      const hold = ease(clamp((t-t0-1.2)/.5));
+      if (k==='M'){ o.armR = lerp(o.armR,-11,hold); o.head = 4*hold + 2*Math.sin(t*1.5); }
+      else { o.armL = lerp(o.armL, 11, hold); o.head = -4*hold + 2*Math.sin(t*1.5);
+             const wv = ease(clamp((t-2.6)/.4))*(1-ease(clamp((t-4.3)/.4)));
+             o.armR = lerp(o.armR,-150,wv); o.foreR = lerp(o.foreR, -20+24*Math.sin(t*11), wv); }
+      setRig(rigs[k],o); place(id,sh,x,feetY,sc,fadeIn(t,[.3,.8]));
+    });
+    $('likes').textContent = fmtNum(lerp(12408, 12408+9120, clamp((t-.8)/3.6)));
+  };
+  scene2 = t=>{
+    const feetY=1860, sc=1.15, off = t>=T.maskOff;
+    const e = ease(clamp((t-5.2)/.8)), dn = ease(clamp((t-T.maskOff-.2)/1.0));
+    setRig(rigs.S,{ bob:Math.sin(t*1.6)*2, sway:0, armL:20, foreL:50, armR:lerp(-5,-22,e), foreR:lerp(-3,-128,e),
+      head:14*dn + Math.sin(t*1.3)*1.2, mask:!off, phone:t>5.4, tear:t>9.3 });
+    place('figS','shS',470,feetY,sc,1);
+    $('faceglow').style.opacity = fadeIn(t,[5.6,6.4])*(.75+.25*Math.sin(t*3));
+    $('maskTable').style.opacity = t>=T.maskOff ? fadeIn(t,[T.maskOff,T.maskOff+.3]) : 0;
+    const pk = easeOut(clamp((t-5.4)/.6)); $('phoneCard').style.opacity = pk; $('phoneCard').style.transform=`translateY(${(1-pk)*60}px)`;
+    // сообщение печатается и стирается: «Я так больше не могу»
+    const msg='Я так больше не могу'; let shown;
+    if (t<7.0) shown=''; else if (t<10.0) shown=msg.slice(0,clamp(Math.floor((t-7.0)*9),0,msg.length)); else shown=msg.slice(0,Math.max(0,msg.length-Math.floor((t-10.0)*14)));
+    $('inp').innerHTML = shown + '<span class="cur"></span>';
+  };
+}
+
+/* ================== СЦЕНЫ ВАРИАНТА 2: УСПЕШНЫЙ ЧЕЛОВЕК ================== */
+if (V===2){
+  const buildings = (x0,w,col)=>{ const hs=[420,560,360,640,500,700,440,600,380,540]; return hs.map((h,i)=>`<rect x="${x0+i*w}" y="${1210-h}" width="${w-10}" height="${h}" fill="${col}"/>`).join(''); };
+  const pts = [[0,300],[60,270],[110,290],[170,230],[225,250],[290,170],[340,190],[400,110],[455,130],[520,40]];
+  const path = 'M'+pts.map(p=>p.join(' ')).join(' L');
+  $('L1').innerHTML = `<div id="bg2a"></div>
+    <svg id="glassWall" class="abs" viewBox="0 0 1080 1210" width="1080" height="1210">
+      <rect width="1080" height="1210" fill="#0f1830"/>${buildings(0,108,'#16264a')}${buildings(20,108,'#1b3058')}
+      <g stroke="rgba(255,215,0,.5)" stroke-width="6"><line x1="360" y1="0" x2="360" y2="1210"/><line x1="720" y1="0" x2="720" y2="1210"/><line x1="0" y1="600" x2="1080" y2="600"/></g>
+      <g fill="#ffd700" opacity=".5">${Array.from({length:40},(_,i)=>`<rect x="${(i*97)%1040+10}" y="${(i*131)%900+280}" width="10" height="14"/>`).join('')}</g></svg>
+    <div id="money" class="abs">+0 ₽</div>
+    <div id="chart" class="abs"><svg viewBox="0 0 560 380" width="560" height="380"><g stroke="rgba(255,255,255,.1)" stroke-width="2">${[1,2,3,4].map(i=>`<line x1="20" y1="${i*70}" x2="540" y2="${i*70}"/>`).join('')}</g>
+      <g transform="translate(20 40)"><polyline id="cl" points="${pts.map(p=>p.join(',')).join(' ')}" fill="none" stroke="#ffd700" stroke-width="10" stroke-linejoin="round" stroke-linecap="round" pathLength="1" stroke-dasharray="1" stroke-dashoffset="1" style="filter:drop-shadow(0 0 12px rgba(255,215,0,.7))"/>
+      <circle id="cd" r="14" fill="#fff0a0" cx="0" cy="300"/></g></svg></div>
+    <div id="floor2a" class="abs"></div><div id="desk" class="abs"></div>
+    <svg id="laptop" class="abs outl" viewBox="0 0 240 112"><path d="M30 0H210L226 98H14Z" fill="#070707"/><path d="M44 12H196L208 84H32Z" fill="#12263f"/><path d="M60 70L100 44 130 58 176 24" stroke="#ffd700" stroke-width="5" fill="none"/><path d="M0 98H240L228 112H12Z" fill="#070707"/></svg>
+    <div id="shS" class="shadow"></div><div id="figS" class="fig outl"></div>`;
+  $('L2').innerHTML = `<div id="tiles"></div><div id="fluo" class="abs"></div>
+    <div id="mirror" class="abs"><div id="figR" class="fig"></div><div class="sheen"></div></div>
+    <div id="shB" class="shadow"></div><div id="figB" class="fig outl"></div>
+    <div id="counter2" class="abs"></div>
+    <svg id="faucet" class="abs" viewBox="0 0 90 80"><path d="M10 80V30Q10 10 40 10H70V28H46Q34 28 34 38V80Z" fill="#8a6d2b"/></svg><div id="drip" class="abs"></div>`;
+  rigs.S = buildRig($('figS'),'suit'); rigs.R = buildRig($('figR'),'suit'); rigs.B = buildRig($('figB'),'suit');
+  scene1 = t=>{
+    const feetY=1450, sc=.85, t0=.4, x=lerp(-200,430,easeOut(clamp((t-t0)/1.2)));
+    const w = clamp((t-t0)/.12)*(1-ease(clamp((t-(t0+1.1))/.4)));
+    const o = gait((t-t0)*2*Math.PI*1.6, w, t*1.8);
+    const pump = ease(clamp((t-2.4)/.3))*(1-ease(clamp((t-3.7)/.4)));
+    o.armR = lerp(o.armR,-150,pump); o.foreR = lerp(o.foreR,-20+22*Math.sin(t*12),pump); o.head = 3*Math.sin(t*1.5);
+    setRig(rigs.S,o); place('figS','shS',x,feetY,sc,fadeIn(t,[.3,.8]));
+    const p = clamp((t-.9)/3.4);
+    $('cl').setAttribute('stroke-dashoffset', 1-ease(p));
+    const k = Math.min(9, p*9.99|0), f = (p*9.99)-k, a=pts[k], b=pts[Math.min(9,k+1)];
+    $('cd').setAttribute('cx', lerp(a[0],b[0],f)); $('cd').setAttribute('cy', lerp(a[1],b[1],f));
+    $('money').textContent = '+' + fmtNum(1000000*ease(p)) + ' ₽';
+    $('money').style.opacity = fadeIn(t,[.8,1.3]); $('chart').style.opacity = fadeIn(t,[.6,1.2]);
+  };
+  scene2 = t=>{
+    const panic = ease(clamp((t-6.0)/5.0)), trem = Math.sin(t*38)*(1.2+3*panic);
+    const hands = ease(clamp((t-5.4)/.7));
+    const base = (extra)=>Object.assign({ bob:Math.sin(t*(3+6*panic))*(1+2*panic), armL:lerp(3,135,hands), foreL:lerp(2,135,hands),
+        armR:lerp(-5,-135,hands), foreR:lerp(-3,-135,hands), head:trem*.4 }, extra);
+    setRig(rigs.R, base({ mask:t<T.maskOff, eye:'#ff4d4d', tear:t>7.0, open:t>8.2 }));
+    setRig(rigs.B, base({ back:true }));
+    const fr=$('figR'); fr.style.transform = `scale(1.5) translate(${trem*.5}px,0)`;
+    place('figB','shB',560+trem*.3,1700,1.0,1);
+    // капля из крана
+    const dp = (t*.9)%1; $('drip').style.opacity = dp<.6?1:0; $('drip').style.top = (1330+Math.pow(dp/.6,2)*52)+'px';
+    $('fluo').style.opacity = .5 + .35*Math.sin(t*47)*Math.sin(t*5.3)*(t>7?1:.3);
+    $('redv').style.opacity = (t>=MID && t<T.dip[0]) ? panic*(.3+.3*Math.sin(t*(7+8*panic))) : 0;
+  };
+}
+
+/* ================== ЧАСТИЦЫ ================== */
+const cv=$('dust'), cx=cv.getContext('2d'), rnd=mulberry(1234);
+const PART = Array.from({length:80},()=>({a:rnd()*6.283, R:140+rnd()*560, ph:rnd(), sp:.16+rnd()*.3, sz:2+rnd()*4.5, sx:rnd()*1080, sw:20+rnd()*60, rot:rnd()*6}));
+function drawDust(t){
+  cx.clearRect(0,0,1080,1920);
+  if (t>=T.glitch[0] && t<T.s1.cut) return;
+  const mode = t<T.s1.cut ? 1 : t<MID ? 2 : 3;
+  const vis = mode===1 ? fadeIn(t,[.6,1.6]) : mode===2 ? .5 : fadeIn(t,T.logo)*.85;
+  for (const p of PART){
+    const age=(t*p.sp+p.ph)%1, a=Math.sin(Math.PI*age)*vis*(.6+.4*Math.sin(t*9+p.ph*20));
+    cx.globalAlpha=Math.max(0,a); cx.fillStyle='#ffd700'; cx.shadowColor='#ffd700'; cx.shadowBlur=12;
+    if (mode===1 && V===1){ cx.font=`${p.sz*7}px "DejaVu Sans",sans-serif`; cx.fillText('♥', p.sx+Math.sin(t*1.5+p.ph*9)*p.sw, 1400-age*1100); }
+    else if (mode===1){ cx.save(); cx.translate(p.sx+Math.sin(t*2+p.ph*9)*p.sw, -40+age*1500); cx.rotate(p.rot+t*3); cx.fillRect(-6,-3,12+p.sz,6); cx.restore(); }
+    else if (mode===2){ cx.beginPath(); cx.arc(p.sx+Math.sin(t*1.3+p.ph*9)*p.sw, 1500-age*1300, p.sz*.7, 0, 6.283); cx.fill(); }
+    else { cx.beginPath(); cx.arc(540+Math.cos(p.a)*p.R*age, 470+Math.sin(p.a)*p.R*age*.9-age*70, p.sz, 0, 6.283); cx.fill(); }
+  }
+  cx.globalAlpha=1; cx.shadowBlur=0;
+}
+
+/* ================== ГЛИТЧ ================== */
+const world=$('world'), bars=$('bars'); for(let i=0;i<10;i++) bars.appendChild(document.createElement('div'));
+function glitch(on, frame){
+  if(!on){ world.style.filter=''; for(const b of bars.children) b.style.display='none'; return; }
+  const r=mulberry(frame*97+5), sx=10+r()*26;
+  world.style.transform=`translate(${(r()-.5)*110}px,${(r()-.5)*24}px) skewX(${(r()-.5)*9}deg) scale(${1+r()*.04})`;
+  world.style.filter=`drop-shadow(${sx}px 0 0 rgba(255,215,0,.8)) drop-shadow(${-sx}px 0 0 rgba(0,170,255,.7)) contrast(${1.2+r()*.7}) brightness(${.9+r()*.9}) hue-rotate(${(r()-.5)*40}deg)`;
+  for(const b of bars.children){ const s=r()>.25; b.style.display=s?'block':'none'; if(!s) continue;
+    b.style.top=r()*1920+'px'; b.style.height=(10+r()*150)+'px';
+    b.style.background = r()>.35 ? `rgba(255,215,0,${.25+r()*.5})` : (r()>.5 ? 'rgba(255,255,255,.35)' : 'rgba(0,170,255,.3)');
+    b.style.transform=`translateX(${(r()-.5)*260}px)`; }
+}
+
+/* ================== ГЛАВНЫЙ РЕНДЕР ================== */
+const FPS=30;
+function render(t){
+  $('L1').style.opacity = t<T.s1.cut ? fadeIn(t,T.s1.in) : 0;
+  $('L2').style.opacity = (t>=T.s1.cut && t<MID) ? 1 : 0;
+  $('L3').style.opacity = t>=MID ? 1 : 0;
+  if (t<T.s1.cut) scene1(t); else if (t<MID) scene2(t);
+
+  // текст
+  const c1=T.c1; $('c1').innerHTML = typed(c1.text,c1.at,c1.cps,t, t>=c1.at && t<c1.at+c1.text.length/c1.cps+.6);
+  $('c1').style.opacity = t<T.glitch[0] ? 1 : 0;
+  const inS2 = t>=T.s1.cut && t<T.dip[0]+.4, o2 = 1-ease(clamp((t-(T.dip[0]-.5))/.5));
+  $('c2').innerHTML = T.c2.text.replace(/\n/g,'<br>'); $('c2').style.opacity = inS2 ? fadeIn(t,T.c2.fade)*o2 : 0;
+  $('s2').innerHTML = T.s2.text;                        $('s2').style.opacity = inS2 ? fadeIn(t,T.s2.fade)*o2 : 0;
+
+  // вспышки
+  $('flash').style.opacity = Math.max(0,...T.flashes.map(f=> t>=f ? Math.exp(-(t-f)*7)*.9 : 0));
+
+  // финал
+  const q=T.q, cta=T.cta, fin=t>=MID;
+  $('logo').style.opacity = fadeIn(t,T.logo);
+  $('logo').style.transform = `scale(${.9+.1*ease(clamp((t-T.logo[0])/1.2))+Math.sin(t*2.2)*.012})`;
+  $('logo').style.filter = `drop-shadow(0 0 ${30+14*Math.sin(t*2.2)}px rgba(255,215,0,.75))`;
+  $('q').innerHTML   = fin ? typed(q.text,q.at,q.cps,t,t<q.at+q.text.length/q.cps+.3) : ''; $('q').style.opacity = fin?1:0;
+  $('cta').innerHTML = fin ? typed(cta.text,cta.at,cta.cps,t,false) : '';                   $('cta').style.opacity = fin?1:0;
+  $('note').innerHTML = T.note.text.replace(/\n/g,'<br>'); $('note').style.opacity = fin ? fadeIn(t,T.note.fade) : 0;
+
+  drawDust(t);
+  const gl = t>=T.glitch[0] && t<T.glitch[1];
+  glitch(gl, Math.floor(t*FPS));
+  if (!gl){                                             // дрожь кадра при панике (вариант 2)
+    let sh=0; if (V===2 && t>=7.2 && t<T.dip[0]) sh = (t-7.2)/4.8*7;
+    const r=mulberry(Math.floor(t*FPS)*31+7); world.style.transform = sh ? `translate(${(r()-.5)*sh*2}px,${(r()-.5)*sh*2}px)` : '';
+  }
+  if (V!==2) $('redv').style.opacity = 0;
+
+  // затемнения
+  const [a,b]=T.dip, dipv = (t<a||t>=b) ? 0 : t<MID ? ease((t-a)/(MID-a)) : 1-ease((t-MID)/(b-MID));
+  $('fade').style.opacity = Math.max(1-ease(clamp(t/.5)), dipv, ease(clamp((t-(T.duration-.35))/.35)));
+  $('time').textContent = t.toFixed(1)+' / '+T.duration+' с';
+}
+
+/* ================== ПЛЕЕР ================== */
+let t0=performance.now(), offset=0, paused=null, cur=0;
+function loop(now){ if(paused===null){ let t=(now-t0)/1000+offset; if(t>=T.duration){ t0=now; offset=0; t=0; } cur=t; render(t); } requestAnimationFrame(loop); }
+$('replay').onclick=()=>{ t0=performance.now(); offset=0; paused=null; $('pause').textContent='❚❚ Пауза'; };
+$('pause').onclick=()=>{ if(paused===null){ paused=cur; $('pause').textContent='▶ Играть'; } else { offset=paused; t0=performance.now(); paused=null; $('pause').textContent='❚❚ Пауза'; } };
+window.seek = s => { paused=s; cur=s; render(s); };
+function fit(){ const s=Math.min(innerWidth/1080,(innerHeight-50)/1920), st=$('stage'); st.style.transform=`scale(${s})`; st.style.margin=`${-(1920*(1-s))/2}px ${-(1080*(1-s))/2}px`; }
+addEventListener('resize',fit); fit(); requestAnimationFrame(loop);
+</script>
+</body>
+</html>
