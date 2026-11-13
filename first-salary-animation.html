@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Первая зарплата</title>
+<style>
+  :root { --bg1:#1a1a1a; --bg2:#2b2b2b; --text:#e8e4dc; --muted:#8d8a84; --accent:#c9a24a; --red:#c0392b; }
+  * { box-sizing:border-box; margin:0; }
+  html, body { height:100%; background:#000; overflow:hidden; font-family:"Segoe UI",system-ui,sans-serif; }
+  body { display:grid; place-items:center; }
+
+  /* Сцена 1080x1920 (9:16), масштабируется под экран */
+  #stage { position:relative; width:1080px; height:1920px; transform-origin:center; overflow:hidden;
+           background:linear-gradient(160deg,var(--bg2),var(--bg1)); }
+  #world { position:absolute; inset:0; }
+  .layer { position:absolute; inset:0; opacity:0; }
+  canvas#coins { position:absolute; inset:0; }
+
+  /* Зерно и виньетка */
+  #grain { position:absolute; inset:-50%; pointer-events:none; opacity:.09; mix-blend-mode:overlay; z-index:20;
+           background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence baseFrequency='.9' numOctaves='2'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>"); }
+  #vignette { position:absolute; inset:0; pointer-events:none; z-index:19;
+              background:radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,.65) 100%); }
+
+  /* Текст */
+  .caption { position:absolute; left:80px; right:80px; text-align:center; color:var(--text);
+             font-size:68px; line-height:1.25; font-weight:700; letter-spacing:.5px; min-height:2.5em; }
+  .caption .cursor { display:inline-block; width:.08em; height:.95em; background:var(--accent); margin-left:6px;
+                     vertical-align:-.1em; animation:blink .7s steps(1) infinite; }
+  @keyframes blink { 50% { opacity:0; } }
+  #t1 { top:230px; }
+  #t2 { top:230px; color:#b9b4aa; }
+  #t3 { top:1480px; font-size:62px; }
+  #t4 { top:1400px; font-size:64px; }
+
+  /* Персонаж (силуэт) */
+  .person { position:absolute; left:50%; transform:translateX(-50%); }
+  .head { width:220px; height:250px; border-radius:50% 50% 46% 46%; background:#0d0d0d; margin:0 auto; position:relative; }
+  .eyes { position:absolute; top:95px; left:0; right:0; display:flex; justify-content:center; gap:46px; }
+  .eyes i { width:26px; height:26px; border-radius:50%; background:var(--accent); box-shadow:0 0 28px 8px rgba(201,162,74,.75); }
+  .body { width:520px; height:360px; background:#0d0d0d; border-radius:260px 260px 0 0; margin:-14px auto 0; }
+  #p1 { top:760px; }
+  #p2 { top:860px; }
+  #p2 .head { transform:translateY(46px) rotate(4deg); }
+  .hands { position:absolute; top:70px; left:50%; width:300px; height:160px; transform:translateX(-50%) scaleY(0);
+           transform-origin:bottom; background:#161616; border-radius:80px 80px 30px 30px; border:2px solid #222; }
+
+  /* Стол */
+  .desk { position:absolute; left:0; right:0; bottom:0; height:420px; background:#101010; border-top:2px solid #222; }
+
+  /* Телефон и уведомления */
+  .phone { position:absolute; left:50%; transform:translateX(-50%); width:480px; height:700px; border-radius:56px;
+           background:#050505; border:3px solid #2e2e2e; padding:36px 28px; overflow:hidden;
+           box-shadow:0 0 140px 30px rgba(120,150,190,.18); }
+  #ph2 { top:1030px; }
+  #ph3 { top:1000px; }
+  .notif { background:rgba(60,64,72,.9); border-radius:26px; padding:20px 24px; margin-bottom:20px; color:#dcdcdc;
+           font-size:34px; opacity:0; transform:translateY(-60px); }
+  .notif small { display:block; color:var(--muted); font-size:22px; margin-bottom:6px; letter-spacing:2px; }
+  .notif b { color:#e0735f; }
+  #balance { margin-top:50px; text-align:center; color:var(--muted); font-size:34px; }
+  #balance strong { display:block; color:var(--red); font-size:130px; margin-top:10px; font-weight:800;
+                    text-shadow:0 0 40px rgba(192,57,43,.55); }
+
+  /* Логотип-маска */
+  #logo { position:absolute; left:50%; top:620px; transform:translateX(-50%); width:320px; height:320px; }
+
+  /* Подпись-режиссёр (метка сцены) */
+  .tag { position:absolute; top:110px; left:0; right:0; text-align:center; font-size:34px; letter-spacing:12px;
+         color:var(--accent); text-transform:uppercase; opacity:.85; }
+
+  /* Глитч */
+  #bars { position:absolute; inset:0; z-index:18; pointer-events:none; }
+  #bars div { position:absolute; left:0; right:0; mix-blend-mode:screen; display:none; }
+  #fade { position:absolute; inset:0; background:#000; opacity:0; z-index:17; pointer-events:none; }
+
+  /* UI */
+  #ui { position:fixed; bottom:14px; left:50%; transform:translateX(-50%); display:flex; gap:10px; z-index:50; }
+  #ui button { background:#2b2b2b; color:#e8e4dc; border:1px solid #444; border-radius:10px; padding:10px 18px; font-size:15px; cursor:pointer; }
+  #ui button:hover { background:#3a3a3a; }
+  #time { color:#8d8a84; align-self:center; font:14px/1 monospace; min-width:70px; }
+</style>
+</head>
+<body>
+
+<div id="stage">
+  <div id="world">
+
+    <!-- Сцена 1: Ожидание -->
+    <div class="layer" id="s1">
+      <canvas id="coins" width="1080" height="1920"></canvas>
+      <div class="tag">Ожидание</div>
+      <div class="caption" id="t1"></div>
+      <div class="person" id="p1"><div class="head"><div class="eyes"><i></i><i></i></div></div><div class="body"></div></div>
+      <div class="desk"></div>
+    </div>
+
+    <!-- Сцена 2: Реальность -->
+    <div class="layer" id="s2">
+      <div class="tag" style="color:#8d8a84">Реальность</div>
+      <div class="caption" id="t2"></div>
+      <div class="person" id="p1b" style="top:520px; opacity:.9"><div class="head"></div><div class="body" style="height:260px"></div></div>
+      <div class="phone" id="ph2">
+        <div class="notif" data-at="4.0"><small>АРЕНДА</small><b>−50 000 ₽</b> · 50% зарплаты</div>
+        <div class="notif" data-at="4.7"><small>ПРОДУКТЫ</small><b>−30 000 ₽</b> · 30% зарплаты</div>
+        <div class="notif" data-at="5.4"><small>ПОДПИСКИ</small><b>−10 000 ₽</b> · 10% зарплаты</div>
+      </div>
+    </div>
+
+    <!-- Сцена 3: Узнавание -->
+    <div class="layer" id="s3">
+      <div class="person" id="p2"><div class="head"><div class="hands" id="hands"></div></div><div class="body"></div></div>
+      <div class="phone" id="ph3" style="top:1000px; height:430px">
+        <div id="balance">БАЛАНС<strong>0 ₽</strong></div>
+      </div>
+      <div class="caption" id="t3"></div>
+    </div>
+
+    <!-- Сцена 4: Призыв -->
+    <div class="layer" id="s4">
+      <svg id="logo" viewBox="0 0 200 200" aria-label="логотип">
+        <defs>
+          <linearGradient id="mg" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#d8d3c8"/><stop offset="1" stop-color="#8d8a84"/>
+          </linearGradient>
+        </defs>
+        <path d="M100 18C58 18 30 48 30 92c0 38 20 72 52 86 6 3 12 3 18 3s12 0 18-3c32-14 52-48 52-86 0-44-28-74-70-74z" fill="url(#mg)"/>
+        <path d="M52 86q18-18 34 0q-17 12-34 0zM114 86q18-18 34 0q-17 12-34 0z" fill="#1a1a1a"/>
+        <path d="M70 134q30 22 60 0" stroke="#1a1a1a" stroke-width="8" fill="none" stroke-linecap="round"/>
+      </svg>
+      <div class="caption" id="t4"></div>
+    </div>
+  </div>
+
+  <div id="bars"></div>
+  <div id="fade"></div>
+  <div id="vignette"></div>
+  <div id="grain"></div>
+</div>
+
+<div id="ui">
+  <button id="replay">↻ Заново</button>
+  <button id="pause">❚❚ Пауза</button>
+  <span id="time">0.0 / 15 с</span>
+</div>
+
+<script>
+/* ============ НАСТРОЙКИ ============ */
+const CFG = {
+  duration: 15,
+  loop: true,
+  colors: { bg1:'#1a1a1a', bg2:'#2b2b2b' },
+  glitchWindows: [[2.72, 3.05], [3.45, 3.65]],   // резкий переход «Ожидание → Реальность»
+  texts: {
+    t1: 'Ожидание: я получу первую зарплату и куплю ВСЁ!',
+    t2: 'Реальность:',
+    t3: 'Ты работаешь, чтобы жить, или живёшь, чтобы работать?',
+    t4: 'На что ушла твоя первая зарплата?\nНапиши в комментариях 👇'
+  },
+  // Скорость печати (букв в секунду) и время старта каждой надписи
+  typing: { t1:[0.15, 22], t2:[3.7, 14], t3:[6.4, 20], t4:[12.6, 18] }
+};
+/* Чтобы поменять названия сцен на «Снаружи / Внутри», измените texts.t1/t2
+   и подписи .tag в разметке — тайминги и глитч останутся прежними. */
+
+/* ============ ХЕЛПЕРЫ ============ */
+const $ = id => document.getElementById(id);
+const clamp = (v,a=0,b=1) => Math.min(b, Math.max(a, v));
+const ease = x => x*x*(3-2*x);
+/* плавное появление/исчезновение: [in0,in1] нарастание, [out0,out1] спад */
+function fade(t, in0, in1, out0, out1){
+  const a = ease(clamp((t-in0)/(in1-in0)));
+  const b = out0==null ? 1 : 1-ease(clamp((t-out0)/(out1-out0)));
+  return a*b;
+}
+function typeText(el, text, start, cps, t){
+  const n = clamp(Math.floor((t-start)*cps), 0, text.length);
+  const done = n >= text.length;
+  const shown = t < start ? '' : text.slice(0,n);
+  el.innerHTML = shown.replace(/\n/g,'<br>') + (t>=start && !(done && t-start-text.length/cps>1.2) ? '<span class="cursor"></span>' : '');
+}
+
+/* ============ МОНЕТЫ (сцена 1) ============ */
+const cv = $('coins'), cx = cv.getContext('2d');
+const coins = Array.from({length:46}, (_,i)=>({
+  x: Math.random()*1080, y: Math.random()*1920, r: 22+Math.random()*30,
+  vy: 160+Math.random()*320, ph: Math.random()*6.28, sp: 2+Math.random()*4, gold: Math.random()>.35
+}));
+function drawCoins(t){
+  cx.clearRect(0,0,1080,1920);
+  if (t>3.05) return;
+  const spin = t>2.7 ? 0.3 : 1;        // монеты «замирают» перед обрывом музыки
+  for (const c of coins){
+    const y = (c.y + c.vy*t*spin) % 2100 - 90;
+    const w = Math.abs(Math.cos(c.ph + t*c.sp)) * c.r + 3;
+    cx.beginPath(); cx.ellipse(c.x + Math.sin(t+c.ph)*18, y, w, c.r, 0, 0, 6.283);
+    cx.fillStyle = c.gold ? '#c9a24a' : '#7fa36a'; cx.fill();
+    cx.lineWidth = 4; cx.strokeStyle = 'rgba(0,0,0,.35)'; cx.stroke();
+    cx.fillStyle = 'rgba(255,255,255,.18)'; cx.fillRect(c.x-1+Math.sin(t+c.ph)*18, y-c.r*.6, 3, c.r*1.2);
+  }
+}
+
+/* ============ ГЛИТЧ ============ */
+const world = $('world'), bars = $('bars');
+for (let i=0;i<7;i++) bars.appendChild(document.createElement('div'));
+function glitch(on){
+  if (!on){
+    world.style.transform=''; world.style.filter='';
+    for (const b of bars.children) b.style.display='none';
+    return;
+  }
+  const dx = (Math.random()-.5)*60, dy = (Math.random()-.5)*14, sx = 5+Math.random()*14;
+  world.style.transform = `translate(${dx}px,${dy}px) skewX(${(Math.random()-.5)*6}deg)`;
+  world.style.filter =
+    `drop-shadow(${sx}px 0 0 rgba(255,0,60,.75)) drop-shadow(${-sx}px 0 0 rgba(0,255,255,.7)) ` +
+    `contrast(${1.1+Math.random()*.5}) hue-rotate(${(Math.random()-.5)*50}deg)`;
+  for (const b of bars.children){
+    const show = Math.random()>.35;
+    b.style.display = show ? 'block' : 'none';
+    if (!show) continue;
+    b.style.top = Math.random()*1920+'px';
+    b.style.height = (8+Math.random()*110)+'px';
+    b.style.background = ['rgba(255,0,60,.22)','rgba(0,255,255,.2)','rgba(255,255,255,.14)'][Math.floor(Math.random()*3)];
+    b.style.transform = `translateX(${(Math.random()-.5)*160}px)`;
+  }
+}
+
+/* ============ ТАЙМЛАЙН ============ */
+function render(t){
+  // Сцены (fade-in / fade-out)
+  $('s1').style.opacity = fade(t, 0, .45, 2.75, 3.0);
+  $('s2').style.opacity = fade(t, 3.5, 4.0, 5.8, 6.2);
+  $('s3').style.opacity = fade(t, 5.9, 6.5, 11.5, 12.2);
+  $('s4').style.opacity = fade(t, 12.3, 13.0);
+
+  // Кратковременный чёрный экран 0.5с (3.0–3.5) + затемнение финала
+  const black = (t>=3.0 && t<3.5) ? 1 : 0;
+  $('fade').style.opacity = Math.max(black, ease(clamp((t-11.6)/.6))*(t<12.3?1:1-ease(clamp((t-12.3)/.5))));
+
+  // Текст по буквам
+  for (const k of ['t1','t2','t3','t4']) typeText($(k), CFG.texts[k], CFG.typing[k][0], CFG.typing[k][1], t);
+
+  // Монеты + лёгкий зум первого кадра
+  drawCoins(t);
+  $('p1').style.transform = `translateX(-50%) scale(${1 + t*0.018})`;
+
+  // Уведомления телефона (сцена 2)
+  document.querySelectorAll('.notif').forEach(n=>{
+    const a = ease(clamp((t - parseFloat(n.dataset.at))/.45));
+    n.style.opacity = a; n.style.transform = `translateY(${(1-a)*-60}px)`;
+  });
+
+  // Закрытое лицо руками (сцена 3)
+  $('hands').style.transform = `translateX(-50%) scaleY(${ease(clamp((t-7.0)/.8))})`;
+
+  // Логотип (сцена 4): плавное проявление + мягкое «дыхание»
+  $('logo').style.opacity = fade(t, 12.4, 13.2);
+  $('logo').style.transform = `translateX(-50%) scale(${.92 + .08*ease(clamp((t-12.4)/1.2)) + Math.sin(t*2)*.01})`;
+
+  // Глитч
+  glitch(CFG.glitchWindows.some(([a,b])=>t>=a && t<b));
+
+  $('time').textContent = t.toFixed(1)+' / '+CFG.duration+' с';
+}
+
+/* ============ ПЛЕЕР ============ */
+let t0 = performance.now(), pausedAt = null, offset = 0;
+function loop(now){
+  if (pausedAt===null){
+    let t = (now - t0)/1000 + offset;
+    if (t >= CFG.duration){ if (CFG.loop){ t0 = now; offset = 0; t = 0; } else t = CFG.duration; }
+    render(t); $('stage')._t = t;
+  }
+  requestAnimationFrame(loop);
+}
+$('replay').onclick = ()=>{ t0 = performance.now(); offset = 0; pausedAt = null; $('pause').textContent='❚❚ Пауза'; };
+$('pause').onclick = ()=>{
+  if (pausedAt===null){ pausedAt = $('stage')._t || 0; $('pause').textContent='▶ Играть'; }
+  else { offset = pausedAt; t0 = performance.now(); pausedAt = null; $('pause').textContent='❚❚ Пауза'; }
+};
+window.seek = s => { pausedAt = s; render(s); };   // для отладки: seek(3.8)
+
+function fit(){ const s = Math.min(innerWidth/1080, (innerHeight-50)/1920); $('stage').style.transform = `scale(${s})`; $('stage').style.margin = `${-(1920*(1-s))/2}px ${-(1080*(1-s))/2}px`; }
+addEventListener('resize', fit); fit();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
