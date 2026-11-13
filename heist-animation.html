@@ -5,9 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Ограбление века</title>
 <!--
-  Вертикальная анимация 9:16 (1080×1920), 12 секунд, 30 fps.
+  Вертикальная анимация 9:16 (1080×1920), 25 секунд, 30 fps.
   Библиотек не требуется: чистый HTML/CSS/JS + SVG + Canvas.
-  Экспорт в MP4: см. export/README.md  (node export/render.js heist-animation.html 12 heist.mp4 audio/heist.wav)
+  Экспорт в MP4: см. export/README.md  (node export/render.js heist-animation.html 25 heist.mp4 audio/heist.wav)
 -->
 <style>
   :root { --black:#0a0a0a; --navy:#111a2b; --gold:#ffd700; --gold-d:#b8960b; --cream:#f3e6c4; }
@@ -44,6 +44,25 @@
          filter:drop-shadow(3px 0 0 #ffd700) drop-shadow(-3px 0 0 #ffd700) drop-shadow(0 3px 0 #ffd700) drop-shadow(0 -3px 0 #ffd700) drop-shadow(0 0 22px rgba(255,215,0,.5)); }
   .shadow { position:absolute; border-radius:50%; background:radial-gradient(ellipse,rgba(0,0,0,.85),transparent 70%); }
   #floor2 { left:0; top:1540px; width:1080px; height:380px; background:linear-gradient(180deg,#0d1422,#05080f); border-top:2px solid rgba(255,215,0,.28); }
+  /* ---------- Сцена «Выписка» ---------- */
+  #bg4 { position:absolute; inset:0; background:linear-gradient(180deg,#111a2b,#0a0a0a 85%); }
+  #doc { left:70px; top:560px; width:940px; padding:44px 50px 54px; background:#0b111c; border:4px solid var(--gold); border-radius:22px; box-shadow:0 0 70px rgba(255,215,0,.25); opacity:0; }
+  #doc .dh { display:flex; justify-content:space-between; font-size:32px; letter-spacing:6px; color:#8a7d52; font-weight:700; }
+  #doc .dt { font-size:54px; font-weight:800; color:var(--cream); margin:14px 0 30px; padding-bottom:28px; border-bottom:2px solid #2d3548; }
+  #doc .row { display:flex; justify-content:space-between; align-items:baseline; font-size:40px; color:#c9c2a6; padding:32px 0; border-bottom:1px solid #1f2738; opacity:0; }
+  #doc .row b { font-size:46px; color:#7bd88f; font-weight:800; }
+  #doc .row.bad { color:#ffb4a8; } #doc .row.bad b { color:#ff6b57; }
+  #doc .bal { display:flex; justify-content:space-between; align-items:baseline; margin-top:40px; font-size:36px; letter-spacing:6px; color:#8a7d52; font-weight:800; }
+  #doc .bal b { font-size:72px; letter-spacing:0; color:var(--gold); text-shadow:0 0 24px rgba(255,215,0,.45); }
+  #stamp { left:540px; top:1070px; opacity:0; transform-origin:center; font-size:70px; font-weight:900; letter-spacing:4px; color:#e0483a; border:10px solid #e0483a; border-radius:14px; padding:6px 26px; background:rgba(10,10,10,.5); text-shadow:0 0 18px rgba(224,72,58,.5); white-space:nowrap; }
+  #c3 { top:150px; font-family:Georgia,"Times New Roman","DejaVu Serif",serif; font-size:76px; line-height:1.14; font-weight:700; color:#fff; text-shadow:0 6px 30px rgba(0,0,0,.8); }
+  #s3t{ top:400px; font-family:Georgia,"Times New Roman","DejaVu Serif",serif; font-style:italic; font-size:60px; line-height:1.25; color:#e8e8e8; }
+  /* ---------- Сцена «Полиция» ---------- */
+  #polL, #polR { position:absolute; top:0; bottom:0; width:640px; mix-blend-mode:screen; }
+  #polL { left:0;  background:radial-gradient(ellipse at 0% 45%,rgba(255,40,40,.75),transparent 70%); }
+  #polR { right:0; background:radial-gradient(ellipse at 100% 45%,rgba(40,110,255,.75),transparent 70%); }
+  #c4a { top:190px; font-size:78px; white-space:nowrap; font-weight:900; color:var(--gold); letter-spacing:1px; text-shadow:0 0 34px rgba(255,215,0,.55); }
+  #c4b { top:410px; font-family:Georgia,"Times New Roman","DejaVu Serif",serif; font-style:italic; font-size:72px; line-height:1.2; color:#f2f2f2; text-shadow:0 6px 30px rgba(0,0,0,.85); }
   #phone { left:520px; top:640px; width:510px; opacity:0; background:#070b13; border:4px solid var(--gold); border-radius:44px; padding:28px 30px 34px;
            box-shadow:0 0 60px rgba(255,215,0,.35); }
   #phone .hd { display:flex; justify-content:space-between; font-size:26px; letter-spacing:4px; color:#8a7d52; font-weight:700; margin-bottom:18px; }
@@ -99,6 +118,28 @@
     </div>
   </div>
 
+  <!-- СЦЕНА «ВЫПИСКА»: правда о деньгах -->
+  <div class="layer" id="L4">
+    <div id="bg4"></div>
+    <div id="doc" class="abs">
+      <div class="dh"><span>ВЫПИСКА</span><span>СЧЁТ №0417</span></div>
+      <div class="dt">Детский дом «Солнышко»</div>
+      <div class="row"><span>12.03 · Пожертвования</span><b>+1 200 000 ₽</b></div>
+      <div class="row"><span>28.05 · Госвыплата</span><b>+2 300 000 ₽</b></div>
+      <div class="row"><span>14.09 · Спонсор</span><b>+1 500 000 ₽</b></div>
+      <div class="row bad"><span>03.11 · «Комиссия банка»</span><b>−5 000 000 ₽</b></div>
+      <div class="bal"><span>БАЛАНС</span><b id="balv">5 000 000 ₽</b></div>
+    </div>
+    <div id="stamp" class="abs">СПИСАНО БАНКОМ</div>
+  </div>
+
+  <!-- СЦЕНА «ПОЛИЦИЯ»: он остался -->
+  <div class="layer" id="L5">
+    <svg id="corr2" class="abs" style="inset:0" width="1080" height="1920" viewBox="0 0 1080 1920"></svg>
+    <div id="sh3" class="shadow"></div><div id="fig3" class="fig"></div>
+    <div id="polL"></div><div id="polR"></div>
+  </div>
+
   <!-- СЦЕНА 3: ФИНАЛ -->
   <div class="layer" id="L3">
     <div id="s3bg"></div>
@@ -112,6 +153,7 @@
 
   <div id="c1" class="txt"></div><div id="s1" class="txt"></div>
   <div id="c2" class="txt"></div><div id="s2" class="txt"></div>
+  <div id="c3" class="txt"></div><div id="s3t" class="txt"></div><div id="c4a" class="txt"></div><div id="c4b" class="txt"></div>
   <div id="q" class="txt"></div><div id="cta" class="txt"></div><div id="note" class="txt"></div>
  </div>
  <div id="flash" class="abs"></div>
@@ -123,10 +165,10 @@
 <script>
 /* ================== РАСКАДРОВКА (все тайминги в одном месте) ================== */
 const T = {
-  duration: 12,
+  duration: 25,
   s1:   { in:[0, 1.4], cut:3.15 },              // сцена 1: плавное проявление, жёсткий обрыв
   glitch:[3.0, 3.3],                            // резкий глитч (без easing)
-  s2:   { from:3.15, out:8.0 },
+  s2:   { from:3.15, out:7.9 },
   flash: 1.0,                                   // золотая вспышка при появлении текста
   c1:   { text:'СНАРУЖИ:\nОграбление века', at:1.0, cps:20, hideAt:3.0 },
   s1t:  { text:'5 минут до приезда полиции', at:2.2, cps:34 },
@@ -134,12 +176,18 @@ const T = {
   s2t:  { text:'Он вернул деньги, которые банк украл у сирот', fade:[4.9, 5.8] },
   env:  [3.95, 5.0],                             // конверт плывёт к кассиру
   phone:[5.35, 5.95],
-  s3:   { from:8.7 },
-  logo: [8.9, 9.8],
-  q:    { text:'Он преступник или единственный честный человек в этом городе?', at:9.0, cps:34 },
-  cta:  { text:'Пиши в комментах 👇', at:10.75, cps:22 },
-  note: { text:'Продолжение — завтра.\nПодпишись, чтобы не пропустить', fade:[11.0, 11.5] },
-  cutMusic: 11.45                               // слово «комментах» — музыка обрывается
+  dips: [[8.0,8.8],[12.6,13.4],[17.0,17.8]],    // затемнения между сценами, смена сцены — в середине
+  c3:   { text:'ТРИ ГОДА НАЗАД:\nБанк «потерял» их деньги', fade:[9.2,9.9], out:12.2 },
+  s3t:  { text:'Деньги, собранные на будущее сирот', fade:[10.3,11.0], out:12.2 },
+  stamp: 11.5,                                  // печать «СПИСАНО БАНКОМ»
+  c4a:  { text:'ПОЛИЦИЯ ПРИЕХАЛА', at:13.6, cps:14, out:16.9 },
+  c4b:  { text:'Он не побежал.\nОн просто ждал.', fade:[15.2,16.0], out:16.9 },
+  s3:   { from:17.4 },
+  logo: [17.6, 18.5],
+  q:    { text:'Он преступник или единственный честный человек в этом городе?', at:17.9, cps:30 },
+  cta:  { text:'Пиши в комментах 👇', at:21.6, cps:15 },
+  note: { text:'Продолжение — завтра.\nПодпишись, чтобы не пропустить', fade:[23.2, 23.8] },
+  cutMusic: 22.8                               // слово «комментах» — музыка обрывается
 };
 
 /* ================== ХЕЛПЕРЫ ================== */
@@ -157,7 +205,7 @@ function typed(text, start, cps, t, cursor){
 const fadeIn = (t,[a,b]) => ease(clamp((t-a)/(b-a)));
 
 /* ================== КОРИДОР БАНКА ================== */
-(function buildCorridor(){
+function buildCorridor(host, gid){
   const VPx=540, VPy=860, bx0=400, bx1=680, by0=760, by1=960;
   let s = `<defs>
     <linearGradient id="fl" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#05070c"/><stop offset=".7" stop-color="#0e1626"/><stop offset="1" stop-color="#16233a"/></linearGradient>
@@ -185,8 +233,9 @@ const fadeIn = (t,[a,b]) => ease(clamp((t-a)/(b-a)));
           <g class="lamp" data-i="${i}"><rect x="${540-P(150,40,kk)}" y="${yt+4}" width="${P(300,80,kk)}" height="${P(26,6,kk)}" rx="4" fill="#ffe27a"/>
           <ellipse cx="540" cy="${P(1500,1000,kk)}" rx="${P(420,70,kk)}" ry="${P(60,10,kk)}" fill="rgba(255,215,0,.07)"/></g>`;
   }
-  $('corr').innerHTML = `<g id="corrG" style="transform-origin:540px 860px">${s}</g>`;
-})();
+  host.innerHTML = `<g id="${gid}" style="transform-origin:540px 860px">${s}</g>`;
+}
+buildCorridor($('corr'),'corrG'); buildCorridor($('corr2'),'corrG2');
 const lamps = [...document.querySelectorAll('.lamp')];
 
 /* ================== ПЕРСОНАЖ В ПОЛНЫЙ РОСТ (скелетная анимация) ==================
@@ -244,6 +293,7 @@ function setRig(r,o){
 const rig1 = buildRig($('fig1')), rig2 = buildRig($('fig2'));
 $('teller').innerHTML = tellerSVG();
 rig1.env.style.display='none'; rig2.bag.style.display='none';
+const rig3 = buildRig($('fig3')); rig3.bag.style.display='none'; rig3.env.style.display='none';
 const bump = u => Math.sin(clamp(u)*Math.PI);
 let P1 = {x:540, y:820};
 
@@ -281,6 +331,32 @@ function poseScene2(t){
   env.style.transform = `translate(${ex}px,${ey}px) scale(.55) rotate(${(1-k)*-12}deg)`;
   env.style.opacity = t>=5.0 ? 1 : 0;
   $('teller').style.transform = `translateY(${bump((t-5.6)/.7)*14}px)`;
+}
+
+const fmtRub = v => Math.round(v).toString().replace(/\B(?=(\d{3})+(?!\d))/g,'\u202f') + '\u00a0₽';
+/* Сцена «Выписка»: строки появляются, печать, баланс обнуляется */
+function sceneLedger(t){
+  const doc=$('doc'), d0=9.0;
+  doc.style.opacity = fadeIn(t,[d0,d0+.5]); doc.style.transform = `translateY(${(1-easeOut(clamp((t-d0)/.6)))*50}px)`;
+  [...doc.querySelectorAll('.row')].forEach((r,i)=>{ const a=fadeIn(t,[9.4+i*.5,9.8+i*.5]); r.style.opacity=a; r.style.transform=`translateX(${(1-a)*-40}px)`; });
+  const st=T.stamp, k=clamp((t-st)/.14), stp=$('stamp');
+  stp.style.opacity = t>=st ? 1 : 0;
+  stp.style.transform = `translateX(-50%) rotate(-9deg) scale(${1+ (1-easeOut(k))*1.6})`;
+  const shake = t>=st && t<st+.35 ? Math.sin((t-st)*90)*10*(1-(t-st)/.35) : 0;
+  doc.style.transform += ` translate(${shake}px,${-Math.abs(shake)*.6}px)`;
+  const v = t<st ? 5000000 : 5000000*(1-ease(clamp((t-st-.05)/.9)));
+  const bv=$('balv'); bv.textContent = fmtRub(v); bv.style.color = t<st ? '' : '#ff6b57';
+}
+/* Сцена «Полиция»: вор поднимает руки и спокойно ждёт, стены вспыхивают красным и синим */
+function scenePolice(t){
+  const e = ease(clamp((t-14.2)/.9)), idle = Math.sin(t*2.0), feetY = 1450, sc = .84;
+  setRig(rig3,{ bob:idle*2.5, sway:Math.sin(t*1.1)*1.2, armL:3+147*e, foreL:2+18*e, armR:-3-147*e, foreR:-18*e*1,
+    head: 4*Math.sin(t*1.4) + 6*ease(clamp((t-15.4)/.8)) });
+  const el=$('fig3'); el.style.left=(540-150)+'px'; el.style.top=(feetY-690)+'px'; el.style.transform=`scale(${sc})`;
+  const sh=$('sh3'); sh.style.width=(300*sc)+'px'; sh.style.height=(46*sc)+'px'; sh.style.left=(540-150*sc)+'px'; sh.style.top=(feetY-22*sc)+'px';
+  const f = Math.sin(t*13) > 0;
+  $('polL').style.opacity = f ? .85 : .12; $('polR').style.opacity = f ? .12 : .85;
+  $('corrG2').style.transform = `scale(${1+.05*clamp((t-13.4)/3.6)})`;
 }
 
 /* ================== ЧАСТИЦЫ ================== */
@@ -325,7 +401,10 @@ function render(t){
   // ---- слои сцен ----
   const L1 = t<T.s1.cut ? fadeIn(t,T.s1.in) : 0;
   $('L1').style.opacity = L1;
-  $('L2').style.opacity = (t>=T.s2.from && t<T.s3.from) ? 1 : 0;
+  const M = T.dips.map(d=>(d[0]+d[1])/2);            // моменты смены сцен
+  $('L2').style.opacity = (t>=T.s2.from && t<M[0]) ? 1 : 0;
+  $('L4').style.opacity = (t>=M[0] && t<M[1]) ? 1 : 0;
+  $('L5').style.opacity = (t>=M[1] && t<M[2]) ? 1 : 0;
   $('L3').style.opacity = t>=T.s3.from ? 1 : 0;
 
   // ---- сцена 1: коридор, дыхание камеры, лампы, силуэт ----
@@ -363,11 +442,22 @@ function render(t){
   $('cta').innerHTML = t>=T.s3.from ? typed(cta.text, cta.at, cta.cps, t, false) : ''; $('cta').style.opacity = t>=T.s3.from?1:0;
   $('note').innerHTML = T.note.text.replace(/\n/g,'<br>'); $('note').style.opacity = t>=T.s3.from ? fadeIn(t,T.note.fade) : 0;
 
+  // ---- сцены 3–4 ----
+  const win = (t0,t1)=> t>=t0 && t<t1;
+  const outf = (o)=> 1-ease(clamp((t-o)/.5));
+  $('c3').innerHTML = T.c3.text.replace(/\n/g,'<br>'); $('c3').style.opacity = win(8.9,T.c3.out+.6) ? fadeIn(t,T.c3.fade)*outf(T.c3.out) : 0;
+  $('s3t').innerHTML = T.s3t.text;                      $('s3t').style.opacity = win(8.9,T.s3t.out+.6) ? fadeIn(t,T.s3t.fade)*outf(T.s3t.out) : 0;
+  $('c4a').innerHTML = typed(T.c4a.text, T.c4a.at, T.c4a.cps, t, t<T.c4a.at+T.c4a.text.length/T.c4a.cps+.5);
+  $('c4a').style.opacity = win(13.4,T.c4a.out+.6) ? outf(T.c4a.out) : 0;
+  $('c4b').innerHTML = T.c4b.text.replace(/\n/g,'<br>'); $('c4b').style.opacity = win(13.4,T.c4b.out+.6) ? fadeIn(t,T.c4b.fade)*outf(T.c4b.out) : 0;
+  if (t>=M[0] && t<M[1]) sceneLedger(t);
+  if (t>=M[1] && t<M[2]) scenePolice(t);
+
   drawDust(t);
   glitch(t>=T.glitch[0] && t<T.glitch[1], Math.floor(t*FPS));
 
   // ---- затемнения ----
-  const toBlack = t>=7.9 && t<T.s3.from ? ease(clamp((t-7.9)/.8)) : 0;
+  const toBlack = Math.max(0, ...T.dips.map(([a,b])=>{ const m=(a+b)/2; return t<a||t>=b ? 0 : t<m ? ease((t-a)/(m-a)) : 1-ease((t-m)/(b-m)); }));
   $('fade').style.opacity = Math.max(1-ease(clamp(t/.5)), toBlack, ease(clamp((t-(T.duration-.35))/.35)));
   $('time').textContent = t.toFixed(1)+' / '+T.duration+' с';
 }
