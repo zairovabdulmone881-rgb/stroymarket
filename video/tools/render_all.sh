@@ -2,7 +2,7 @@
 # Записать mp4 для всех выпусков, у которых есть полная озвучка (timing.js), кроме уже записанных.
 # bash tools/render_all.sh [число потоков]
 cd "$(dirname "$0")/.." || exit 1
-J=${1:-4}
+J=${1:-1}
 ready=()
 for d in episodes/*/; do
   e=$(basename "$d")

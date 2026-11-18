@@ -6,7 +6,7 @@ const { spawn } = require("child_process");
 const path = require("path"), fs = require("fs");
 const [design = "3-kino", ep = "001-abu-bakr-as-siddiq", out = `out/${ep}--${design}.mp4`, fpsArg = "30"] = process.argv.slice(2);
 const fps = +fpsArg;            // частота выходного видео
-const cap = +(process.env.CAPTURE_FPS || 15); // частота съёмки кадров; промежуточные кадры дорисовывает ffmpeg
+const cap = +(process.env.CAPTURE_FPS || 10); // частота съёмки кадров; промежуточные кадры дорисовывает ffmpeg
 const root = path.resolve(__dirname, "..");
 (async () => {
   fs.mkdirSync(path.dirname(path.resolve(root, out)), { recursive: true });
