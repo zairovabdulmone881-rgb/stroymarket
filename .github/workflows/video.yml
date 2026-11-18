@@ -41,17 +41,12 @@ jobs:
         id: eps
         env:
           INPUT: ${{ github.event.inputs.episodes }}
-          BEFORE: ${{ github.event.before }}
         run: |
-          if [ -n "$INPUT" ]; then
-            if [ "$INPUT" = "all" ]; then LIST=$(ls episodes); else LIST="$INPUT"; fi
-          else
-            BASE="$BEFORE"; git cat-file -e "$BASE" 2>/dev/null || BASE=HEAD~1
-            LIST=$(git diff --name-only "$BASE" HEAD -- episodes | grep '/episode.js$' | cut -d/ -f3 | sort -u)
-          fi
-          LIST=$(for e in $LIST; do [ -f "episodes/$e/episode.js" ] && echo $e; done | tr '\n' ' ')
-          echo "list=$LIST" >> "$GITHUB_OUTPUT"
-          echo "Выпуски: $LIST"
+          ALL=$(ls episodes | tr '\n' ' ')
+          if [ -n "$INPUT" ] && [ "$INPUT" != "all" ]; then RENDER="$INPUT"; elif [ -n "$INPUT" ]; then RENDER="$ALL"; else RENDER=""; fi
+          echo "list=$ALL" >> "$GITHUB_OUTPUT"
+          echo "render=$RENDER" >> "$GITHUB_OUTPUT"
+          echo "Все выпуски: $ALL"; echo "Записать по запросу: $RENDER"
 
       - uses: actions/setup-python@v5
         if: steps.eps.outputs.list != ''
@@ -78,6 +73,8 @@ jobs:
         id: voice
         if: steps.eps.outputs.list != ''
         run: |
+          # Озвучиваются только новые или изменённые кадры; выпуски с обновлённой озвучкой записываются в mp4
+          export UPDATED_LIST="$RUNNER_TEMP/updated.txt"; touch "$UPDATED_LIST"
           rc=0
           for e in ${{ steps.eps.outputs.list }}; do python3 tools/voice.py "episodes/$e" || rc=1; done
           exit $rc
@@ -92,13 +89,17 @@ jobs:
           for i in 1 2 3 4; do git pull --rebase -q && git push && break || sleep $((i*5)); done
 
       - name: Запись mp4
-        if: steps.eps.outputs.list != '' && (github.event_name == 'push' || github.event.inputs.render == 'true')
+        if: always() && steps.eps.outputs.list != '' && github.event.inputs.render != 'false'
         run: |
-          for e in ${{ steps.eps.outputs.list }}; do node tools/render.js 3-kino "$e" "out/$e.mp4"; done
+          LIST=$(echo ${{ steps.eps.outputs.render }} $(cat "$RUNNER_TEMP/updated.txt" 2>/dev/null) | tr ' ' '\n' | sort -u)
+          echo "Записываю: $LIST"
+          for e in $LIST; do [ -f "episodes/$e/timing.js" ] && node tools/render.js 3-kino "$e" "out/$e.mp4"; done
+          ls out/*.mp4 >/dev/null 2>&1 || echo "нечего записывать"
 
       - uses: actions/upload-artifact@v4
-        if: steps.eps.outputs.list != '' && (github.event_name == 'push' || github.event.inputs.render == 'true')
+        if: always() && steps.eps.outputs.list != '' && github.event.inputs.render != 'false'
         with:
           name: video
           path: video/out/*.mp4
           retention-days: 30
+          if-no-files-found: ignore

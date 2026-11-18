@@ -53,6 +53,7 @@ def main(dirp):
     idx_path = os.path.join(vdir, "index.json")
     idx = json.load(open(idx_path, encoding="utf-8")) if os.path.exists(idx_path) else {}
     new_idx, failed = {}, []
+    fresh = not os.path.exists(os.path.join(dirp, "timing.js"))
     for i, f in enumerate(ep["frames"], 1):
         p = os.path.join(vdir, f"{i:02d}.mp3")
         key = f"{VOICE}|{RATE}|{f['voice']}"
@@ -64,7 +65,7 @@ def main(dirp):
             subprocess.check_call(["ffmpeg", "-y", "-loglevel", "error", "-f", "lavfi", "-i", "anullsrc=r=24000:cl=mono", "-t", f"{est:.2f}", p])
         else:
             try:
-                tts(f["voice"], p)
+                tts(f["voice"], p); fresh = True
             except Exception as e:
                 failed.append(i); new_idx.pop(f"{i:02d}", None); print(f"кадр {i:02d}: НЕ ОЗВУЧЕН ({e})"); continue
         d = round(max(MIN, LEAD + dur(p) + TAIL), 2)
@@ -87,6 +88,8 @@ def main(dirp):
     with open(os.path.join(dirp, "timing.js"), "w", encoding="utf-8") as fh:
         fh.write("// Создано tools/voice.py — длительность кадров по озвучке\nwindow.TIMING = " + json.dumps(timing) + ";\n")
     print(f"итого: {sum(timing):.1f} c")
+    if fresh and os.environ.get("UPDATED_LIST"):
+        with open(os.environ["UPDATED_LIST"], "a") as fh: fh.write(os.path.basename(dirp) + "\n")
 
 if __name__ == "__main__":
     for d in sys.argv[1:]: main(d.rstrip("/"))
