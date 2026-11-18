@@ -14,8 +14,14 @@ def episode(dirp):
     js = js[js.index("{"): js.rindex("}") + 1]
     return json.loads(subprocess.check_output(["node", "-e", f"process.stdout.write(JSON.stringify({js}))"], text=True))
 
+FFMPEG = os.environ.get("FFMPEG", "ffmpeg")
+
 def dur(p):
-    return float(subprocess.check_output(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", p], text=True))
+    try:  # без ffprobe (на GitHub) — длительность через mutagen
+        from mutagen.mp3 import MP3
+        return MP3(p).info.length
+    except ImportError:
+        return float(subprocess.check_output(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", p], text=True))
 
 async def _say(text):
     """Текст -> mp3-байты. Сервис часто молчит, поэтому повторяем."""
@@ -62,7 +68,7 @@ def main(dirp):
             pass  # текст кадра не менялся — озвучка уже есть
         elif os.environ.get("VOICE_DUMMY"):
             est = max(1.0, len(f["voice"]) / 14.0)
-            subprocess.check_call(["ffmpeg", "-y", "-loglevel", "error", "-f", "lavfi", "-i", "anullsrc=r=24000:cl=mono", "-t", f"{est:.2f}", p])
+            subprocess.check_call([FFMPEG, "-y", "-loglevel", "error", "-f", "lavfi", "-i", "anullsrc=r=24000:cl=mono", "-t", f"{est:.2f}", p])
         else:
             try:
                 tts(f["voice"], p); fresh = True
@@ -78,18 +84,33 @@ def main(dirp):
     if failed:
         print("не озвучены кадры:", failed, "— запустите ещё раз, готовые кадры не перезаписываются")
         sys.exit(1)
-    # Сведение: кадр = тишина LEAD + голос + тишина до конца кадра
-    args, flt = ["ffmpeg", "-y", "-loglevel", "error"], []
+    with open(os.path.join(dirp, "timing.js"), "w", encoding="utf-8") as fh:
+        fh.write("// Создано tools/voice.py — длительность кадров по озвучке\nwindow.TIMING = " + json.dumps(timing) + ";\n")
+    if os.environ.get("NO_MIX"):
+        print(f"итого: {sum(timing):.1f} c (без сведения)")
+        if fresh and os.environ.get("UPDATED_LIST"):
+            with open(os.environ["UPDATED_LIST"], "a") as fh: fh.write(os.path.basename(dirp) + "\n")
+        return
+    mix(dirp, parts)
+    print(f"итого: {sum(timing):.1f} c")
+    if fresh and os.environ.get("UPDATED_LIST"):
+        with open(os.environ["UPDATED_LIST"], "a") as fh: fh.write(os.path.basename(dirp) + "\n")
+
+def mix(dirp, parts=None):
+    """Сведение: кадр = тишина LEAD + голос + тишина до конца кадра."""
+    if parts is None:
+        js = open(os.path.join(dirp, "timing.js"), encoding="utf-8").read()
+        timing = json.loads(js[js.index("["): js.rindex("]") + 1])
+        parts = [(os.path.join(dirp, "voice", f"{i:02d}.mp3"), d) for i, d in enumerate(timing, 1)]
+    args, flt = [FFMPEG, "-y", "-loglevel", "error"], []
     for k, (p, d) in enumerate(parts):
         args += ["-i", p]
         flt.append(f"[{k}:a]aresample=48000,aformat=channel_layouts=stereo,adelay={int(LEAD*1000)}|{int(LEAD*1000)},apad,atrim=0:{d}[a{k}]")
     flt.append("".join(f"[a{k}]" for k in range(len(parts))) + f"concat=n={len(parts)}:v=0:a=1[out]")
     subprocess.check_call(args + ["-filter_complex", ";".join(flt), "-map", "[out]", "-c:a", "libmp3lame", "-b:a", "160k", os.path.join(dirp, "voice.mp3")])
-    with open(os.path.join(dirp, "timing.js"), "w", encoding="utf-8") as fh:
-        fh.write("// Создано tools/voice.py — длительность кадров по озвучке\nwindow.TIMING = " + json.dumps(timing) + ";\n")
-    print(f"итого: {sum(timing):.1f} c")
-    if fresh and os.environ.get("UPDATED_LIST"):
-        with open(os.environ["UPDATED_LIST"], "a") as fh: fh.write(os.path.basename(dirp) + "\n")
 
 if __name__ == "__main__":
-    for d in sys.argv[1:]: main(d.rstrip("/"))
+    if sys.argv[1] == "--mix":  # только свести готовую озвучку в voice.mp3
+        for d in sys.argv[2:]: mix(d.rstrip("/"))
+    else:
+        for d in sys.argv[1:]: main(d.rstrip("/"))

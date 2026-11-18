@@ -1,7 +1,12 @@
 # Серия «100 сподвижников»: сверка хадисов → озвучка каждого кадра → запись mp4.
-# Запускается при изменении episode.js или вручную (Actions → Video → Run workflow).
-# Озвучка (voice/NN.mp3 и timing.js) коммитится обратно в папку выпуска,
-# готовые mp4 лежат в артефактах запуска.
+#
+# Запускается при изменении любого episode.js или вручную (Actions → Video → Run workflow).
+# 1) voice: сверяет цитаты с базой хадисов, озвучивает новые и изменённые кадры
+#    голосом ru-RU-DmitryNeural и коммитит voice/NN.mp3 и timing.js в ту же ветку.
+#    Готовые кадры повторно не озвучиваются. Если сервис озвучки не ответил,
+#    записанное сохраняется — достаточно запустить ещё раз.
+# 2) render: записывает mp4 для выпусков с обновлённой озвучкой (или выбранных вручную)
+#    и выкладывает их в артефакты запуска.
 name: Video
 
 on:
@@ -10,94 +15,97 @@ on:
   workflow_dispatch:
     inputs:
       episodes:
-        description: "Папки выпусков через пробел (например 001-abu-bakr-as-siddiq) или all"
-        required: true
-        default: "all"
-      render:
-        description: "Записывать mp4"
-        type: boolean
-        default: true
+        description: "Записать mp4: папки выпусков через пробел (например 001-abu-bakr-as-siddiq), all или пусто"
+        required: false
+        default: ""
 
 permissions:
   contents: write
 
 concurrency:
-  group: video-${{ github.ref }}
+  group: video-pipeline-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
-  video:
+  voice:
     runs-on: ubuntu-latest
-    timeout-minutes: 350
+    timeout-minutes: 120
+    outputs:
+      render: ${{ steps.list.outputs.render }}
     defaults:
       run:
         working-directory: video
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Какие выпуски
-        id: eps
-        env:
-          INPUT: ${{ github.event.inputs.episodes }}
-        run: |
-          ALL=$(ls episodes | tr '\n' ' ')
-          if [ -n "$INPUT" ] && [ "$INPUT" != "all" ]; then RENDER="$INPUT"; elif [ -n "$INPUT" ]; then RENDER="$ALL"; else RENDER=""; fi
-          echo "list=$ALL" >> "$GITHUB_OUTPUT"
-          echo "render=$RENDER" >> "$GITHUB_OUTPUT"
-          echo "Все выпуски: $ALL"; echo "Записать по запросу: $RENDER"
-
       - uses: actions/setup-python@v5
-        if: steps.eps.outputs.list != ''
         with: { python-version: "3.12" }
-
-      - uses: actions/setup-node@v4
-        if: steps.eps.outputs.list != ''
-        with: { node-version: "20" }
-
-      - name: Установка
-        if: steps.eps.outputs.list != ''
-        run: |
-          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg
-          pip install -q edge-tts
-          npm install --no-audit --no-fund
-          npx playwright install --with-deps chromium
+      - run: pip install -q edge-tts mutagen
 
       - name: Сверка хадисов и аятов
-        if: steps.eps.outputs.list != ''
         run: |
-          for e in ${{ steps.eps.outputs.list }}; do python3 tools/hadith.py verify "episodes/$e/episode.js"; done
+          for f in episodes/*/episode.js; do python3 tools/hadith.py verify "$f"; done
 
-      - name: Озвучка
-        id: voice
-        if: steps.eps.outputs.list != ''
+      - name: Озвучка новых и изменённых кадров
+        env:
+          NO_MIX: "1"
+          UPDATED_LIST: ${{ runner.temp }}/updated.txt
         run: |
-          # Озвучиваются только новые или изменённые кадры; выпуски с обновлённой озвучкой записываются в mp4
-          export UPDATED_LIST="$RUNNER_TEMP/updated.txt"; touch "$UPDATED_LIST"
-          rc=0
-          for e in ${{ steps.eps.outputs.list }}; do python3 tools/voice.py "episodes/$e" || rc=1; done
+          touch "$UPDATED_LIST"; rc=0
+          for e in episodes/*/; do python3 tools/voice.py "$e" || rc=1; done
           exit $rc
 
       - name: Сохранить озвучку в репозиторий
-        if: always() && steps.eps.outputs.list != ''
+        if: always()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add episodes/*/voice; git add episodes/*/timing.js 2>/dev/null || true
-          git diff --cached --quiet || git commit -m "Озвучка выпусков: ${{ steps.eps.outputs.list }} [skip ci]"
-          for i in 1 2 3 4; do git pull --rebase -q && git push && break || sleep $((i*5)); done
+          git add episodes
+          git diff --cached --quiet && exit 0
+          git commit -m "Озвучка выпусков [skip ci]"
+          for i in 1 2 3 4; do git pull --rebase -q && git push && exit 0; sleep $((i*5)); done
+          exit 1
 
-      - name: Запись mp4
-        if: always() && steps.eps.outputs.list != '' && github.event.inputs.render != 'false'
+      - name: Что записывать
+        id: list
+        if: always()
+        env:
+          INPUT: ${{ github.event.inputs.episodes }}
         run: |
-          LIST=$(echo ${{ steps.eps.outputs.render }} $(cat "$RUNNER_TEMP/updated.txt" 2>/dev/null) | tr ' ' '\n' | sort -u)
-          echo "Записываю: $LIST"
-          for e in $LIST; do [ -f "episodes/$e/timing.js" ] && node tools/render.js 3-kino "$e" "out/$e.mp4"; done
-          ls out/*.mp4 >/dev/null 2>&1 || echo "нечего записывать"
+          if [ "$INPUT" = "all" ]; then INPUT=$(ls episodes); fi
+          LIST=$(echo $INPUT $(cat "${{ runner.temp }}/updated.txt" 2>/dev/null) | tr ' ' '\n' | grep . | sort -u | tr '\n' ' ')
+          echo "render=$LIST" >> "$GITHUB_OUTPUT"
+          echo "Записать: $LIST"
 
+  render:
+    needs: voice
+    if: always() && needs.voice.outputs.render != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    defaults:
+      run:
+        working-directory: video
+    steps:
+      - uses: actions/checkout@v4
+        with: { ref: "${{ github.ref }}" }
+      - run: git pull -q origin "${GITHUB_REF_NAME}"
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - uses: actions/setup-node@v4
+        with: { node-version: "20" }
+      - name: Установка (Chrome уже есть на GitHub, ffmpeg — из pip)
+        run: |
+          pip install -q imageio-ffmpeg mutagen
+          echo "FFMPEG=$(python3 -c 'import imageio_ffmpeg as f; print(f.get_ffmpeg_exe())')" >> "$GITHUB_ENV"
+          echo "CHROME_PATH=$(command -v google-chrome || command -v chromium || command -v chromium-browser)" >> "$GITHUB_ENV"
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm install --no-audit --no-fund
+      - name: Запись mp4
+        run: |
+          for e in ${{ needs.voice.outputs.render }}; do
+            [ -f "episodes/$e/timing.js" ] || { echo "нет озвучки: $e"; continue; }
+            python3 tools/voice.py --mix "episodes/$e"
+            node tools/render.js 3-kino "$e" "out/$e.mp4"
+          done
       - uses: actions/upload-artifact@v4
-        if: always() && steps.eps.outputs.list != '' && github.event.inputs.render != 'false'
         with:
           name: video
           path: video/out/*.mp4
