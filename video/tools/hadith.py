@@ -71,8 +71,13 @@ def verify_quote(ref, ar):
     return False, "текст не найден в этом хадисе"
 
 def verify_quran(key, ar):
-    req = urllib.request.Request(QURAN.format(key), headers={"User-Agent": "Mozilla/5.0"})
-    txt = json.load(urllib.request.urlopen(req))["data"]["text"]
+    # key: "сура:аят" или "сура:аят1-аят2"
+    sura, ayat = key.split(":")
+    a, b = (ayat.split("-") + [ayat])[:2]
+    txt = ""
+    for n in range(int(a), int(b) + 1):
+        req = urllib.request.Request(QURAN.format(f"{sura}:{n}"), headers={"User-Agent": "Mozilla/5.0"})
+        txt += " " + json.load(urllib.request.urlopen(req))["data"]["text"]
     return norm(ar) in norm(txt), ""
 
 def verify(path):
