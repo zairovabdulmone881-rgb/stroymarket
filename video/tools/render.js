@@ -4,7 +4,7 @@
 const { chromium } = require("playwright");
 const { spawn } = require("child_process");
 const path = require("path"), fs = require("fs");
-const [design = "1-klassika", ep = "044-khalid-ibn-al-walid", out = `out/${ep}--${design}.mp4`, fpsArg = "30"] = process.argv.slice(2);
+const [design = "3-kino", ep = "044-khalid-ibn-al-walid", out = `out/${ep}--${design}.mp4`, fpsArg = "30"] = process.argv.slice(2);
 const fps = +fpsArg;
 const root = path.resolve(__dirname, "..");
 (async () => {
