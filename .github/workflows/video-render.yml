@@ -1,0 +1,64 @@
+# Серия «100 сподвижников»: запись mp4 для всех выпусков с готовой озвучкой.
+# Запуск вручную: Actions → Video render → Run workflow.
+# 10 параллельных потоков; готовые ролики складываются в ветку video-out
+# (папка mp4/), уже записанные пропускаются.
+name: Video render
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: video-render-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    defaults: { run: { working-directory: video } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - uses: actions/setup-node@v4
+        with: { node-version: "20" }
+      - name: Установка (Chrome уже есть на GitHub, ffmpeg — из pip)
+        run: |
+          pip install -q imageio-ffmpeg mutagen
+          echo "FFMPEG=$(python3 -c 'import imageio_ffmpeg as f; print(f.get_ffmpeg_exe())')" >> "$GITHUB_ENV"
+          echo "CHROME_PATH=$(command -v google-chrome || command -v chromium || command -v chromium-browser)" >> "$GITHUB_ENV"
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm install --no-audit --no-fund
+      - name: Запись (поток ${{ matrix.shard }})
+        env:
+          SHARD: ${{ matrix.shard }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git fetch -q origin video-out 2>/dev/null && DONE=$(git ls-tree --name-only origin/video-out mp4/ 2>/dev/null) || DONE=""
+          mkdir -p out; i=0
+          for d in episodes/*/; do
+            e=$(basename "$d"); i=$((i + 1))
+            [ $(((i - 1) % 10)) -eq "$SHARD" ] || continue
+            [ -f "$d/timing.js" ] || continue
+            n=$(grep -c '{ type:' "$d/episode.js"); v=$(ls "$d/voice"/*.mp3 2>/dev/null | wc -l)
+            [ "$n" = "$v" ] || { echo "нет полной озвучки: $e"; continue; }
+            echo "$DONE" | grep -q "mp4/$e.mp4" && { echo "уже записан: $e"; continue; }
+            python3 tools/voice.py --mix "$d" && node tools/render.js 3-kino "$e" "out/$e.mp4" || { echo "ОШИБКА: $e"; continue; }
+            # сохранить ролик в ветку video-out
+            for t in 1 2 3 4 5 6; do
+              rm -rf /tmp/vo; git worktree prune
+              git fetch -q origin video-out && git worktree add -q --detach /tmp/vo origin/video-out || continue
+              mkdir -p /tmp/vo/mp4 && cp "out/$e.mp4" /tmp/vo/mp4/
+              (cd /tmp/vo && git add mp4 && git commit -qm "Видео: $e" && git push -q origin HEAD:video-out) && break
+              git worktree remove --force /tmp/vo 2>/dev/null
+              sleep $((RANDOM % 15 + t * 5))
+            done
+            git worktree remove --force /tmp/vo 2>/dev/null; rm -f "out/$e.mp4"
+          done
