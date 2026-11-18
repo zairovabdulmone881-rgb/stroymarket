@@ -19,7 +19,7 @@ const root = path.resolve(__dirname, "..");
   const voice = path.join(root, "episodes", ep, "voice.mp3"); // собирается tools/voice.py
   const audio = fs.existsSync(voice) ? ["-i", voice] : ["-f", "lavfi", "-i", "anullsrc=r=48000:cl=stereo"];
   const ff = spawn(process.env.FFMPEG || "ffmpeg", ["-y", "-loglevel", "error", "-f", "image2pipe", "-framerate", String(cap), "-c:v", "mjpeg", "-i", "-",
-    ...audio, "-map", "0:v", "-map", "1:a", "-shortest", "-vf", `framerate=fps=${fps}`, "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-pix_fmt", "yuv420p",
+    ...audio, "-map", "0:v", "-map", "1:a", "-shortest", "-vf", `fps=${fps}`, "-c:v", "libx264", "-preset", "veryfast", "-crf", "21", "-pix_fmt", "yuv420p",
     "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", path.resolve(root, out)], { stdio: ["pipe", "inherit", "inherit"] });
   for (let f = 0; f < n; f++) {
     await page.evaluate((t) => window.render(t), f / cap);
