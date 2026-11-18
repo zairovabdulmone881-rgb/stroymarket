@@ -62,7 +62,11 @@ def verify_quote(ref, ar):
     na = norm(ar)
     for h, e in hs:
         if na in norm(h["text"]):
-            g = "; ".join(f'{x["name"]}: {x["grade"]}' for x in (e or h).get("grades", []))
+            grades = (e or h).get("grades", [])
+            g = "; ".join(f'{x["name"]}: {x["grade"]}' for x in grades)
+            alb = [x["grade"].lower() for x in grades if "albani" in x["name"].lower()]
+            if book not in ("bukhari", "muslim") and not (alb and any(w in alb[0] for w in ("sahih", "hasan"))):
+                return False, "нет оценки «достоверный/хороший» у аль-Альбани: " + g
             return True, g
     return False, "текст не найден в этом хадисе"
 
