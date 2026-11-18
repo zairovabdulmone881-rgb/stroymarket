@@ -1,113 +1,68 @@
-# Серия «100 сподвижников»: сверка хадисов → озвучка каждого кадра → запись mp4.
+# Серия «100 сподвижников»: сверка хадисов и озвучка кадров голосом ru-RU-DmitryNeural.
 #
 # Запускается при изменении любого episode.js или вручную (Actions → Video → Run workflow).
-# 1) voice: сверяет цитаты с базой хадисов, озвучивает новые и изменённые кадры
-#    голосом ru-RU-DmitryNeural и коммитит voice/NN.mp3 и timing.js в ту же ветку.
-#    Готовые кадры повторно не озвучиваются. Если сервис озвучки не ответил,
-#    записанное сохраняется — достаточно запустить ещё раз.
-# 2) render: записывает mp4 для выпусков с обновлённой озвучкой (или выбранных вручную)
-#    и выкладывает их в артефакты запуска.
+# Выпуски делятся на 10 параллельных потоков. Каждый поток озвучивает только новые
+# и изменённые кадры и после каждого выпуска коммитит voice/NN.mp3 и timing.js в ту же ветку.
+# Если сервис озвучки не ответил, записанное сохраняется — достаточно запустить ещё раз.
+# Видео собирается командой: python3 tools/voice.py --mix episodes/NNN && node tools/render.js 3-kino NNN
 name: Video
 
 on:
   push:
     paths: ["video/episodes/**/episode.js"]
   workflow_dispatch:
-    inputs:
-      episodes:
-        description: "Записать mp4: папки выпусков через пробел (например 001-abu-bakr-as-siddiq), all или пусто"
-        required: false
-        default: ""
 
 permissions:
   contents: write
 
 concurrency:
-  group: video-pipeline-${{ github.ref }}
-  cancel-in-progress: false
+  group: video-voice-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  voice:
+  verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
-    outputs:
-      render: ${{ steps.list.outputs.render }}
-    defaults:
-      run:
-        working-directory: video
+    defaults: { run: { working-directory: video } }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - name: Сверка хадисов и аятов
+        run: for f in episodes/*/episode.js; do python3 tools/hadith.py verify "$f"; done
+
+  voice:
+    needs: verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+    defaults: { run: { working-directory: video } }
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
       - run: pip install -q edge-tts mutagen
-
-      - name: Сверка хадисов и аятов
-        run: |
-          for f in episodes/*/episode.js; do python3 tools/hadith.py verify "$f"; done
-
-      - name: Озвучка новых и изменённых кадров
+      - name: Озвучка (поток ${{ matrix.shard }})
         env:
           NO_MIX: "1"
-          UPDATED_LIST: ${{ runner.temp }}/updated.txt
-        run: |
-          touch "$UPDATED_LIST"; rc=0
-          for e in episodes/*/; do python3 tools/voice.py "$e" || rc=1; done
-          exit $rc
-
-      - name: Сохранить озвучку в репозиторий
-        if: always()
+          SHARD: ${{ matrix.shard }}
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add episodes
-          git diff --cached --quiet && exit 0
-          git commit -m "Озвучка выпусков [skip ci]"
-          for i in 1 2 3 4; do git pull --rebase -q && git push && exit 0; sleep $((i*5)); done
-          exit 1
-
-      - name: Что записывать
-        id: list
-        if: always()
-        env:
-          INPUT: ${{ github.event.inputs.episodes }}
-        run: |
-          if [ "$INPUT" = "all" ]; then INPUT=$(ls episodes); fi
-          LIST=$(echo $INPUT $(cat "${{ runner.temp }}/updated.txt" 2>/dev/null) | tr ' ' '\n' | grep . | sort -u | tr '\n' ' ')
-          echo "render=$LIST" >> "$GITHUB_OUTPUT"
-          echo "Записать: $LIST"
-
-  render:
-    needs: voice
-    if: always() && needs.voice.outputs.render != ''
-    runs-on: ubuntu-latest
-    timeout-minutes: 300
-    defaults:
-      run:
-        working-directory: video
-    steps:
-      - uses: actions/checkout@v4
-        with: { ref: "${{ github.ref }}" }
-      - run: git pull -q origin "${GITHUB_REF_NAME}"
-      - uses: actions/setup-python@v5
-        with: { python-version: "3.12" }
-      - uses: actions/setup-node@v4
-        with: { node-version: "20" }
-      - name: Установка (Chrome уже есть на GitHub, ffmpeg — из pip)
-        run: |
-          pip install -q imageio-ffmpeg mutagen
-          echo "FFMPEG=$(python3 -c 'import imageio_ffmpeg as f; print(f.get_ffmpeg_exe())')" >> "$GITHUB_ENV"
-          echo "CHROME_PATH=$(command -v google-chrome || command -v chromium || command -v chromium-browser)" >> "$GITHUB_ENV"
-          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 npm install --no-audit --no-fund
-      - name: Запись mp4
-        run: |
-          for e in ${{ needs.voice.outputs.render }}; do
-            [ -f "episodes/$e/timing.js" ] || { echo "нет озвучки: $e"; continue; }
-            python3 tools/voice.py --mix "episodes/$e"
-            node tools/render.js 3-kino "$e" "out/$e.mp4"
+          save() {
+            git add episodes
+            git diff --cached --quiet && return 0
+            git commit -q -m "Озвучка: $1 [skip ci]"
+            for i in 1 2 3 4 5 6; do git pull -q --rebase && git push -q && return 0; sleep $((RANDOM % 10 + i * 3)); done
+          }
+          rc=0; i=0
+          for e in episodes/*/; do
+            if [ $((i % 10)) -eq "$SHARD" ]; then
+              python3 tools/voice.py "$e" || rc=1
+              save "$(basename "$e")"
+            fi
+            i=$((i + 1))
           done
-      - uses: actions/upload-artifact@v4
-        with:
-          name: video
-          path: video/out/*.mp4
-          retention-days: 30
-          if-no-files-found: ignore
+          exit $rc

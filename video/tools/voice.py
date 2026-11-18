@@ -26,7 +26,7 @@ def dur(p):
 async def _say(text):
     """Текст -> mp3-байты. Сервис часто молчит, поэтому повторяем."""
     import edge_tts
-    for attempt in range(12):
+    for attempt in range(8):
         try:
             data = b""
             async for ch in edge_tts.Communicate(text, VOICE, rate=RATE).stream():
@@ -73,10 +73,12 @@ def main(dirp):
             try:
                 tts(f["voice"], p); fresh = True
             except Exception as e:
-                failed.append(i); new_idx.pop(f"{i:02d}", None); print(f"кадр {i:02d}: НЕ ОЗВУЧЕН ({e})"); continue
+                failed.append(i); new_idx.pop(f"{i:02d}", None); print(f"кадр {i:02d}: НЕ ОЗВУЧЕН ({e})", flush=True)
+                if len(failed) >= 3 and failed[-3:] == list(range(i - 2, i + 1)): break
+                continue
         d = round(max(MIN, LEAD + dur(p) + TAIL), 2)
         timing.append(d); parts.append((p, d))
-        print(f"кадр {i:02d}: {d:5.2f} c")
+        print(f"{os.path.basename(dirp)} кадр {i:02d}: {d:5.2f} c", flush=True)
     for extra in os.listdir(vdir):  # лишние кадры после сокращения выпуска
         if extra.endswith(".mp3") and int(extra[:2]) > len(ep["frames"]): os.remove(os.path.join(vdir, extra))
     if not os.environ.get("VOICE_DUMMY"):
