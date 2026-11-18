@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Сподвижники — кадр</title>
+<link rel="stylesheet" href="fonts/fonts.css">
+<link rel="stylesheet" href="engine/common.css">
+<script>
+  // player.html?d=1-klassika&ep=044-khalid-ibn-al-walid[&render]
+  const q = new URLSearchParams(location.search);
+  const d = q.get("d") || "1-klassika";
+  const ep = q.get("ep") || "044-khalid-ibn-al-walid";
+  document.write(`<link rel="stylesheet" href="designs/${d}.css">`);
+  document.write(`<script src="episodes/${ep}/episode.js"><\/script>`);
+  document.documentElement.className = "d-" + d;
+</script>
+</head>
+<body>
+<script src="engine/scenes.js"></script>
+<script src="engine/player.js"></script>
+</body>
+</html>

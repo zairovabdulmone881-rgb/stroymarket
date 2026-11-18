@@ -1,0 +1,43 @@
+/* 4. Орнамент — изумрудная ночь, золотая рамка, сцена в арке */
+.stage {
+  --sky-top:#0d2420; --sky-bot:#6b5a33; --sun:#f0d79a; --far:#183530; --mid:#10281f; --near:#0a1714;
+  --ink:#06110e; --accent:#C9A65B; --star:#f7ecd0; --map-bg:#0f2622; --map-line:#b59a5c;
+  --night-top:#04100e; --night-bot:#173a33;
+  background:#0B1A18; color:#F2EEE3;
+}
+.bg { background:
+  radial-gradient(900px 600px at 72% 50%, rgba(201,166,91,.08), transparent 70%),
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cg fill='none' stroke='%23C9A65B' stroke-opacity='.07' stroke-width='1.2'%3E%3Crect x='35' y='35' width='50' height='50'/%3E%3Crect x='35' y='35' width='50' height='50' transform='rotate(45 60 60)'/%3E%3C/g%3E%3C/svg%3E"); }
+.orn::before { content:""; position:absolute; inset:26px; border:2px solid rgba(201,166,91,.75); border-radius:6px; }
+.orn::after { content:""; position:absolute; inset:38px; border:1px solid rgba(201,166,91,.3); border-radius:4px; }
+.hdr { left:110px; right:110px; top:64px; height:50px; display:flex; align-items:center; justify-content:space-between; }
+.num { font-family:'Playfair Display',serif; color:#C9A65B; font-size:26px; letter-spacing:2px; }
+.secs { position:absolute !important; left:50%; top:10px; width:900px; margin-left:-450px; height:30px; }
+.sec { width:100%; text-align:center; color:#C9A65B; font-size:18px; font-weight:700; letter-spacing:8px; text-transform:uppercase; }
+.sec::before, .sec::after { content:"◆"; font-size:10px; margin:0 18px; vertical-align:3px; opacity:.8; }
+.cnt { font-family:'Playfair Display',serif; font-size:26px; color:#6f7f78; } .cnt b { color:#C9A65B; font-weight:400; }
+.prog { position:absolute; left:50%; width:520px; margin-left:-260px; top:52px; height:2px; background:rgba(201,166,91,.18); }
+.prog i { background:#C9A65B; }
+.scene-wrap { left:120px; top:150px; width:960px; height:790px;
+  border-radius:480px 480px 18px 18px / 360px 360px 18px 18px;
+  box-shadow: 0 0 0 3px #C9A65B, 0 0 0 14px #0B1A18, 0 0 0 15px rgba(201,166,91,.4); }
+.vignette { background: radial-gradient(ellipse at 50% 60%, transparent 55%, rgba(0,0,0,.5)); }
+.panel { left:1160px; top:190px; width:640px; height:700px; }
+.card { align-items:center; text-align:center; }
+.ar { font-size:48px; line-height:1.75; color:#C9A65B; }
+.rule { width:220px; height:14px; margin:22px 0; transform-origin:center !important;
+  background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='14'%3E%3Cpath d='M0 7H96M124 7H220' stroke='%23C9A65B' stroke-opacity='.6'/%3E%3Cpath d='M110 0L117 7L110 14L103 7Z' fill='%23C9A65B'/%3E%3C/svg%3E") center/contain no-repeat; }
+.ru { font-size:30px; line-height:1.45; font-weight:500; }
+.src { margin-top:22px; color:#C9A65B; font-size:15px; font-weight:700; letter-spacing:4px; text-transform:uppercase; }
+.note { margin-top:14px; color:#8d9a94; font-size:18px; line-height:1.5; }
+.kicker { color:#C9A65B; font-size:16px; font-weight:700; letter-spacing:7px; text-transform:uppercase; }
+.type-title .ar { font-size:76px; }
+.ru.big { font-family:'Playfair Display',serif; font-size:62px; font-weight:600; line-height:1.12; }
+.sub { font-family:'Playfair Display',serif; font-style:italic; color:#e2cb93; font-size:34px; margin-top:12px; }
+.label { border:1.5px solid #C9A65B; color:#C9A65B; font-weight:700; font-size:14px; letter-spacing:5px; text-transform:uppercase; padding:6px 18px; margin-bottom:26px; }
+.ru.fact { font-family:'Playfair Display',serif; font-size:44px; line-height:1.3; font-weight:400; }
+.type-final .ar { font-size:88px; }
+.type-final .ru { font-family:'Playfair Display',serif; font-size:42px; font-weight:400; }
+.ftr { left:0; right:0; bottom:60px; text-align:center; }
+.name { font-family:'Playfair Display',serif; color:#C9A65B; font-size:28px; letter-spacing:10px; text-transform:uppercase; }
+.series { color:#5f706a; font-size:15px; margin-top:8px; letter-spacing:1px; }

@@ -1,0 +1,35 @@
+/* 1. Классика — как в утверждённом шаблоне: тёмный фон, золото, сцена слева, текст справа */
+.stage {
+  --sky-top:#1b1611; --sky-bot:#5a4127; --sun:#E8CBA5; --far:#3a2b1d; --mid:#2a1f15; --near:#171310;
+  --ink:#0d0b09; --accent:#D4B58E; --star:#f3e6cf; --map-bg:#1d1915; --map-line:#a88c68;
+  --night-top:#0b0d14; --night-bot:#2a2230;
+  background:#0F0E0C; color:#fff;
+}
+.bg { background: radial-gradient(1200px 600px at 50% 0%, #1c1813, transparent 70%); }
+.hdr { left:70px; right:70px; top:44px; height:60px; display:flex; align-items:center; gap:22px; }
+.num { border:1.5px solid #D4B58E; color:#E8CBA5; border-radius:30px; padding:6px 16px; font-weight:700; font-size:17px; letter-spacing:2px; }
+.secs { color:#D4B58E; font-weight:700; font-size:18px; letter-spacing:6px; text-transform:uppercase; height:24px; flex:1; }
+.cnt { font-family:'Playfair Display',serif; font-size:30px; color:#7d7468; } .cnt b { color:#D4B58E; font-weight:400; }
+.prog { position:absolute; left:0; right:0; bottom:-6px; height:2px; background:rgba(212,181,142,.18); }
+.prog i { background:#D4B58E; }
+.scene-wrap { left:70px; top:130px; width:1100px; height:790px; border-radius:22px; border:1px solid rgba(212,181,142,.18); }
+.vignette { background: radial-gradient(ellipse at 50% 55%, transparent 55%, rgba(0,0,0,.55)); }
+.panel { left:1200px; top:130px; width:650px; height:790px; background:#1A1816; border-radius:22px; border:1px solid rgba(255,255,255,.04); }
+.card { padding:0 60px; }
+.ar { font-size:46px; line-height:1.75; color:#D4B58E; text-align:right; }
+.rule { height:1px; background:rgba(255,255,255,.16); margin:30px 0; }
+.ru { font-size:30px; line-height:1.45; font-weight:500; }
+.src { margin-top:26px; color:#D4B58E; font-size:16px; font-weight:700; letter-spacing:3px; text-transform:uppercase; }
+.note { margin-top:18px; color:#9E9E9E; font-size:19px; line-height:1.5; }
+.kicker { color:#D4B58E; font-size:16px; font-weight:700; letter-spacing:6px; text-transform:uppercase; margin-bottom:10px; }
+.type-title .ar { font-size:74px; text-align:left; direction:rtl; }
+.ru.big { font-family:'Playfair Display',serif; font-size:60px; font-weight:600; line-height:1.15; }
+.sub { font-family:'Playfair Display',serif; font-style:italic; color:#E8CBA5; font-size:34px; margin-top:16px; }
+.label { align-self:flex-start; background:#E8CBA5; color:#0F0E0C; font-weight:700; font-size:15px; letter-spacing:4px; text-transform:uppercase; padding:7px 16px; border-radius:20px; margin-bottom:28px; }
+.ru.fact { font-family:'Playfair Display',serif; font-size:44px; line-height:1.3; font-weight:400; }
+.type-final .ar { font-size:80px; text-align:center; }
+.type-final .ru { font-family:'Playfair Display',serif; font-size:42px; text-align:center; font-weight:400; }
+.type-final .src, .type-final .note { text-align:center; }
+.ftr { left:0; right:0; bottom:48px; text-align:center; }
+.name { font-family:'Playfair Display',serif; color:#D4B58E; font-size:30px; font-weight:600; letter-spacing:10px; text-transform:uppercase; }
+.series { color:#6f675d; font-size:16px; margin-top:10px; letter-spacing:1px; }

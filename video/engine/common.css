@@ -1,0 +1,37 @@
+html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+.stage { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; overflow: hidden;
+  transform-origin: 0 0; font-family: Montserrat, sans-serif; -webkit-font-smoothing: antialiased; }
+.stage > * { position: absolute; }
+.bg { inset: 0; }
+.orn { inset: 0; pointer-events: none; }
+.scene-wrap { overflow: hidden; }
+.scene { position: absolute; inset: 0; will-change: opacity, transform; }
+.scene svg { width: 100%; height: 100%; display: block; }
+.vignette { position: absolute; inset: 0; z-index: 5; pointer-events: none; }
+.panel { }
+.card { position: absolute; inset: 0; display: flex; flex-direction: column; justify-content: center; }
+.card .a { will-change: opacity, transform; }
+.card .rule { transform-origin: left center; }
+.ar { font-family: Amiri, serif; direction: rtl; }
+.secs { position: relative; display: inline-block; }
+.sec { position: absolute; left: 0; top: 0; white-space: nowrap; }
+.prog { overflow: hidden; } .prog i { display: block; height: 100%; width: 0; }
+.black { inset: 0; background: #000; z-index: 50; pointer-events: none; }
+.map-label { font-family: Montserrat, sans-serif; font-weight: 600; font-size: 34px; letter-spacing: 6px; fill: var(--map-line); }
+.map-label.small { font-size: 22px; letter-spacing: 8px; opacity: 0.7; }
+
+/* Бесконечные анимации сцен — время выставляет движок */
+@keyframes drift { from { transform: translateX(0); } to { transform: translateX(-200px); } }
+@keyframes driftp { 0% { transform: translate(0,0); } 100% { transform: translate(-260px,-90px); } }
+@keyframes glow { 0%,100% { opacity: .85; } 50% { opacity: 1; } }
+@keyframes wave { 0%,100% { transform: skewY(0deg) scaleX(1); } 50% { transform: skewY(-3deg) scaleX(.97); } }
+@keyframes twinkle { 0%,100% { opacity: .25; } 50% { opacity: 1; } }
+@keyframes flicker { 0%,100% { opacity: .85; } 30% { opacity: 1; } 55% { opacity: .75; } 80% { opacity: .95; } }
+@keyframes glint { 0%,100% { opacity: 0; } 45%,55% { opacity: .9; } }
+.drift { animation: drift 30s linear infinite alternate; }
+.drift-p { animation: driftp 12s linear infinite; }
+.glow { animation: glow 5s ease-in-out infinite; transform-box: fill-box; }
+.wave { animation: wave 2.6s ease-in-out infinite; transform-box: fill-box; transform-origin: left center; }
+.twinkle { animation: twinkle 3s ease-in-out infinite; }
+.flicker { animation: flicker 1.9s ease-in-out infinite; }
+.glint { animation: glint 4s ease-in-out infinite; }

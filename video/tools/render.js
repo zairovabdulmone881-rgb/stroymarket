@@ -1,0 +1,33 @@
+// Запись выпуска в mp4: node tools/render.js <дизайн> [выпуск] [выход.mp4] [fps]
+// Кадры снимаются по одному (детерминированно), затем сводятся ffmpeg.
+// Если в папке выпуска есть voice.mp3 — подкладывается как звук.
+const { chromium } = require("playwright");
+const { spawn } = require("child_process");
+const path = require("path"), fs = require("fs");
+const [design = "1-klassika", ep = "044-khalid-ibn-al-walid", out = `out/${ep}--${design}.mp4`, fpsArg = "30"] = process.argv.slice(2);
+const fps = +fpsArg;
+const root = path.resolve(__dirname, "..");
+(async () => {
+  fs.mkdirSync(path.dirname(path.resolve(root, out)), { recursive: true });
+  const browser = await chromium.launch();
+  const page = await browser.newPage({ viewport: { width: 1920, height: 1080 } });
+  await page.goto(`file://${root}/player.html?d=${design}&ep=${ep}&render=1`);
+  await page.evaluate(() => document.fonts.ready);
+  const total = await page.evaluate(() => window.TOTAL);
+  const n = Math.round(total * fps);
+  const voice = path.join(root, "episodes", ep, "voice.mp3");
+  const audio = fs.existsSync(voice) ? ["-i", voice] : ["-f", "lavfi", "-i", "anullsrc=r=48000:cl=stereo"];
+  const ff = spawn("ffmpeg", ["-y", "-loglevel", "error", "-f", "image2pipe", "-framerate", String(fps), "-c:v", "mjpeg", "-i", "-",
+    ...audio, "-map", "0:v", "-map", "1:a", "-shortest", "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-pix_fmt", "yuv420p",
+    "-c:a", "aac", "-b:a", "160k", "-movflags", "+faststart", path.resolve(root, out)], { stdio: ["pipe", "inherit", "inherit"] });
+  for (let f = 0; f < n; f++) {
+    await page.evaluate((t) => window.render(t), f / fps);
+    const buf = await page.screenshot({ type: "jpeg", quality: 92 });
+    if (!ff.stdin.write(buf)) await new Promise((r) => ff.stdin.once("drain", r));
+    if (f % 150 === 0) console.log(`${design}: ${f}/${n}`);
+  }
+  ff.stdin.end();
+  await new Promise((r) => ff.on("close", r));
+  await browser.close();
+  console.log("готово:", out);
+})();

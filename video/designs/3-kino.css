@@ -1,0 +1,38 @@
+/* 3. Кино — сцена на весь кадр, широкие поля, текст как субтитры */
+.stage {
+  --sky-top:#0e1a22; --sky-bot:#b8703a; --sun:#ffd29a; --far:#3b2a22; --mid:#22180f; --near:#120c08;
+  --ink:#0a0705; --accent:#f2c48a; --star:#fff1d8; --map-bg:#121719; --map-line:#c9a678;
+  --night-top:#05080f; --night-bot:#1d2236;
+  background:#000; color:#fff;
+}
+.scene-wrap { inset:0; }
+.vignette { background:
+  linear-gradient(0deg, rgba(0,0,0,.92) 0%, rgba(0,0,0,.75) 30%, rgba(0,0,0,0) 62%),
+  radial-gradient(ellipse at 50% 40%, transparent 50%, rgba(0,0,0,.5)); }
+.orn { z-index:6; background: linear-gradient(#000 0 84px, transparent 84px calc(100% - 84px), #000 calc(100% - 84px)); }
+.hdr { z-index:7; left:80px; right:80px; top:0; height:84px; display:flex; align-items:center; gap:24px; }
+.num { color:#f2c48a; font-weight:700; font-size:17px; letter-spacing:4px; }
+.secs { flex:1; height:22px; color:#cfc6b8; font-size:16px; font-weight:600; letter-spacing:7px; text-transform:uppercase; }
+.cnt { color:#8f877b; font-size:17px; font-weight:600; letter-spacing:3px; } .cnt b { color:#f2c48a; }
+.prog { position:absolute; left:-80px; right:-80px; top:84px; height:3px; background:rgba(255,255,255,.08); }
+.prog i { background:#f2c48a; }
+.panel { z-index:7; left:240px; right:240px; bottom:120px; height:500px; }
+.card { justify-content:flex-end; align-items:center; text-align:center; }
+.ar { font-size:62px; line-height:1.6; color:#f2c48a; text-shadow:0 2px 24px rgba(0,0,0,.8); }
+.rule { width:120px; height:2px; background:#f2c48a; margin:22px 0; transform-origin:center !important; }
+.ru { font-size:34px; line-height:1.4; font-weight:500; text-shadow:0 2px 16px rgba(0,0,0,.9); max-width:1300px; }
+.src { margin-top:20px; color:#f2c48a; font-size:15px; font-weight:700; letter-spacing:4px; text-transform:uppercase; }
+.note { margin-top:10px; color:#a59d92; font-size:18px; }
+.kicker { color:#f2c48a; font-size:16px; font-weight:700; letter-spacing:8px; text-transform:uppercase; }
+.type-title { padding-bottom:10px; }
+.type-title .ar { font-size:72px; margin-top:8px; }
+.ru.big { font-family:'Playfair Display',serif; font-size:92px; font-weight:600; line-height:1.05; letter-spacing:1px; }
+.sub { font-family:'Playfair Display',serif; font-style:italic; color:#f2c48a; font-size:38px; margin-top:12px; }
+.label { border:1.5px solid #f2c48a; color:#f2c48a; font-weight:700; font-size:14px; letter-spacing:5px; text-transform:uppercase; padding:6px 16px; margin-bottom:22px; }
+.ru.fact { font-family:'Playfair Display',serif; font-size:46px; line-height:1.3; font-weight:400; }
+.type-final .ar { font-size:96px; }
+.type-final .ru { font-family:'Playfair Display',serif; font-size:44px; font-weight:400; }
+.ftr { z-index:7; left:80px; right:80px; bottom:0; height:84px; display:flex; align-items:center; justify-content:space-between; }
+.name { font-family:'Playfair Display',serif; color:#f2c48a; font-size:24px; letter-spacing:8px; text-transform:uppercase; }
+.series { color:#7a7368; font-size:15px; letter-spacing:1px; }
+.black { z-index:60; }
