@@ -17,16 +17,42 @@ def episode(dirp):
 def dur(p):
     return float(subprocess.check_output(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", p], text=True))
 
-async def tts(text, out):
+async def _say(text):
+    """Текст -> mp3-байты. Сервис часто молчит, поэтому повторяем."""
     import edge_tts
-    await edge_tts.Communicate(text, VOICE, rate=RATE).save(out)
+    for attempt in range(12):
+        try:
+            data = b""
+            async for ch in edge_tts.Communicate(text, VOICE, rate=RATE).stream():
+                if ch["type"] == "audio": data += ch["data"]
+            if data: return data
+        except Exception as e:
+            print(f"   попытка {attempt + 1}: {e}", flush=True)
+        await asyncio.sleep(min(4 * (attempt + 1), 15))
+    return None
+
+async def _tts(text):
+    data = await _say(text)
+    if data is None:  # целиком не вышло — по предложениям
+        import re
+        data = b""
+        for part in re.findall(r"[^.!?]+[.!?]*", text):
+            piece = await _say(part.strip())
+            if piece is None: return None
+            data += piece; await asyncio.sleep(1)
+    return data
+
+def tts(text, out):
+    data = asyncio.run(_tts(text))
+    if not data: raise RuntimeError("озвучка не получена")
+    open(out, "wb").write(data)
 
 def main(dirp):
     ep = episode(dirp); vdir = os.path.join(dirp, "voice"); os.makedirs(vdir, exist_ok=True)
     timing, parts = [], []
     idx_path = os.path.join(vdir, "index.json")
     idx = json.load(open(idx_path, encoding="utf-8")) if os.path.exists(idx_path) else {}
-    new_idx = {}
+    new_idx, failed = {}, []
     for i, f in enumerate(ep["frames"], 1):
         p = os.path.join(vdir, f"{i:02d}.mp3")
         key = f"{VOICE}|{RATE}|{f['voice']}"
@@ -37,11 +63,10 @@ def main(dirp):
             est = max(1.0, len(f["voice"]) / 14.0)
             subprocess.check_call(["ffmpeg", "-y", "-loglevel", "error", "-f", "lavfi", "-i", "anullsrc=r=24000:cl=mono", "-t", f"{est:.2f}", p])
         else:
-            for attempt in range(4):
-                try: asyncio.run(tts(f["voice"], p)); break
-                except Exception as e:
-                    if attempt == 3: raise
-                    print("повтор:", e)
+            try:
+                tts(f["voice"], p)
+            except Exception as e:
+                failed.append(i); new_idx.pop(f"{i:02d}", None); print(f"кадр {i:02d}: НЕ ОЗВУЧЕН ({e})"); continue
         d = round(max(MIN, LEAD + dur(p) + TAIL), 2)
         timing.append(d); parts.append((p, d))
         print(f"кадр {i:02d}: {d:5.2f} c")
@@ -49,6 +74,9 @@ def main(dirp):
         if extra.endswith(".mp3") and int(extra[:2]) > len(ep["frames"]): os.remove(os.path.join(vdir, extra))
     if not os.environ.get("VOICE_DUMMY"):
         json.dump(new_idx, open(idx_path, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+    if failed:
+        print("не озвучены кадры:", failed, "— запустите ещё раз, готовые кадры не перезаписываются")
+        sys.exit(1)
     # Сведение: кадр = тишина LEAD + голос + тишина до конца кадра
     args, flt = ["ffmpeg", "-y", "-loglevel", "error"], []
     for k, (p, d) in enumerate(parts):
