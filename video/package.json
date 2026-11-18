@@ -1,0 +1,6 @@
+{
+  "name": "sahaba-video",
+  "private": true,
+  "description": "Серия роликов «100 сподвижников Пророка ﷺ»",
+  "dependencies": { "playwright": "1.63.0" }
+}

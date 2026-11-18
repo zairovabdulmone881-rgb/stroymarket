@@ -10,18 +10,40 @@
   const N = ep.frames.length;
   const pad = (n, l = 2) => String(n).padStart(l, "0");
 
+  // Длительность кадра: из timing.js (по озвучке), иначе из episode.js, иначе оценка по тексту диктора
+  const BOOKS = { bukhari: "Сахих аль-Бухари", muslim: "Сахих Муслим", tirmidhi: "Сунан ат-Тирмизи",
+    abudawud: "Сунан Абу Дауда", nasai: "Сунан ан-Насаи", ibnmajah: "Сунан Ибн Маджи" };
+  function srcLabel(f) {
+    if (f.src || !f.ref) return f.src;
+    const refs = Array.isArray(f.ref) ? f.ref : [f.ref];
+    return refs.map((r) => {
+      const [b, n] = r.split(":");
+      if (b === "quran") { const [s, a] = r.slice(6).split(":"); return `Коран, сура ${s}, аят ${a}`; }
+      return `${BOOKS[b] || b}, ${n}`;
+    }).join(" · ") + (f.from ? ` · от ${f.from}` : "");
+  }
   let acc = 0;
-  ep.frames.forEach((f) => { f.start = acc; acc += f.duration; });
+  ep.frames.forEach((f, i) => {
+    f.duration = (window.TIMING && window.TIMING[i]) || f.duration ||
+      Math.max(5, Math.round((1 + (f.voice || "").length / 14 + 1.2) * 10) / 10);
+    f.src = srcLabel(f);
+    f.start = acc; acc += f.duration;
+  });
   const TOTAL = acc;
 
   const esc = (s) => String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;");
+  // Арабский для экрана: без служебных кавычек и меток направления, ﷺ вместо формулы
+  const arClean = (s) => String(s || "")
+    .replace(/صلى الله عليه وسلم/g, "ﷺ")
+    .replace(/\u200f?\.\u200f?/g, ".").replace(/[\u200f"]/g, "")
+    .replace(/\s+([.،])/g, "$1").replace(/\s+/g, " ").trim();
 
   function card(f, i) {
     const a = (cls, at, html) => html ? `<div class="a ${cls}" data-at="${at}">${html}</div>` : "";
     let body = "";
     if (f.type === "title") {
       body = a("kicker", 0.3, `Выпуск № ${pad(ep.num, 3)}`) +
-             a("ar", 0.5, esc(f.ar)) +
+             a("ar", 0.5, esc(arClean(f.ar))) +
              a("rule", 0.8, "") +
              a("ru big", 0.9, esc(f.ru)) +
              a("sub", 1.2, esc(f.sub));
@@ -32,7 +54,7 @@
              a("src", 1.1, esc(f.src)) +
              a("note", 1.3, esc(f.note));
     } else {
-      body = a("ar", 0.3, esc(f.ar)) +
+      body = a("ar", 0.3, esc(arClean(f.ar))) +
              a("rule", 0.7, "") +
              a("ru", 0.8, esc(f.ru)) +
              a("src", 1.1, esc(f.src)) +
@@ -53,7 +75,7 @@
       <div class="prog"><i></i></div>
     </div>
     <div class="scene-wrap">
-      ${ep.frames.map((f, i) => `<div class="scene" data-i="${i}">${window.renderScene(f.scene)}</div>`).join("")}
+      ${ep.frames.map((f, i) => `<div class="scene" data-i="${i}">${window.renderScene(f.scene, f)}</div>`).join("")}
       <div class="vignette"></div>
     </div>
     <div class="panel">${ep.frames.map(card).join("")}</div>

@@ -15,7 +15,7 @@ const root = path.resolve(__dirname, "..");
   await page.evaluate(() => document.fonts.ready);
   const total = await page.evaluate(() => window.TOTAL);
   const n = Math.round(total * fps);
-  const voice = path.join(root, "episodes", ep, "voice.mp3");
+  const voice = path.join(root, "episodes", ep, "voice.mp3"); // собирается tools/voice.py
   const audio = fs.existsSync(voice) ? ["-i", voice] : ["-f", "lavfi", "-i", "anullsrc=r=48000:cl=stereo"];
   const ff = spawn("ffmpeg", ["-y", "-loglevel", "error", "-f", "image2pipe", "-framerate", String(fps), "-c:v", "mjpeg", "-i", "-",
     ...audio, "-map", "0:v", "-map", "1:a", "-shortest", "-c:v", "libx264", "-preset", "medium", "-crf", "20", "-pix_fmt", "yuv420p",

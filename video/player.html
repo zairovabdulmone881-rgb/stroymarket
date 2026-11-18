@@ -12,6 +12,7 @@
   const ep = q.get("ep") || "044-khalid-ibn-al-walid";
   document.write(`<link rel="stylesheet" href="designs/${d}.css">`);
   document.write(`<script src="episodes/${ep}/episode.js"><\/script>`);
+  document.write(`<script src="episodes/${ep}/timing.js" onerror="0"><\/script>`);
   document.documentElement.className = "d-" + d;
 </script>
 </head>
