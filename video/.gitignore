@@ -3,3 +3,4 @@ out/
 node_modules/
 logs/
 episodes/*/voice.mp3
+*.zip
