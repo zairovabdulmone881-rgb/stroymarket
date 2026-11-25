@@ -68,24 +68,25 @@ def dec(path):
     return np.frombuffer(r.stdout, np.float32).astype(np.float64)
 
 
-def trim(x, thr_db=-45, pad=0.03, fade_ms=0):
+def trim(x, thr_db=-45, pad=0.03, fade_ms=0, return_start=False):
     fr = 240; n = len(x) // fr
     db = 20 * np.log10(np.sqrt(np.mean(x[: n * fr].reshape(n, fr) ** 2, 1)) + 1e-9)
     on = np.where(db > thr_db)[0]
-    if not len(on): return x
+    if not len(on): return (x, 0) if return_start else x
     a = max(0, on[0] * fr - int(pad * SR)); b = min(len(x), (on[-1] + 1) * fr + int(pad * SR * 2))
     y = x[a:b].copy()
     if fade_ms:  # мягкие края фрагмента — без «обрубленных» вдохов и хвостов
         k = min(len(y) // 4, int(fade_ms / 1000 * SR))
         y[:k] *= np.linspace(0, 1, k) ** 0.5; y[-k:] *= np.linspace(1, 0, k) ** 0.5
-    return y
+    return (y, a) if return_start else y
 
 
-async def synth(text, rate, pitch, out, voice="ru-RU-DmitryNeural"):
+async def synth(text, rate, pitch, out, voice="ru-RU-DmitryNeural", meta=None):
     for attempt in range(8):  # сервис иногда отвечает без аудио — повторяем
         try:
-            c = edge_tts.Communicate(text, voice, rate=f"{rate:+d}%", pitch=f"{pitch:+d}Hz")
-            await c.save(out)
+            c = edge_tts.Communicate(text, voice, rate=f"{rate:+d}%", pitch=f"{pitch:+d}Hz",
+                                     boundary="WordBoundary" if meta else "SentenceBoundary")
+            await c.save(out, meta)
             if os.path.getsize(out) > 1000: return
         except edge_tts.exceptions.NoAudioReceived as e:
             print("  повтор", text, attempt + 1, e)
@@ -111,18 +112,31 @@ def process(x, out_wav, fx=VOICE_FX, gain_db=0.0):
 
 
 async def main(only=None, script=SCRIPT, vdir=os.path.join(ROOT, "voice"), fx=VOICE_FX, gains=None,
-               pad=0.03, fade_ms=0):
+               pad=0.03, fade_ms=0, words=False, preroll=None):
     cdir = os.path.join(vdir, "chunks")
     os.makedirs(cdir, exist_ok=True)
     for i, chunks in enumerate(script):
         if only and i + 1 not in only: continue
-        parts = []
+        lead = 0.04 + (preroll or {}).get(i + 1, 0.0)
+        parts = [np.zeros(int(lead * SR))]; pos = int(lead * SR); wl = []
         for k, (text, rate, pitch, pause) in enumerate(chunks):
             mp3 = os.path.join(cdir, f"{i+1:02d}_{k}.mp3")
-            await synth(text, rate, pitch, mp3)
-            parts.append(trim(dec(mp3), pad=pad, fade_ms=fade_ms))
-            if pause: parts.append(np.zeros(int(pause * SR)))
-        x = np.concatenate([np.zeros(int(0.04 * SR))] + parts + [np.zeros(int(0.08 * SR))])
+            meta = mp3[:-4] + ".jsonl" if words else None
+            await synth(text, rate, pitch, mp3, meta=meta)
+            y, a0 = trim(dec(mp3), pad=pad, fade_ms=fade_ms, return_start=True)
+            if meta:   # время каждого слова в сцене, сек (offset сервиса — в тиках по 100 нс)
+                import json as _j
+                for line in open(meta, encoding="utf-8"):
+                    m = _j.loads(line)
+                    if m.get("type") == "WordBoundary":
+                        wl.append({"word": m["text"], "t": round((pos - a0) / SR + m["offset"] / 1e7, 3),
+                                   "d": round(m["duration"] / 1e7, 3)})
+            parts.append(y); pos += len(y)
+            if pause: parts.append(np.zeros(int(pause * SR))); pos += int(pause * SR)
+        x = np.concatenate(parts + [np.zeros(int(0.08 * SR))])
+        if words:
+            import json as _j
+            _j.dump(wl, open(os.path.join(vdir, f"{i+1:02d}.words.json"), "w", encoding="utf-8"), ensure_ascii=False, indent=0)
         out = os.path.join(vdir, f"{i+1:02d}.wav")
         process(x, out, fx, (gains or {}).get(i + 1, 0.0))
         print(out, round(len(x) / SR, 2), "с", flush=True)

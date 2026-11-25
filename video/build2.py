@@ -21,7 +21,7 @@ IMGDIR, CARDDIR, HDDIR, VDIR = "imgs2", "imgs2_card", "imgs2_hd", "voice2"
 # Верх карточки по группам страниц (найден по чёрной полосе-разделителю), низ/бока общие.
 CARD_TOP = [332] * 3 + [447] * 3 + [505] * 3 + [458] * 3 + [372] * 3 + [332] * 3
 CARD_L, CARD_R, CARD_B = 16, 701, 942
-CARD_CY, CARD_MAXH, CARD_MAXW = 850, 860, 1240   # где и каким размером карточка стоит в кадре
+CARD_CY, CARD_MAXH, CARD_MAXW = 990, 720, 1240   # где и каким размером карточка стоит в кадре
 
 # ------------------------------------------------------------------ сценарий
 SCENES = [
@@ -68,6 +68,15 @@ SCRIPT = [
     [("А что бы ты взял в рюкзак?", -4, -2, 0.35), ("Пиши в комментариях.", -2, -2, 0)],
 ]
 VOICE_GAIN = {12: -1.0, 15: -2.0, 16: -1.0}   # тихие, «шёпотные» сцены чуть тише
+PREROLL = 0.35          # сцена 01: голос вступает после удара-зацепа
+HUD_K = 1.7             # HUD и карточка «ФАКТ» — в 1.7 раза крупнее
+SUB_Y = 1560            # центр субтитров (ниже карточки)
+# Резкие наезды (+8% за 0.15 с) в сценах длиннее 4 с — на ключевых словах (начало слова, по WordBoundary)
+PUNCH_WORDS = {1: ["сообщение", "двухстах", "двадцать"], 3: ["пустеют", "воду"], 4: ["работают", "пластик"],
+               5: ["рюкзак", "аптечка", "документы"], 6: ["бежит", "намертво"], 7: ["остаться", "окна"],
+               8: ["двенадцать", "сосед", "дочкой"], 10: ["открываешь", "трое", "двоих"],
+               11: ["пропадает", "радио", "улицу"], 12: ["полночь", "гаснет", "тихо"], 13: ["первый"],
+               17: ["утро", "пережили"], 18: ["рюкзак", "комментариях"]}
 RADIO = ["Внимание. Говорит штаб гражданской обороны.", "Оставайтесь дома.", "Не выходите на улицу."]
 
 TIMER = ["24:00", "23:58", "18:00", "16:30", "14:00", "13:00", "12:30", "12:00", "11:59", "09:00", "03:00", "00:00",
@@ -87,7 +96,7 @@ FOCUS = [((0.45, 0.5), (0.42, 0.5)), ((0.5, 0.5), (0.5, 0.48)), ((0.45, 0.55), (
 PAN_UP = {5, 11}
 RED_VIG = {13}
 SHAKE = {0, 6, 13, 15}
-VIBRO = [(0.15, 0.55), (0.75, 1.15), (1.35, 1.75)]      # 01: вибрация телефона
+VIBRO = [(0.45, 0.85), (1.05, 1.45), (1.65, 2.05)]      # 01: вибрация телефона (после удара-зацепа)
 SCRATCH = [(0.15, 0.85), (1.2, 1.9), (2.25, 2.95)]       # 16: скрежет ногтей
 DARK_STEPS = [0.15, 0.75, 1.3, 1.9, 2.5, 3.1]            # 12: окна гаснут рывками
 
@@ -157,7 +166,12 @@ def build_sfx(starts_f, total_f, lens):
     m = int(min(du[0], 3.0) * SR); tt = np.arange(m) / SR
     gate = ((tt % 0.75) < 0.5).astype(float); gate = filt(gate, "lowpass", 60, 2)
     alarm = (np.sin(2 * np.pi * 853 * tt) + np.sin(2 * np.pi * 960 * tt)) * gate
-    put(reverb(fade(alarm, 0.02, 0.6), rng, 0.8, 0.25) * 0.10, st[0] + 0.1)
+    put(reverb(fade(alarm, 0.02, 0.6), rng, 0.8, 0.25) * 0.10, st[0] + 0.4)
+    # удар-зацеп в самом начале: суб-бум + треск + металл
+    n = int(2.2 * SR); t2 = np.arange(n) / SR
+    boom = np.sin(2 * np.pi * (85 * np.exp(-t2 * 3) + 38) * t2) * np.exp(-t2 / 0.55) * 1.4
+    crack = filt(rng.standard_normal(n), "bandpass", [300, 6000], 2) * np.exp(-t2 / 0.025) * 1.2
+    put(reverb(boom + crack + metal_hit(rng, n, 140, 0.7) * 0.4, rng, 1.4, 0.3) * 0.62, st[0] + 0.0)
     # 02 тишина + тиканье часов
     rng = R(2)
     for k, t0 in enumerate(np.arange(0.2, du[1], 1.0)):
@@ -373,14 +387,15 @@ def tmin(s):
 
 
 def render_hud(i, t, f, starts_f):
-    im = Image.new("RGBA", (W, 400), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
-    grad = Image.new("L", (1, 400))
-    for y in range(400): grad.putpixel((0, y), int(160 * (1 - y / 400) ** 1.6))
-    im.paste(Image.new("RGBA", (W, 400), (0, 0, 0, 255)), (0, 0), grad.resize((W, 400)))
-    x0, y0 = 48, 104
+    q = lambda v: int(round(v * HUD_K)); HH = 600
+    im = Image.new("RGBA", (W, HH), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
+    grad = Image.new("L", (1, HH))
+    for y in range(HH): grad.putpixel((0, y), int(170 * (1 - y / HH) ** 1.4))
+    im.paste(Image.new("RGBA", (W, HH), (0, 0, 0, 255)), (0, 0), grad.resize((W, HH)))
+    x0, y0 = 44, 96
     val = TIMER[i]; numeric = ":" in val
     if numeric:
-        d.text((x0 + 2, y0), "ДО ПРИХОДА", font=font("extra", 32), fill=(255, 255, 255, 230), stroke_width=3, stroke_fill=(0, 0, 0, 255))
+        d.text((x0 + 4, y0), "ДО ПРИХОДА", font=font("extra", q(32)), fill=(255, 255, 255, 235), stroke_width=q(3), stroke_fill=(0, 0, 0, 255))
         shown = val
         if i > 0 and ":" in TIMER[i - 1] and t < 0.4:   # «прокрутка» таймера от прошлого значения
             a, b = tmin(TIMER[i - 1]), tmin(val); k = smooth(t / 0.4); v = round(a + (b - a) * k)
@@ -390,34 +405,67 @@ def render_hud(i, t, f, starts_f):
         if s12 - 5 * FPS <= f < s12:               # последние 5 с до 00:00 — мигает красным
             col = (255, 43, 28) if (f // 8) % 2 == 0 else (255, 255, 255)
         if val == "00:00": col = (255, 43, 28)
-        fm = B.ImageFont.truetype(os.path.join(ROOT, "fonts", "JetBrainsMono_800ExtraBold.ttf"), 118)
-        d.text((x0 - 4, y0 + 36), shown, font=fm, fill=col + (255,), stroke_width=6, stroke_fill=(0, 0, 0, 255))
-        py = y0 + 36 + 140
+        fm = B.ImageFont.truetype(os.path.join(ROOT, "fonts", "JetBrainsMono_800ExtraBold.ttf"), q(118))
+        d.text((x0 - 6, y0 + q(36)), shown, font=fm, fill=col + (255,), stroke_width=q(6), stroke_fill=(0, 0, 0, 255))
+        py = y0 + q(36) + q(140)
     else:
         col = (255, 43, 28) if val.startswith("НОЧЬ") else (255, 210, 26)
-        d.text((x0, y0 + 22), val, font=font("black", 112), fill=col + (255,), stroke_width=6, stroke_fill=(0, 0, 0, 255))
-        py = y0 + 22 + 140
+        d.text((x0, y0 + q(10)), val, font=font("black", q(112)), fill=col + (255,), stroke_width=q(6), stroke_fill=(0, 0, 0, 255))
+        py = y0 + q(10) + q(140)
     if PLACE[i]:
-        f2 = font("extra", 34); tw = text_w(d, PLACE[i], f2)
-        d.rounded_rectangle([x0, py, x0 + tw + 44, py + 54], 8, fill=(0, 0, 0, 170))
-        d.rectangle([x0, py, x0 + 8, py + 54], fill=(255, 210, 26, 255))
-        d.text((x0 + 26, py + 27), PLACE[i], font=f2, fill=(255, 255, 255, 255), anchor="lm")
+        f2 = font("extra", q(34)); tw = text_w(d, PLACE[i], f2); ph = q(54)
+        d.rounded_rectangle([x0, py, x0 + tw + q(44), py + ph], q(8), fill=(0, 0, 0, 170))
+        d.rectangle([x0, py, x0 + q(8), py + ph], fill=(255, 210, 26, 255))
+        d.text((x0 + q(26), py + ph // 2), PLACE[i], font=f2, fill=(255, 255, 255, 255), anchor="lm")
     return im
 
 
 def render_bar_top(v):
-    """Шкала «УГРОЗА» в правом верхнем углу (над карточкой, ничего не закрывает)."""
-    bw, bh = 34, 270
-    im = Image.new("RGBA", (300, bh + 20), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
-    bx, by = 300 - bw - 14, 8
-    d.rounded_rectangle([bx - 5, by - 5, bx + bw + 5, by + bh + 5], 12, fill=(0, 0, 0, 170), outline=(255, 255, 255, 220), width=3)
+    """Шкала «УГРОЗА» в правом верхнем углу (над карточкой, ничего не закрывает); x1.7."""
+    q = lambda x: int(round(x * HUD_K))
+    bw, bh = q(30), 400
+    im = Image.new("RGBA", (440, bh + 24), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
+    bx, by = 440 - bw - 14, 10
+    d.rounded_rectangle([bx - 6, by - 6, bx + bw + 6, by + bh + 6], 14, fill=(0, 0, 0, 170), outline=(255, 255, 255, 220), width=4)
     fh = int(bh * v / 100); col = B.threat_col(v)
-    if fh > 0: d.rounded_rectangle([bx, by + bh - fh, bx + bw, by + bh], 8, fill=col + (255,))
+    if fh > 0: d.rounded_rectangle([bx, by + bh - fh, bx + bw, by + bh], 10, fill=col + (255,))
     for k in range(1, 10):
-        yy = by + bh * k // 10; d.line([bx, yy, bx + 9, yy], fill=(0, 0, 0, 120), width=2)
-    d.text((bx - 14, by + 4), "УГРОЗА", font=font("black", 30), fill=(255, 255, 255, 255), stroke_width=4, stroke_fill=(0, 0, 0, 255), anchor="ra")
-    d.text((bx - 14, by + bh), f"{int(round(v))}%", font=font("black", 52), fill=col + (255,), stroke_width=5, stroke_fill=(0, 0, 0, 255), anchor="rd")
+        yy = by + bh * k // 10; d.line([bx, yy, bx + 14, yy], fill=(0, 0, 0, 120), width=3)
+    d.text((bx - 18, by + bh - q(52) - 14), "УГРОЗА", font=font("black", q(30)), fill=(255, 255, 255, 255), stroke_width=q(4), stroke_fill=(0, 0, 0, 255), anchor="rd")
+    d.text((bx - 18, by + bh), f"{int(round(v))}%", font=font("black", q(52)), fill=col + (255,), stroke_width=q(5), stroke_fill=(0, 0, 0, 255), anchor="rd")
     return im
+
+
+def scene_words(i):
+    p = os.path.join(ROOT, VDIR, f"{i+1:02d}.words.json")
+    return json.load(open(p, encoding="utf-8")) if os.path.exists(p) else []
+
+
+def punch_times(i, du):
+    if du <= 4.0: return []
+    keys = PUNCH_WORDS.get(i + 1, []); out = []
+    for w in scene_words(i):
+        ww = w["word"].lower().strip(".,:;!?—…«»")
+        if any(ww.startswith(k) for k in keys) and all(abs(w["t"] - o) > 0.6 for o in out):
+            out.append(max(0.08, w["t"]))
+    return out[:3]
+
+
+def punch_zoom(t, times):
+    """+8% за 0.15 с, удержание 0.35 с, мягкий возврат за 0.5 с."""
+    z = 0.0
+    for p in times:
+        if t < p: continue
+        u = t - p
+        if u < 0.15: z = max(z, 0.08 * (1 - (1 - u / 0.15) ** 3))
+        elif u < 0.5: z = max(z, 0.08)
+        else: z = max(z, 0.08 * (1 - smooth((u - 0.5) / 0.5)))
+    return z
+
+
+def intro_zoom(t):
+    """Сцена 01: быстрый наезд за первые 0.35 с (+15%), затем плавно до +5%."""
+    return 0.15 * (1 - (1 - min(t / 0.35, 1)) ** 3) - 0.10 * smooth((t - 0.5) / 1.0)
 
 
 def shake_offset(i, t, du):
@@ -427,7 +475,9 @@ def shake_offset(i, t, du):
                 amp * sum(math.sin(2 * math.pi * fr[k] * t + ph[k]) for k in range(3, 6)) / 2.2)
     if i == 0:
         on = any(a <= t <= b for a, b in VIBRO)
-        return jit(101, t, 5 if on else 0, 28)
+        hx, hy = jit(102, t, 22 * math.exp(-t / 0.12), 14)      # удар-зацеп в первые доли секунды
+        vx, vy = jit(101, t, 5 if on else 0, 28)
+        return hx + vx, hy + vy
     if i == 6:
         dx = dy = 0.0
         for k in hammer_times(du):
@@ -458,9 +508,12 @@ def render_video(starts_f, total_f, lens, out_path, audio_wav, draft):
     redm = ss(0.35, 1.25, rr).astype(np.float32)[:, :, None]
     red = np.array([150, 0, 0], np.float32); warm = np.array([255, 178, 105], np.float32)
     canv = [card_canvas(i, draft) for i in range(len(SCENES))]
+    ends0 = starts_f[1:] + [total_f]
+    punches = [punch_times(i, (ends0[i] - starts_f[i]) / FPS) for i in range(len(SCENES))]
+    print("наезды:", {i + 1: p for i, p in enumerate(punches) if p})
     imgs = [(c, K) for c, K, _ in canv]
     subs = [render_sub(i, SCENES) for i in range(len(SCENES))]
-    facts = {k: render_fact(v) for k, v in FACTS.items()}
+    facts = {k: render_fact(v, HUD_K) for k, v in FACTS.items()}
     cmd = ["ffmpeg", "-y", "-v", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}", "-r", str(FPS),
            "-i", "-", "-i", audio_wav, "-map", "0:v", "-map", "1:a",
            "-c:v", "libx264", "-preset", "slow", "-crf", "15", "-tune", "animation", "-pix_fmt", "yuv420p", "-profile:v", "high",
@@ -473,6 +526,9 @@ def render_video(starts_f, total_f, lens, out_path, audio_wav, draft):
         base, K = imgs[i]
         zmax = 0.18 if i == 8 else 0.10                       # 09: медленный глубокий наезд
         z = (1.0 + zmax * u) * (1.06 if i in SHAKE else 1.0)
+        z *= 1 + punch_zoom(t, punches[i])
+        if i == 0:
+            z *= 1 + intro_zoom(t)
         if i == 8:                                             # пульс в такт сердцу
             z *= 1 + sum(0.008 * math.exp(-(t - h) / 0.12) for h in heart_times(du) if t >= h)
         (fx0, fy0), (fx1, fy1) = FOCUS[i]
@@ -503,19 +559,19 @@ def render_video(starts_f, total_f, lens, out_path, audio_wav, draft):
         ov = Image.new("RGBA", (W, H), (0, 0, 0, 0))
         ov.alpha_composite(render_hud(i, t, f, starts_f), (0, 0))
         v0 = THREAT[i - 1] if i > 0 else 0
-        ov.alpha_composite(render_bar_top(v0 + (THREAT[i] - v0) * smooth(t / 0.6)), (W - 300 - 26, 96))
+        ov.alpha_composite(render_bar_top(v0 + (THREAT[i] - v0) * smooth(t / 0.6)), (W - 440 - 26, 96))
         if i in facts:
-            fc = facts[i]; k = smooth((t - 0.35) / 0.3)
+            fc = facts[i]; k = smooth((t - 0.3) / 0.3) * (1 - smooth((t - (du - 0.45)) / 0.3))
             if k > 0:
                 c2 = fc.copy(); c2.putalpha(c2.getchannel("A").point(lambda q: int(q * k)))
-                ov.alpha_composite(c2, (int(-fc.width + (40 + fc.width) * k), 352))
+                ov.alpha_composite(c2, (int(-fc.width + ((W - fc.width) // 2 + fc.width) * k), 520))
         sb = subs[i]; k = min(t / 0.15, 1.0); sc = 0.7 + 0.3 * (1 - (1 - k) ** 3)
         sbi = sb if sc >= 0.999 else sb.resize((max(1, int(sb.width * sc)), max(1, int(sb.height * sc))), Image.BICUBIC)
-        ov.alpha_composite(sbi, (int(W / 2 - sbi.width / 2), int(1470 - sbi.height / 2)))
+        ov.alpha_composite(sbi, (int(W / 2 - sbi.width / 2), int(SUB_Y - sbi.height / 2)))
         o = np.asarray(ov, dtype=np.float32); oa = o[:, :, 3:4] / 255.0
         a = a * (1 - oa) + o[:, :, :3] * oa
-        if i > 0 and fl < 4:
-            fa = 0.3 * (1 - fl / 4); a = a * (1 - fa) + 255 * fa
+        if fl < 4 and (i > 0 or True):                      # вспышка на склейке и на самом первом кадре
+            fa = (0.45 if i == 0 else 0.3) * (1 - fl / 4); a = a * (1 - fa) + 255 * fa
         p.stdin.write(np.clip(a, 0, 255).astype(np.uint8).tobytes())
         if f % 300 == 0: print(f"  кадр {f}/{total_f}", flush=True)
     p.stdin.close(); p.wait()
@@ -526,7 +582,7 @@ def render_video(starts_f, total_f, lens, out_path, audio_wav, draft):
 def run_tts():
     import tts
     asyncio.run(tts.main(None, SCRIPT, os.path.join(ROOT, VDIR), fx=tts.VOICE_FX_HUMAN, gains=VOICE_GAIN,
-                         pad=0.06, fade_ms=25))
+                         pad=0.06, fade_ms=25, words=True, preroll={1: PREROLL}))
     # радио-фрагменты другим голосом (диктор гражданской обороны), без нашей голосовой обработки
     async def radio():
         parts = []

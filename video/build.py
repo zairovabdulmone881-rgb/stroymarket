@@ -426,19 +426,20 @@ def wrap(d, text, f, maxw):
     return lines
 
 
-def render_fact(text):
-    cw = 620; f = font("extra", 34); tmp = ImageDraw.Draw(Image.new("RGBA", (1, 1)))
-    lines = wrap(tmp, text, f, cw - 56)
-    lh = 44; chh = 70 + len(lines) * lh + 28
-    im = Image.new("RGBA", (cw + 20, chh + 20), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
-    sh = Image.new("RGBA", im.size, (0, 0, 0, 0)); ImageDraw.Draw(sh).rounded_rectangle([6, 10, cw + 6, chh + 10], 18, fill=(0, 0, 0, 140))
-    im.alpha_composite(sh.filter(ImageFilter.GaussianBlur(8)))
-    d.rounded_rectangle([0, 0, cw, chh], 18, fill=(255, 255, 255, 245))
-    fb = font("black", 30)
-    d.rounded_rectangle([24, 22, 24 + text_w(d, "ФАКТ", fb) + 36, 22 + 46], 10, fill=RED + (255,))
-    d.text((24 + 18, 22 + 23), "ФАКТ", font=fb, fill=(255, 255, 255, 255), anchor="lm")
-    for k, l in enumerate(lines):
-        d.text((28, 86 + k * lh), l, font=f, fill=(20, 20, 20, 255))
+def render_fact(text, k=1.0):
+    q = lambda v: int(round(v * k))
+    cw = q(620); f = font("extra", q(34)); tmp = ImageDraw.Draw(Image.new("RGBA", (1, 1)))
+    lines = wrap(tmp, text, f, cw - q(56))
+    lh = q(44); chh = q(70) + len(lines) * lh + q(28)
+    im = Image.new("RGBA", (cw + q(20), chh + q(20)), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
+    sh = Image.new("RGBA", im.size, (0, 0, 0, 0)); ImageDraw.Draw(sh).rounded_rectangle([q(6), q(10), cw + q(6), chh + q(10)], q(18), fill=(0, 0, 0, 140))
+    im.alpha_composite(sh.filter(ImageFilter.GaussianBlur(q(8))))
+    d.rounded_rectangle([0, 0, cw, chh], q(18), fill=(255, 255, 255, 245))
+    fb = font("black", q(30))
+    d.rounded_rectangle([q(24), q(22), q(24) + text_w(d, "ФАКТ", fb) + q(36), q(22) + q(46)], q(10), fill=RED + (255,))
+    d.text((q(24) + q(18), q(22) + q(23)), "ФАКТ", font=fb, fill=(255, 255, 255, 255), anchor="lm")
+    for j, l in enumerate(lines):
+        d.text((q(28), q(86) + j * lh), l, font=f, fill=(20, 20, 20, 255))
     return im
 
 
