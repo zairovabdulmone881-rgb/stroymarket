@@ -214,7 +214,7 @@ def build_sfx(starts_f, total_f, lens):
     # 01 гул мотора лифта
     rng = R(1); n = int((du[0] + 0.2) * SR); t = np.arange(n) / SR
     hum = sum(a * np.sin(2 * np.pi * f * t * (1 + 0.003 * np.sin(2 * np.pi * 0.7 * t))) for f, a in [(48, 1), (96, .6), (144, .3), (390, .06)])
-    hum += 0.8 * filt(rng.standard_normal(n), "lowpass", 220, 2)
+    hum += 0.25 * filt(rng.standard_normal(n), "lowpass", 120, 4)
     put(fade(hum, 0.3, 0.12) * 0.22, st[0])
     # 02 удар-остановка + щелчок света + гудение мигающей лампы
     rng = R(2); n = int(2.5 * SR)
@@ -223,8 +223,7 @@ def build_sfx(starts_f, total_f, lens):
     click = filt(rng.standard_normal(int(0.02 * SR)), "highpass", 2500, 2) * env_ad(int(0.02 * SR), 0.0005, 0.004)
     put(click * 0.9, t_click); put(click * 0.5, t_click + 0.09)
     n = int(du[1] * SR); t = np.arange(n) / SR
-    buzz = filt(np.sign(np.sin(2 * np.pi * 100 * t)), "bandpass", [100, 1500], 2) * 0.05
-    put(fade(buzz, 0.4, 0.2), st[1])
+
     # 03–04 скрежет + рычание
     for i, sg, gg in [(2, 0.30, 0.18), (3, 0.22, 0.32)]:
         rng = R(i + 1); n = int((du[i] + 0.1) * SR)
@@ -278,11 +277,11 @@ def build_sfx(starts_f, total_f, lens):
     crack = filt(crack, "bandpass", [1200, 6000], 2)
     fire = reverb(roar * 0.8 + crack * 0.25, rng, 2.0, 0.55)[:n]
     w = wind(rng, n, 250, 900, 0.25)
-    sfx9 = fire * 0.5 + w * 0.12
+    sfx9 = fire * 0.5 + w * 0.06
     put(np.stack([fade(sfx9[:, c], 0.3, 0.3) for c in range(2)], 1) * 0.6, st[8])
     # 10 тихая комната: еле слышный фон
     rng = R(10); n = int(du[9] * SR)
-    put(fade(filt(rng.standard_normal(n), "lowpass", 180, 2), 0.3, 0.3) * 0.05, st[9])
+    pass
     # 11 три тяжёлых удара в дверь
     rng = R(11)
     for k in KNOCKS:
@@ -290,20 +289,22 @@ def build_sfx(starts_f, total_f, lens):
     # 12–13 ветер на крыше
     rng = R(12); n = int((du[11] + du[12] + 0.2) * SR)
     w = wind(rng, n, 350, 1600, 0.35)
-    put(np.stack([fade(w[:, c], 0.4, 0.4) for c in range(2)], 1) * 0.16, st[11])
+    put(np.stack([fade(w[:, c], 0.4, 0.4) for c in range(2)], 1) * 0.10, st[11])
     # 14 удар-акцент на вопросе
     rng = R(14); n = int(2.6 * SR); tt = np.arange(n) / SR
     sub = np.sin(2 * np.pi * (70 * np.exp(-tt * 1.3) + 32) * tt) * np.exp(-tt / 0.7)
     hit = sub * 1.3 + metal_hit(rng, n, 120, 0.9) * 0.5
     put(reverb(hit, rng, 1.8, 0.35) * 0.5, st[13] + 0.02)
     tail = wind(rng, int(du[13] * SR), 350, 1400, 0.3)
-    put(np.stack([fade(tail[:, c], 0.5, 1.0) for c in range(2)], 1) * 0.07, st[13])
+
+    # убрать шипение: срез выше 9 кГц и ниже 30 Гц
+    mix = np.stack([filt(filt(mix[:, c], "lowpass", 9000, 6), "highpass", 30, 2) for c in range(2)], 1)
     return mix
 
 
 def load_wav48(path):
     tmp = path + ".48k.wav"
-    subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", path, "-ar", str(SR), "-ac", "2", tmp], check=True)
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", path, "-af", "aresample=resampler=soxr:precision=28,highpass=f=70", "-ar", str(SR), "-ac", "2", tmp], check=True)
     sr, x = wavfile.read(tmp); os.remove(tmp)
     return x.astype(np.float64) / 32768.0
 
@@ -460,12 +461,31 @@ def render_bar(v, pulse):
     return im
 
 
+def trim_box(img, depth=20, thr=180):
+    """Срезать белые поля-разделители (и осколки соседних кадров) у краёв исходника."""
+    g = np.asarray(img.convert("L"), np.float32)
+    def cut(prof):
+        c = 0
+        for k in range(depth):
+            if prof[k] > thr: c = k + 3
+        return c
+    cm, rm = g.mean(0), g.mean(1)
+    return cut(cm), cut(rm), g.shape[1] - cut(cm[::-1]), g.shape[0] - cut(rm[::-1])
+
+
 def prep_image(i):
-    im = Image.open(os.path.join(ROOT, "imgs", f"{i+1:02d}.png")).convert("RGB")
+    src = Image.open(os.path.join(ROOT, "imgs", f"{i+1:02d}.png")).convert("RGB")
+    l, t, r, btm = trim_box(src)
+    hd = os.path.join(ROOT, "imgs_hd", f"{i+1:02d}.png")
+    if os.path.exists(hd):
+        im = Image.open(hd).convert("RGB"); k = im.width / src.width
+        im = im.crop((int(l * k), int(t * k), int(r * k), int(btm * k)))
+    else:
+        im = src.crop((l, t, r, btm))
     K = 1.25  # запас разрешения под наезд
     s = max(W * K / im.width, H * K / im.height)
     im = im.resize((int(round(im.width * s)), int(round(im.height * s))), Image.LANCZOS)
-    im = im.filter(ImageFilter.UnsharpMask(radius=2.2, percent=70, threshold=2))
+    im = im.filter(ImageFilter.UnsharpMask(radius=1.2, percent=35, threshold=3))
     return im, K
 
 
@@ -508,9 +528,6 @@ def render_video(starts_f, total_f, lens, out_path, audio_wav, draft_note=False)
     vig = (1 - 0.42 * ss(0.45, 1.3, rr)).astype(np.float32)[:, :, None]
     redm = ss(0.35, 1.25, rr).astype(np.float32)[:, :, None]
     red = np.array([150, 0, 0], np.float32)
-    gr = np.random.default_rng(77)
-    grains = [gr.standard_normal((H // 2, W // 2)).astype(np.float32) for _ in range(8)]
-    grains = [np.repeat(np.repeat(g, 2, 0), 2, 1)[:, :, None] * 7.0 for g in grains]
 
     imgs = [prep_image(i) for i in range(len(SCENES))]
     statics = [render_static(i) for i in range(len(SCENES))]
@@ -519,8 +536,8 @@ def render_video(starts_f, total_f, lens, out_path, audio_wav, draft_note=False)
 
     cmd = ["ffmpeg", "-y", "-v", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}", "-r", str(FPS),
            "-i", "-", "-i", audio_wav, "-map", "0:v", "-map", "1:a",
-           "-c:v", "libx264", "-preset", "medium", "-crf", "18", "-pix_fmt", "yuv420p", "-profile:v", "high",
-           "-r", str(FPS), "-c:a", "aac", "-b:a", "192k", "-ar", str(SR), "-ac", "2",
+           "-c:v", "libx264", "-preset", "slow", "-crf", "15", "-tune", "animation", "-pix_fmt", "yuv420p", "-profile:v", "high",
+           "-r", str(FPS), "-c:a", "aac", "-b:a", "256k", "-ar", str(SR), "-ac", "2",
            "-movflags", "+faststart", "-shortest", out_path]
     p = subprocess.Popen(cmd, stdin=subprocess.PIPE)
     ends = starts_f[1:] + [total_f]
@@ -565,7 +582,6 @@ def render_video(starts_f, total_f, lens, out_path, audio_wav, draft_note=False)
         o = np.asarray(ov, dtype=np.float32)
         oa = o[:, :, 3:4] / 255.0
         a = a * (1 - oa) + o[:, :, :3] * oa
-        a += grains[f % 8]
         # белая вспышка на склейке
         if i > 0 and fl < 4:
             fa = 0.3 * (1 - fl / 4)
