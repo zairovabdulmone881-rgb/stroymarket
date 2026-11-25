@@ -47,6 +47,20 @@ VOICE_FX = ",".join([
     "acompressor=threshold=-22dB:ratio=3:attack=5:release=90:makeup=4",
 ])
 
+# «человечная» цепочка для ролика №2: мягче компрессия, меньше эксайтера, тёплый низ
+# и лёгкие ранние отражения маленькой комнаты — голос перестаёт звучать «из вакуума».
+VOICE_FX_HUMAN = ",".join([
+    "highpass=f=70:poles=2",
+    "equalizer=f=180:t=q:w=1.0:g=2",
+    "equalizer=f=400:t=q:w=1.4:g=-2",
+    "equalizer=f=2800:t=q:w=1.2:g=2.5",
+    "highshelf=f=8000:g=1.5",
+    "aexciter=amount=0.5:drive=4:blend=0:freq=7000:ceil=16000",
+    "deesser=i=0.3:m=0.5:f=0.5",
+    "acompressor=threshold=-24dB:ratio=2.2:attack=12:release=150:makeup=2.5:knee=6",
+    "aecho=0.9:0.9:17|29|43:0.10|0.07|0.045",
+])
+
 
 def dec(path):
     r = subprocess.run(["ffmpeg", "-v", "error", "-i", path, "-af", "aresample=resampler=soxr:precision=28",
@@ -54,13 +68,17 @@ def dec(path):
     return np.frombuffer(r.stdout, np.float32).astype(np.float64)
 
 
-def trim(x, thr_db=-45, pad=0.03):
+def trim(x, thr_db=-45, pad=0.03, fade_ms=0):
     fr = 240; n = len(x) // fr
     db = 20 * np.log10(np.sqrt(np.mean(x[: n * fr].reshape(n, fr) ** 2, 1)) + 1e-9)
     on = np.where(db > thr_db)[0]
     if not len(on): return x
     a = max(0, on[0] * fr - int(pad * SR)); b = min(len(x), (on[-1] + 1) * fr + int(pad * SR * 2))
-    return x[a:b]
+    y = x[a:b].copy()
+    if fade_ms:  # мягкие края фрагмента — без «обрубленных» вдохов и хвостов
+        k = min(len(y) // 4, int(fade_ms / 1000 * SR))
+        y[:k] *= np.linspace(0, 1, k) ** 0.5; y[-k:] *= np.linspace(1, 0, k) ** 0.5
+    return y
 
 
 async def synth(text, rate, pitch, out, voice="ru-RU-DmitryNeural"):
@@ -75,10 +93,10 @@ async def synth(text, rate, pitch, out, voice="ru-RU-DmitryNeural"):
     sys.exit(f"Не удалось озвучить: {text}")
 
 
-def process(x, out_wav):
+def process(x, out_wav, fx=VOICE_FX, gain_db=0.0):
     tmp = out_wav + ".raw.wav"
     wavfile.write(tmp, SR, x.astype(np.float32))
-    r = subprocess.run(["ffmpeg", "-v", "error", "-i", tmp, "-af", VOICE_FX, "-ar", str(SR), "-ac", "1",
+    r = subprocess.run(["ffmpeg", "-v", "error", "-i", tmp, "-af", fx, "-ar", str(SR), "-ac", "1",
                         "-f", "f32le", "-"], capture_output=True, check=True)
     os.remove(tmp)
     y = np.frombuffer(r.stdout, np.float32).astype(np.float64)
@@ -86,13 +104,14 @@ def process(x, out_wav):
     fr = 480; n = len(y) // fr
     rms = np.sqrt(np.mean(y[: n * fr].reshape(n, fr) ** 2, 1))
     act = rms[rms > rms.max() * 0.1]
-    y *= 10 ** (-17 / 20) / np.sqrt(np.mean(act ** 2))
+    y *= 10 ** ((-17 + gain_db) / 20) / np.sqrt(np.mean(act ** 2))
     lim = 10 ** (-1.5 / 20)
     y = np.where(np.abs(y) > lim * 0.8, np.sign(y) * (lim * 0.8 + (lim * 0.2) * np.tanh((np.abs(y) - lim * 0.8) / (lim * 0.2))), y)
     wavfile.write(out_wav, SR, (y * 32767).astype(np.int16))
 
 
-async def main(only=None, script=SCRIPT, vdir=os.path.join(ROOT, "voice")):
+async def main(only=None, script=SCRIPT, vdir=os.path.join(ROOT, "voice"), fx=VOICE_FX, gains=None,
+               pad=0.03, fade_ms=0):
     cdir = os.path.join(vdir, "chunks")
     os.makedirs(cdir, exist_ok=True)
     for i, chunks in enumerate(script):
@@ -101,11 +120,11 @@ async def main(only=None, script=SCRIPT, vdir=os.path.join(ROOT, "voice")):
         for k, (text, rate, pitch, pause) in enumerate(chunks):
             mp3 = os.path.join(cdir, f"{i+1:02d}_{k}.mp3")
             await synth(text, rate, pitch, mp3)
-            parts.append(trim(dec(mp3)))
+            parts.append(trim(dec(mp3), pad=pad, fade_ms=fade_ms))
             if pause: parts.append(np.zeros(int(pause * SR)))
         x = np.concatenate([np.zeros(int(0.04 * SR))] + parts + [np.zeros(int(0.08 * SR))])
         out = os.path.join(vdir, f"{i+1:02d}.wav")
-        process(x, out)
+        process(x, out, fx, (gains or {}).get(i + 1, 0.0))
         print(out, round(len(x) / SR, 2), "с", flush=True)
 
 

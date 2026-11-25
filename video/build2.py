@@ -15,7 +15,13 @@ import build as B
 from build import (W, H, FPS, SR, ROOT, filt, env_ad, fade, reverb, stereo, randwalk, growl, metal_hit,
                    thump, wind, scrape, smooth, font, text_w, render_sub, render_fact, render_bar, loudnorm)
 
-IMGDIR, HDDIR, VDIR = "imgs2", "imgs2_hd", "voice2"
+IMGDIR, CARDDIR, HDDIR, VDIR = "imgs2", "imgs2_card", "imgs2_hd", "voice2"
+# В PDF каждая страница 720x1280: по центру резкая карточка-кадр, вокруг — размытая копия,
+# сверху у части страниц осколок предыдущей карточки, в углу — номер сцены.
+# Верх карточки по группам страниц (найден по чёрной полосе-разделителю), низ/бока общие.
+CARD_TOP = [332] * 3 + [447] * 3 + [505] * 3 + [458] * 3 + [372] * 3 + [332] * 3
+CARD_L, CARD_R, CARD_B = 16, 701, 942
+CARD_CY, CARD_MAXH, CARD_MAXW = 850, 860, 1240   # где и каким размером карточка стоит в кадре
 
 # ------------------------------------------------------------------ сценарий
 SCENES = [
@@ -38,27 +44,30 @@ SCENES = [
     ("Но утро наступает. Вы пережили первую ночь.", "ПЕРВАЯ НОЧЬ ПОЗАДИ", "ПОЗАДИ"),
     ("А что бы ты взял в рюкзак? Пиши в комментариях.", "ЧТО ТЫ БЫ ВЗЯЛ?", "ВЗЯЛ?"),
 ]
-# озвучка по фрагментам: (текст, rate %, pitch Hz, пауза после). База -8% / -4Hz, как в ролике №1.
+# Озвучка. База -8% / -4Hz (как задано). Чтобы звучало по-человечески:
+# целые предложения читаются одним запросом (естественная интонация), фрагменты —
+# только там, где нужна драматическая пауза; отклонения высоты небольшие (-2…-6 Hz).
 SCRIPT = [
-    [("Ночью тебе приходит сообщение.", -8, -4, 0.35), ("Заражённые в двухстах километрах.", -12, -6, 0.35), ("У вас двадцать четыре часа.", -16, -8, 0)],
-    [("Что ты сделаешь первым?", -14, -4, 0)],
-    [("Утром магазины пустеют за час.", -2, -3, 0.30), ("Ты успеваешь взять только воду.", -8, -5, 0)],
-    [("Банкоматы не работают.", -6, -4, 0.35), ("Карты — просто пластик.", -14, -7, 0)],
-    [("Дома ты собираешь рюкзак:", -6, -4, 0.25), ("вода, спички, аптечка, радио, документы.", -10, -4, 0)],
-    [("Весь город бежит.", 0, -3, 0.35), ("Трасса стоит намертво.", -14, -7, 0)],
-    [("И ты решаешь остаться.", -14, -6, 0.35), ("Заколачиваешь окна.", -4, -4, 0)],
-    [("Двенадцать часов до прихода.", -10, -6, 0.40), ("В дверь стучит сосед с дочкой.", -8, -4, 0)],
-    [("Ты бы пустил?", -16, -4, 0)],
-    [("Ты открываешь.", -10, -4, 0.30), ("Теперь вас трое.", -10, -4, 0.40), ("А воды — на двоих.", -16, -8, 0)],
-    [("Три часа до прихода.", -10, -6, 0.30), ("Связь пропадает.", -12, -6, 0.35), ("По радио — одна фраза:", -10, -5, 0.30), ("не выходите на улицу.", -18, -9, 0)],
-    [("Полночь.", -18, -10, 0.40), ("Город гаснет.", -14, -8, 0.45), ("И становится очень тихо.", -20, -10, 0)],
-    [("А потом во дворе появляется первый.", -14, -8, 0)],
-    [("За ним — сотни.", -12, -8, 0)],
-    [("Вы сидите без света", -16, -8, 0.20), ("и почти не дышите.", -20, -10, 0)],
-    [("Кто-то скребётся в дверь.", -16, -9, 0)],
-    [("Но утро наступает.", -10, -2, 0.40), ("Вы пережили первую ночь.", -10, -3, 0)],
-    [("А что бы ты взял в рюкзак?", -6, 0, 0.35), ("Пиши в комментариях.", -2, -2, 0)],
+    [("Ночью тебе приходит сообщение.", -6, -4, 0.45), ("Заражённые в двухстах километрах.", -8, -4, 0.40), ("У вас двадцать четыре часа.", -12, -6, 0)],
+    [("Что ты сделаешь первым?", -10, -3, 0)],
+    [("Утром магазины пустеют за час. Ты успеваешь взять только воду.", -4, -4, 0)],
+    [("Банкоматы не работают.", -6, -4, 0.35), ("Карты — просто пластик.", -10, -5, 0)],
+    [("Дома ты собираешь рюкзак: вода, спички, аптечка, радио, документы.", -8, -4, 0)],
+    [("Весь город бежит.", -2, -3, 0.35), ("Трасса стоит намертво.", -10, -5, 0)],
+    [("И ты решаешь остаться.", -10, -5, 0.35), ("Заколачиваешь окна.", -4, -4, 0)],
+    [("Двенадцать часов до прихода.", -8, -5, 0.40), ("В дверь стучит сосед с дочкой.", -6, -4, 0)],
+    [("Ты бы пустил?", -12, -3, 0)],
+    [("Ты открываешь. Теперь вас трое.", -8, -4, 0.40), ("А воды — на двоих.", -12, -6, 0)],
+    [("Три часа до прихода. Связь пропадает.", -8, -5, 0.35), ("По радио — одна фраза:", -8, -4, 0.30), ("не выходите на улицу.", -14, -6, 0)],
+    [("Полночь.", -12, -6, 0.45), ("Город гаснет.", -10, -5, 0.45), ("И становится очень тихо.", -14, -6, 0)],
+    [("А потом во дворе появляется первый.", -10, -5, 0)],
+    [("За ним — сотни.", -10, -6, 0)],
+    [("Вы сидите без света и почти не дышите.", -14, -6, 0)],
+    [("Кто-то скребётся в дверь.", -12, -6, 0)],
+    [("Но утро наступает.", -8, -2, 0.40), ("Вы пережили первую ночь.", -8, -3, 0)],
+    [("А что бы ты взял в рюкзак?", -4, -2, 0.35), ("Пиши в комментариях.", -2, -2, 0)],
 ]
+VOICE_GAIN = {12: -1.0, 15: -2.0, 16: -1.0}   # тихие, «шёпотные» сцены чуть тише
 RADIO = ["Внимание. Говорит штаб гражданской обороны.", "Оставайтесь дома.", "Не выходите на улицу."]
 
 TIMER = ["24:00", "23:58", "18:00", "16:30", "14:00", "13:00", "12:30", "12:00", "11:59", "09:00", "03:00", "00:00",
@@ -70,11 +79,11 @@ FACTS = {2: "Спасатели советуют держать запас ок�
          3: "Без электричества не работают банкоматы и терминалы — держи наличные",
          10: "Радиоприёмник на батарейках работает без интернета и сотовой связи"}
 # центр интереса (x, y в долях картинки), начало -> конец; уточняется по реальным картинкам
-FOCUS = [((0.5, 0.45), (0.5, 0.43)), ((0.5, 0.48), (0.5, 0.46)), ((0.5, 0.52), (0.52, 0.5)), ((0.5, 0.45), (0.48, 0.45)),
-         ((0.5, 0.58), (0.5, 0.56)), ((0.5, 0.62), (0.5, 0.38)), ((0.5, 0.45), (0.5, 0.43)), ((0.5, 0.45), (0.5, 0.45)),
-         ((0.5, 0.5), (0.5, 0.48)), ((0.5, 0.55), (0.5, 0.53)), ((0.5, 0.55), (0.5, 0.52)), ((0.5, 0.6), (0.5, 0.38)),
-         ((0.5, 0.45), (0.5, 0.42)), ((0.5, 0.5), (0.5, 0.48)), ((0.5, 0.5), (0.5, 0.48)), ((0.5, 0.55), (0.5, 0.52)),
-         ((0.5, 0.45), (0.5, 0.42)), ((0.5, 0.42), (0.5, 0.42))]
+FOCUS = [((0.45, 0.5), (0.42, 0.5)), ((0.5, 0.5), (0.5, 0.48)), ((0.45, 0.55), (0.45, 0.52)), ((0.55, 0.5), (0.6, 0.45)),
+         ((0.5, 0.5), (0.48, 0.48)), ((0.5, 0.6), (0.5, 0.45)), ((0.5, 0.5), (0.55, 0.5)), ((0.5, 0.5), (0.45, 0.5)),
+         ((0.5, 0.5), (0.4, 0.55)), ((0.5, 0.55), (0.5, 0.52)), ((0.45, 0.55), (0.4, 0.55)), ((0.5, 0.6), (0.5, 0.45)),
+         ((0.45, 0.45), (0.45, 0.4)), ((0.5, 0.5), (0.5, 0.45)), ((0.45, 0.5), (0.45, 0.48)), ((0.5, 0.6), (0.5, 0.7)),
+         ((0.5, 0.5), (0.5, 0.48)), ((0.5, 0.45), (0.5, 0.42))]
 PAN_UP = {5, 11}
 RED_VIG = {13}
 SHAKE = {0, 6, 13, 15}
@@ -300,6 +309,65 @@ def prep(i, draft):
     return B.prep_image(i, IMGDIR, HDDIR)
 
 
+def extract_cards():
+    """imgs2/NN.png -> imgs2_card/NN.png: вырезать карточку и стереть номер сцены в углу."""
+    import cv2
+    os.makedirs(os.path.join(ROOT, CARDDIR), exist_ok=True)
+    for i in range(len(SCENES)):
+        im = Image.open(os.path.join(ROOT, IMGDIR, f"{i+1:02d}.png")).convert("RGB")
+        c = np.asarray(im.crop((CARD_L, CARD_TOP[i] + 3, CARD_R, CARD_B)))
+        g = c[:90, :120].astype(np.int16)
+        ys, xs = np.where(g.min(2) > 200)                                # белые цифры номера
+        out = c.copy(); npx = 0
+        if len(ys):
+            # прямоугольник номера (с обводкой и тенью): заполнить inpaint'ом и мягко размыть,
+            # края маски растушёваны — остаётся спокойное пятно «вне фокуса», без следов цифр
+            y1, x1 = ys.max() + 18, xs.max() + 18
+            m = np.zeros(c.shape[:2], np.uint8); m[:y1, :x1] = 255
+            fill = cv2.inpaint(c, m, 15, cv2.INPAINT_TELEA)
+            fill = cv2.GaussianBlur(fill, (0, 0), 14)
+            mm = np.zeros(c.shape[:2], np.float32); mm[:y1 + 6, :x1 + 6] = 1
+            wgt = cv2.GaussianBlur(mm, (0, 0), 14)[..., None]
+            wgt = np.clip(wgt / max(wgt[y1 // 2, x1 // 2, 0], 1e-3), 0, 1)
+            out = (c * (1 - wgt) + fill * wgt).astype(np.uint8)
+            npx = y1 * x1
+        Image.fromarray(out).save(os.path.join(ROOT, CARDDIR, f"{i+1:02d}.png"))
+        print(i + 1, c.shape[1::-1], "закрыто пикселей:", npx)
+
+
+def card_canvas(i, draft):
+    """Кадр 9:16: размытая затемнённая подложка + карточка по центру. Возвращает (canvas, K, rect)."""
+    K = 1.25
+    hd = os.path.join(ROOT, HDDIR, f"{i+1:02d}.png"); cp = os.path.join(ROOT, CARDDIR, f"{i+1:02d}.png")
+    if os.path.exists(hd): card = Image.open(hd).convert("RGB")
+    elif os.path.exists(cp): card = Image.open(cp).convert("RGB")
+    elif draft: card = placeholder(i).crop((0, 400, 900, 1200))
+    else: sys.exit(f"Нет карточки {cp}: запустите --cards")
+    CW, CH = int(W * K), int(H * K)
+    # подложка
+    s = max(CW / card.width, CH / card.height)
+    bg = card.resize((max(1, int(card.width * s / 12)), max(1, int(card.height * s / 12))), Image.BILINEAR)
+    bg = bg.filter(ImageFilter.GaussianBlur(4)).resize((int(card.width * s), int(card.height * s)), Image.BICUBIC)
+    bg = bg.crop(((bg.width - CW) // 2, (bg.height - CH) // 2, (bg.width - CW) // 2 + CW, (bg.height - CH) // 2 + CH))
+    bg = Image.eval(bg, lambda v: int(v * 0.42))
+    # карточка
+    sc = min(CARD_MAXW * K / card.width, CARD_MAXH * K / card.height)
+    cw, ch = int(card.width * sc), int(card.height * sc)
+    cimg = card.resize((cw, ch), Image.LANCZOS).filter(ImageFilter.UnsharpMask(radius=1.0, percent=30, threshold=3))
+    # мягкая виньетка углов карточки
+    yy, xx = np.mgrid[0:ch, 0:cw].astype(np.float32)
+    rr = np.sqrt(((xx - cw / 2) / (cw / 2)) ** 2 + ((yy - ch / 2) / (ch / 2)) ** 2)
+    cv = 1 - 0.5 * np.clip((rr - 0.95) / 0.45, 0, 1) ** 1.5
+    cimg = Image.fromarray((np.asarray(cimg, np.float32) * cv[..., None]).astype(np.uint8))
+    if cw > CW:   # шире кадра — обрезать бока поровну
+        cimg = cimg.crop(((cw - CW) // 2, 0, (cw - CW) // 2 + CW, ch)); cw = CW
+    x0, y0 = (CW - cw) // 2, int(CARD_CY * K - ch / 2)
+    sh = Image.new("L", (CW, CH), 0); ImageDraw.Draw(sh).rectangle([x0 - 6, y0 + 4, x0 + cw + 6, y0 + ch + 18], fill=200)
+    bg.paste(Image.new("RGB", (CW, CH), (0, 0, 0)), (0, 0), sh.filter(ImageFilter.GaussianBlur(22)))
+    bg.paste(cimg, (x0, y0))
+    return bg, K, (x0, y0, cw, ch)
+
+
 def tmin(s):
     h, m = s.split(":"); return int(h) * 60 + int(m)
 
@@ -334,6 +402,21 @@ def render_hud(i, t, f, starts_f):
         d.rounded_rectangle([x0, py, x0 + tw + 44, py + 54], 8, fill=(0, 0, 0, 170))
         d.rectangle([x0, py, x0 + 8, py + 54], fill=(255, 210, 26, 255))
         d.text((x0 + 26, py + 27), PLACE[i], font=f2, fill=(255, 255, 255, 255), anchor="lm")
+    return im
+
+
+def render_bar_top(v):
+    """Шкала «УГРОЗА» в правом верхнем углу (над карточкой, ничего не закрывает)."""
+    bw, bh = 34, 270
+    im = Image.new("RGBA", (300, bh + 20), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
+    bx, by = 300 - bw - 14, 8
+    d.rounded_rectangle([bx - 5, by - 5, bx + bw + 5, by + bh + 5], 12, fill=(0, 0, 0, 170), outline=(255, 255, 255, 220), width=3)
+    fh = int(bh * v / 100); col = B.threat_col(v)
+    if fh > 0: d.rounded_rectangle([bx, by + bh - fh, bx + bw, by + bh], 8, fill=col + (255,))
+    for k in range(1, 10):
+        yy = by + bh * k // 10; d.line([bx, yy, bx + 9, yy], fill=(0, 0, 0, 120), width=2)
+    d.text((bx - 14, by + 4), "УГРОЗА", font=font("black", 30), fill=(255, 255, 255, 255), stroke_width=4, stroke_fill=(0, 0, 0, 255), anchor="ra")
+    d.text((bx - 14, by + bh), f"{int(round(v))}%", font=font("black", 52), fill=col + (255,), stroke_width=5, stroke_fill=(0, 0, 0, 255), anchor="rd")
     return im
 
 
@@ -374,7 +457,8 @@ def render_video(starts_f, total_f, lens, out_path, audio_wav, draft):
     vig = (1 - 0.42 * ss(0.45, 1.3, rr)).astype(np.float32)[:, :, None]
     redm = ss(0.35, 1.25, rr).astype(np.float32)[:, :, None]
     red = np.array([150, 0, 0], np.float32); warm = np.array([255, 178, 105], np.float32)
-    imgs = [prep(i, draft) for i in range(len(SCENES))]
+    canv = [card_canvas(i, draft) for i in range(len(SCENES))]
+    imgs = [(c, K) for c, K, _ in canv]
     subs = [render_sub(i, SCENES) for i in range(len(SCENES))]
     facts = {k: render_fact(v) for k, v in FACTS.items()}
     cmd = ["ffmpeg", "-y", "-v", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}", "-r", str(FPS),
@@ -387,13 +471,15 @@ def render_video(starts_f, total_f, lens, out_path, audio_wav, draft):
         i = max(k for k in range(len(starts_f)) if starts_f[k] <= f)
         fl = f - starts_f[i]; nf = ends[i] - starts_f[i]; t = fl / FPS; u = fl / max(nf - 1, 1); du = nf / FPS
         base, K = imgs[i]
-        zmax = 0.20 if i == 8 else 0.12                       # 09: медленный глубокий наезд
+        zmax = 0.18 if i == 8 else 0.10                       # 09: медленный глубокий наезд
         z = (1.0 + zmax * u) * (1.06 if i in SHAKE else 1.0)
         if i == 8:                                             # пульс в такт сердцу
             z *= 1 + sum(0.008 * math.exp(-(t - h) / 0.12) for h in heart_times(du) if t >= h)
         (fx0, fy0), (fx1, fy1) = FOCUS[i]
         e = smooth(u) if i in PAN_UP else u
         fx = fx0 + (fx1 - fx0) * e; fy = fy0 + (fy1 - fy0) * e
+        rx, ry, rw, rh = canv[i][2]
+        fx = (rx + fx * rw) / base.width; fy = (ry + fy * rh) / base.height
         cw, ch = W * K / z, H * K / z
         sx, sy = shake_offset(i, t, du); scale = cw / W
         cx = min(max(fx * base.width + sx * scale, cw / 2), base.width - cw / 2)
@@ -417,12 +503,12 @@ def render_video(starts_f, total_f, lens, out_path, audio_wav, draft):
         ov = Image.new("RGBA", (W, H), (0, 0, 0, 0))
         ov.alpha_composite(render_hud(i, t, f, starts_f), (0, 0))
         v0 = THREAT[i - 1] if i > 0 else 0
-        ov.alpha_composite(render_bar(v0 + (THREAT[i] - v0) * smooth(t / 0.6), 0), (W - 170 - 22, 640))
+        ov.alpha_composite(render_bar_top(v0 + (THREAT[i] - v0) * smooth(t / 0.6)), (W - 300 - 26, 96))
         if i in facts:
             fc = facts[i]; k = smooth((t - 0.35) / 0.3)
             if k > 0:
                 c2 = fc.copy(); c2.putalpha(c2.getchannel("A").point(lambda q: int(q * k)))
-                ov.alpha_composite(c2, (int(-fc.width + (40 + fc.width) * k), 410))
+                ov.alpha_composite(c2, (int(-fc.width + (40 + fc.width) * k), 352))
         sb = subs[i]; k = min(t / 0.15, 1.0); sc = 0.7 + 0.3 * (1 - (1 - k) ** 3)
         sbi = sb if sc >= 0.999 else sb.resize((max(1, int(sb.width * sc)), max(1, int(sb.height * sc))), Image.BICUBIC)
         ov.alpha_composite(sbi, (int(W / 2 - sbi.width / 2), int(1470 - sbi.height / 2)))
@@ -439,7 +525,8 @@ def render_video(starts_f, total_f, lens, out_path, audio_wav, draft):
 # ------------------------------------------------------------------ main
 def run_tts():
     import tts
-    asyncio.run(tts.main(None, SCRIPT, os.path.join(ROOT, VDIR)))
+    asyncio.run(tts.main(None, SCRIPT, os.path.join(ROOT, VDIR), fx=tts.VOICE_FX_HUMAN, gains=VOICE_GAIN,
+                         pad=0.06, fade_ms=25))
     # радио-фрагменты другим голосом (диктор гражданской обороны), без нашей голосовой обработки
     async def radio():
         parts = []
@@ -454,12 +541,15 @@ def run_tts():
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--tts", action="store_true")
+    ap.add_argument("--cards", action="store_true", help="вырезать карточки из imgs2 -> imgs2_card")
     ap.add_argument("--draft", action="store_true")
     ap.add_argument("--out", default=os.path.join(ROOT, "final_video_2.mp4"))
     ap.add_argument("--work", default="/tmp/zombie_build2")
     a = ap.parse_args()
     if a.tts:
         run_tts(); return
+    if a.cards:
+        extract_cards(); return
     os.makedirs(a.work, exist_ok=True)
     voices, lens, starts_f, total_f = B.timeline(os.path.join(ROOT, VDIR), SCENES, tail=1.5)
     if any(v is None for v in voices): sys.exit("Нет озвучки: запустите с --tts")
