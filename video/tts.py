@@ -63,10 +63,10 @@ def trim(x, thr_db=-45, pad=0.03):
     return x[a:b]
 
 
-async def synth(text, rate, pitch, out):
+async def synth(text, rate, pitch, out, voice="ru-RU-DmitryNeural"):
     for attempt in range(8):  # сервис иногда отвечает без аудио — повторяем
         try:
-            c = edge_tts.Communicate(text, "ru-RU-DmitryNeural", rate=f"{rate:+d}%", pitch=f"{pitch:+d}Hz")
+            c = edge_tts.Communicate(text, voice, rate=f"{rate:+d}%", pitch=f"{pitch:+d}Hz")
             await c.save(out)
             if os.path.getsize(out) > 1000: return
         except edge_tts.exceptions.NoAudioReceived as e:
@@ -92,10 +92,10 @@ def process(x, out_wav):
     wavfile.write(out_wav, SR, (y * 32767).astype(np.int16))
 
 
-async def main(only=None):
-    vdir = os.path.join(ROOT, "voice"); cdir = os.path.join(vdir, "chunks")
+async def main(only=None, script=SCRIPT, vdir=os.path.join(ROOT, "voice")):
+    cdir = os.path.join(vdir, "chunks")
     os.makedirs(cdir, exist_ok=True)
-    for i, chunks in enumerate(SCRIPT):
+    for i, chunks in enumerate(script):
         if only and i + 1 not in only: continue
         parts = []
         for k, (text, rate, pitch, pause) in enumerate(chunks):

@@ -82,9 +82,9 @@ def smooth(t):
 
 
 # ---------------------------------------------------------------- тайминг
-def timeline(voice_dir):
+def timeline(voice_dir, scenes=SCENES, tail=1.5):
     voices, lens = [], []
-    for i, (txt, _, _) in enumerate(SCENES):
+    for i, (txt, *_r) in enumerate(scenes):
         p = None
         for ext in ("wav", "mp3"):
             q = os.path.join(voice_dir, f"{i+1:02d}.{ext}") if voice_dir else None
@@ -94,7 +94,7 @@ def timeline(voice_dir):
         else:
             voices.append(None); lens.append(0.55 + len(txt) / 14.5)  # оценка для черновика
     durs = [l + 0.3 for l in lens]
-    durs[-1] = lens[-1] + 1.5
+    durs[-1] = lens[-1] + tail
     starts_f, f = [], 0
     for d in durs:
         starts_f.append(f); f += int(round(d * FPS))
@@ -312,9 +312,9 @@ def load_wav48(path):
     return x.astype(np.float64) / 32768.0
 
 
-def build_audio(voices, starts_f, total_f, lens, out_wav):
+def build_audio(voices, starts_f, total_f, lens, out_wav, sfx_fn=None, duck_db=-14.0, sfx_gain=0.55):
     N = int(round(total_f / FPS * SR))
-    sfx = build_sfx(starts_f, total_f, lens)[:N]
+    sfx = (sfx_fn or build_sfx)(starts_f, total_f, lens)[:N]
     voice = np.zeros((N, 2))
     for i, p in enumerate(voices):
         if p is None: continue
@@ -330,9 +330,9 @@ def build_audio(voices, starts_f, total_f, lens, out_wav):
     g = np.zeros_like(active); cur = 0.0
     for k, a in enumerate(active):
         cur = cur + (a - cur) * (0.3 if a > cur else 0.035); g[k] = cur
-    gain_db = -14.0 * g
+    gain_db = duck_db * g
     gain = np.interp(np.arange(N), np.arange(len(g)) * hop, 10 ** (gain_db / 20))
-    mix = voice * 1.0 + sfx * gain[:, None] * 0.55
+    mix = voice * 1.0 + sfx * gain[:, None] * sfx_gain
     pk = np.abs(mix).max()
     if pk > 0.98: mix *= 0.98 / pk
     wavfile.write(out_wav, SR, (mix * 32767).astype(np.int16))
@@ -344,15 +344,15 @@ def text_w(d, s, f, stroke=0):
     return b[2] - b[0]
 
 
-def render_sub(i):
+def render_sub(i, scenes=SCENES):
     """Субтитр сцены i: RGBA, центр по горизонтали."""
-    text, hl = SCENES[i][1], SCENES[i][2]
+    text, hl = scenes[i][1], scenes[i][2]
     words = text.split(" "); hw = hl.split(" ")
     flags = [False] * len(words)
     for k in range(len(words) - len(hw) + 1):
         if words[k:k + len(hw)] == hw:
             for j in range(len(hw)): flags[k + j] = True
-    last = i == len(SCENES) - 1
+    last = i == len(scenes) - 1
     size = 96
     stroke = 12
     tmp = ImageDraw.Draw(Image.new("RGBA", (10, 10)))
@@ -478,10 +478,10 @@ def trim_box(img, depth=20, thr=180):
     return cut(cm), cut(rm), g.shape[1] - cut(cm[::-1]), g.shape[0] - cut(rm[::-1])
 
 
-def prep_image(i):
-    src = Image.open(os.path.join(ROOT, "imgs", f"{i+1:02d}.png")).convert("RGB")
+def prep_image(i, imgdir="imgs", hddir="imgs_hd"):
+    src = Image.open(os.path.join(ROOT, imgdir, f"{i+1:02d}.png")).convert("RGB")
     l, t, r, btm = trim_box(src)
-    hd = os.path.join(ROOT, "imgs_hd", f"{i+1:02d}.png")
+    hd = os.path.join(ROOT, hddir, f"{i+1:02d}.png")
     if os.path.exists(hd):
         im = Image.open(hd).convert("RGB"); k = im.width / src.width
         im = im.crop((int(l * k), int(t * k), int(r * k), int(btm * k)))
