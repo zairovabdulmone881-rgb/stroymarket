@@ -91,11 +91,23 @@ FACTS = {2: "Спасатели советуют держать запас ок�
          4: "Без электричества не работают банкоматы и терминалы — держи наличные",
          10: "Радиоприёмник на батарейках работает без интернета и сотовой связи"}
 # центр интереса (доли карточки), начало -> конец
-FOCUS = [((0.45, 0.5), (0.42, 0.5)), ((0.5, 0.5), (0.5, 0.48)), ((0.5, 0.5), (0.62, 0.35)), ((0.45, 0.45), (0.55, 0.45)),
-         ((0.55, 0.45), (0.62, 0.4)), ((0.5, 0.5), (0.55, 0.5)), ((0.5, 0.6), (0.5, 0.45)), ((0.5, 0.5), (0.55, 0.5)),
-         ((0.5, 0.5), (0.4, 0.55)), ((0.5, 0.5), (0.45, 0.55)), ((0.45, 0.55), (0.6, 0.6)), ((0.5, 0.55), (0.5, 0.45)),
-         ((0.45, 0.5), (0.45, 0.48)), ((0.5, 0.5), (0.55, 0.55)), ((0.5, 0.45), (0.5, 0.45)), ((0.5, 0.5), (0.5, 0.5)),
-         ((0.5, 0.45), (0.5, 0.42))]
+FOCUS = [((0.40, 0.62), (0.66, 0.55)),  # 01 лицо героя -> телефон
+         ((0.45, 0.52), (0.50, 0.50)),  # 02 герой в толпе
+         ((0.35, 0.72), (0.68, 0.72)),  # 03 герой -> полка «ВОДА ОСТАЛАСЬ» (лицо на одной высоте)
+         ((0.36, 0.38), (0.62, 0.45)),  # 04 злой мужчина -> герой с водой
+         ((0.36, 0.52), (0.64, 0.42)),  # 05 герой -> банкомат
+         ((0.52, 0.45), (0.62, 0.48)),  # 06 двор, машины
+         ((0.40, 0.68), (0.58, 0.50)),  # 07 герой на мосту -> пробка
+         ((0.38, 0.52), (0.52, 0.50)),  # 08 молоток, доски
+         ((0.36, 0.45), (0.48, 0.62)),  # 09 сосед -> дочка
+         ((0.32, 0.45), (0.58, 0.42)),  # 10 герой с бутылкой -> сосед с дочкой
+         ((0.38, 0.50), (0.60, 0.45)),  # 11 герой -> сосед, радио
+         ((0.45, 0.55), (0.60, 0.50)),  # 12 орда
+         ((0.36, 0.42), (0.46, 0.45)),  # 13 спит, свеча
+         ((0.48, 0.58), (0.50, 0.60)),  # 14 лицо с телефоном
+         ((0.50, 0.50), (0.50, 0.50)),  # 15 текст сообщения (статично, вся ширина)
+         ((0.50, 0.50), (0.54, 0.50)),  # 16 глазок
+         ((0.52, 0.58), (0.52, 0.58))]  # 17 крупный план: глаза над субтитром
 PAN_UP = {6, 11}
 RED_VIG = {11, 15}
 SHAKE = {0, 3, 7, 11, 13, 15}
@@ -351,6 +363,54 @@ def extract_cards():
         print(i + 1, c.shape[1::-1], "закрыто пикселей:", npx)
 
 
+FULL_BLEED = True      # картинка на весь кадр (никаких маленьких карточек)
+ANCHOR_X = 460         # точка интереса держится в центре безопасной зоны (0…920)
+# Сцены, где важный текст шире кадра: видимая доля ширины картинки и центр по высоте (px кадра).
+# Картинка всё равно крупная (на всю ширину), сверху/снизу — её размытое продолжение.
+WIDTH_FIT = {14: ((0.115, 0.83), 326),   # 15: текст на телефоне целиком
+             16: ((0.22, 0.78), 66)}     # 17: крупный план — оба глаза, рот над субтитром
+STATIC = {14}                            # без движения камеры (текст на экране)   # 15: текст на телефоне целиком (x 0.15…0.73), верх картинки на y=315
+SUB_HIDE = {14}
+ANCHOR_Y = 800                           # лицо/точка интереса — на этой высоте (над субтитрами 1250)
+ZBASE = {13: 1.0, 15: 1.0, 16: 1.0}      # базовый зум по сценам (по умолчанию 1.10)                          # 15: субтитр не нужен — сам текст сообщения крупно на экране
+
+
+def fill_canvas(i, draft):
+    """Картинка на весь кадр: карточка масштабируется по высоте кадра (с запасом K под наезд),
+    по ширине — шире кадра; камера панорамирует по ней от одной точки интереса к другой."""
+    K = 1.25
+    hd = os.path.join(ROOT, HDDIR, f"{i+1:02d}.png"); cp = os.path.join(ROOT, CARDDIR, f"{i+1:02d}.png")
+    if os.path.exists(hd): card = Image.open(hd).convert("RGB")
+    elif os.path.exists(cp): card = Image.open(cp).convert("RGB")
+    elif draft: card = placeholder(i)
+    else: sys.exit(f"Нет карточки {cp}: запустите --cards")
+    if i in WIDTH_FIT:
+        (fx0, fx1), top = WIDTH_FIT[i]
+        crop = card.crop((int(card.width * fx0), 0, int(card.width * fx1), card.height))
+        s = W * K / crop.width
+        img = crop.resize((int(W * K), int(round(crop.height * s))), Image.LANCZOS)
+        img = img.filter(ImageFilter.UnsharpMask(radius=1.2, percent=35, threshold=3))
+        CW, CH = int(W * K), int(H * K)
+        bs = max(CW / card.width, CH / card.height)
+        bg = card.resize((max(1, int(card.width * bs / 12)), max(1, int(card.height * bs / 12))), Image.BILINEAR)
+        bg = bg.filter(ImageFilter.GaussianBlur(4)).resize((int(card.width * bs), int(card.height * bs)), Image.BICUBIC)
+        bg = bg.crop(((bg.width - CW) // 2, (bg.height - CH) // 2, (bg.width - CW) // 2 + CW, (bg.height - CH) // 2 + CH))
+        bg = Image.eval(bg, lambda v: int(v * 0.45))
+        bg.paste(img, (0, int(top * K)))
+        return bg, K, (0, 0, bg.width, bg.height), img.height
+    s = max(H * K / card.height, W * K / card.width)
+    img = card.resize((int(round(card.width * s)), int(round(card.height * s))), Image.LANCZOS)
+    img = img.filter(ImageFilter.UnsharpMask(radius=1.2, percent=35, threshold=3))
+    # снизу — размытое продолжение высотой с нижнюю безопасную зону: картинку можно поднять,
+    # чтобы лицо оказалось над субтитрами; размытие видно только в зоне интерфейса Shorts
+    pad = int(SAFE_B * K)
+    ext = img.crop((0, img.height - pad, img.width, img.height)).transpose(Image.FLIP_TOP_BOTTOM)
+    ext = ext.resize((max(1, ext.width // 10), max(1, ext.height // 10)), Image.BILINEAR).filter(ImageFilter.GaussianBlur(2)).resize(ext.size, Image.BICUBIC)
+    ext = Image.eval(ext, lambda v: int(v * 0.5))
+    canvas = Image.new("RGB", (img.width, img.height + pad)); canvas.paste(img, (0, 0)); canvas.paste(ext, (0, img.height))
+    return canvas, K, (0, 0, img.width, img.height), img.height
+
+
 def card_canvas(i, draft):
     """Кадр 9:16: размытая затемнённая подложка + карточка по центру. Возвращает (canvas, K, rect)."""
     K = 1.25
@@ -531,11 +591,11 @@ def render_video(starts_f, total_f, lens, out_path, audio_wav, draft):
     vig = (1 - 0.42 * ss(0.45, 1.3, rr)).astype(np.float32)[:, :, None]
     redm = ss(0.35, 1.25, rr).astype(np.float32)[:, :, None]
     red = np.array([150, 0, 0], np.float32); warm = np.array([255, 178, 105], np.float32)
-    canv = [card_canvas(i, draft) for i in range(len(SCENES))]
+    canv = [(fill_canvas if FULL_BLEED else card_canvas)(i, draft) for i in range(len(SCENES))]
     ends0 = starts_f[1:] + [total_f]
     punches = [punch_times(i, (ends0[i] - starts_f[i]) / FPS) for i in range(len(SCENES))]
     print("наезды:", {i + 1: p for i, p in enumerate(punches) if p})
-    imgs = [(c, K) for c, K, _ in canv]
+    imgs = [(c[0], c[1]) for c in canv]
     subs = [render_sub(i, SCENES, SUB_MAXW) for i in range(len(SCENES))]
     facts = {k: render_fact(v, HUD_K, FACT_W) for k, v in FACTS.items()}
     cmd = ["ffmpeg", "-y", "-v", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}", "-r", str(FPS),
@@ -550,11 +610,13 @@ def render_video(starts_f, total_f, lens, out_path, audio_wav, draft):
         base, K = imgs[i]
         zmax = 0.18 if i == 9 else 0.10                       # 10: «Ты бы пустил?» — медленный глубокий наезд
         z = (1.0 + zmax * u) * (1.06 if i in SHAKE else 1.0)
+        if FULL_BLEED: z *= ZBASE.get(i, 1.10)
         z *= 1 + punch_zoom(t, punches[i])
         if i == 0:
             z *= 1 + intro_zoom(t)
         if i == 9:                                             # пульс в такт сердцу
             z *= 1 + sum(0.008 * math.exp(-(t - h) / 0.12) for h in heart_times(du) if t >= h)
+        if i in STATIC: z = 1.0                               # текст на экране — без движения камеры
         (fx0, fy0), (fx1, fy1) = FOCUS[i]
         e = smooth(u) if i in PAN_UP else u
         fx = fx0 + (fx1 - fx0) * e; fy = fy0 + (fy1 - fy0) * e
@@ -562,10 +624,22 @@ def render_video(starts_f, total_f, lens, out_path, audio_wav, draft):
         fx = (rx + fx * rw) / base.width; fy = (ry + fy * rh) / base.height
         cw, ch = W * K / z, H * K / z
         sx, sy = shake_offset(i, t, du); scale = cw / W
+        if i in STATIC: sx = sy = 0.0
         Fx, Fy = fx * base.width, fy * base.height; C0x, C0y = base.width / 2, base.height / 2
         zt = (W * K) / cw
-        cx = min(max(Fx + (C0x - Fx) / zt + sx * scale, cw / 2), base.width - cw / 2)
-        cy = min(max(Fy + (C0y - Fy) / zt + sy * scale, ch / 2), base.height - ch / 2)
+        if FULL_BLEED:   # точка интереса — на ANCHOR_X экрана (в безопасной зоне)
+            cx = min(max(Fx - ANCHOR_X * scale + cw / 2 + sx * scale, cw / 2), base.width - cw / 2)
+        else:
+            cx = min(max(Fx + (C0x - Fx) / zt + sx * scale, cw / 2), base.width - cw / 2)
+        if FULL_BLEED:   # лицо — на ANCHOR_Y; сверху без пустоты, снизу размытие не выше нижней безопасной зоны
+            img_h = canv[i][2][3]
+            cy = min(max(Fy - ANCHOR_Y * scale + ch / 2 + sy * scale, ch / 2), min(base.height, img_h + SAFE_B * scale) - ch / 2)
+        else:
+            cy = min(max(Fy + (C0y - Fy) / zt + sy * scale, ch / 2), base.height - ch / 2)
+        if i in WIDTH_FIT:   # картинка на всю ширину: наезд к центру картинки
+            cx = base.width / 2
+            itop = WIDTH_FIT[i][1] * K; ih = canv[i][3]
+            cy = min(max(itop + ih * 0.42, ch / 2), base.height - ch / 2) if i not in STATIC else base.height / 2
         a = np.asarray(base.resize((W, H), Image.BICUBIC, box=(cx - cw / 2, cy - ch / 2, cx + cw / 2, cy + ch / 2)), dtype=np.float32)
         if i == 12:
             a *= 1 - 0.35 * smooth(u)                          # засыпает: всё темнее
@@ -584,7 +658,7 @@ def render_video(starts_f, total_f, lens, out_path, audio_wav, draft):
             if k > 0:
                 c2 = fc.copy(); c2.putalpha(c2.getchannel("A").point(lambda q: int(q * k)))
                 ov.alpha_composite(c2, (int(-fc.width + (FACT_X + fc.width) * k), 600))
-        sb = subs[i]; k = min(t / 0.15, 1.0); sc = 0.7 + 0.3 * (1 - (1 - k) ** 3)
+        sb = subs[i] if i not in SUB_HIDE else Image.new("RGBA", (2, 2)); k = min(t / 0.15, 1.0); sc = 0.7 + 0.3 * (1 - (1 - k) ** 3)
         sbi = sb if sc >= 0.999 else sb.resize((max(1, int(sb.width * sc)), max(1, int(sb.height * sc))), Image.BICUBIC)
         ov.alpha_composite(sbi, (int(SUB_X - sbi.width / 2), int(SUB_Y - sbi.height / 2)))
         o = np.asarray(ov, dtype=np.float32); oa = o[:, :, 3:4] / 255.0
