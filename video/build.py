@@ -85,8 +85,11 @@ def smooth(t):
 def timeline(voice_dir):
     voices, lens = [], []
     for i, (txt, _, _) in enumerate(SCENES):
-        p = os.path.join(voice_dir, f"{i+1:02d}.mp3") if voice_dir else None
-        if p and os.path.exists(p):
+        p = None
+        for ext in ("wav", "mp3"):
+            q = os.path.join(voice_dir, f"{i+1:02d}.{ext}") if voice_dir else None
+            if q and os.path.exists(q): p = q; break
+        if p:
             voices.append(p); lens.append(ffprobe_dur(p))
         else:
             voices.append(None); lens.append(0.55 + len(txt) / 14.5)  # оценка для черновика
@@ -304,7 +307,7 @@ def build_sfx(starts_f, total_f, lens):
 
 def load_wav48(path):
     tmp = path + ".48k.wav"
-    subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", path, "-af", "aresample=resampler=soxr:precision=28,highpass=f=70", "-ar", str(SR), "-ac", "2", tmp], check=True)
+    subprocess.run(["ffmpeg", "-y", "-v", "error", "-i", path, "-af", "aresample=resampler=soxr:precision=28", "-ar", str(SR), "-ac", "2", tmp], check=True)
     sr, x = wavfile.read(tmp); os.remove(tmp)
     return x.astype(np.float64) / 32768.0
 
@@ -321,13 +324,15 @@ def build_audio(voices, starts_f, total_f, lens, out_wav):
     env = np.abs(voice).max(1)
     hop = 480; fr = np.array([env[k:k + hop].max() if k < N else 0 for k in range(0, N, hop)])
     active = (fr > 0.01).astype(float)
+    la = 12  # look-ahead 120 мс: эффекты уходят вниз до первого слога
+    active = np.maximum(active, np.concatenate([active[la:], np.zeros(la)]))
     # атака 30 мс, отпускание 300 мс
     g = np.zeros_like(active); cur = 0.0
     for k, a in enumerate(active):
         cur = cur + (a - cur) * (0.3 if a > cur else 0.035); g[k] = cur
-    gain_db = -10.0 * g
+    gain_db = -14.0 * g
     gain = np.interp(np.arange(N), np.arange(len(g)) * hop, 10 ** (gain_db / 20))
-    mix = voice * 1.0 + sfx * gain[:, None] * 0.8
+    mix = voice * 1.0 + sfx * gain[:, None] * 0.55
     pk = np.abs(mix).max()
     if pk > 0.98: mix *= 0.98 / pk
     wavfile.write(out_wav, SR, (mix * 32767).astype(np.int16))
