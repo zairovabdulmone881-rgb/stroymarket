@@ -19,29 +19,29 @@ IMGDIR, CARDDIR, HDDIR, VDIR = "imgs2", "imgs2_card", "imgs2_hd", "voice2"
 # В PDF каждая страница 720x1280: по центру резкая карточка-кадр, вокруг — размытая копия,
 # сверху у части страниц осколок предыдущей карточки, в углу — номер сцены.
 # Верх карточки по группам страниц (найден по чёрной полосе-разделителю), низ/бока общие.
-CARD_TOP = [332] * 3 + [447] * 3 + [505] * 3 + [458] * 3 + [372] * 3 + [332] * 3
-CARD_L, CARD_R, CARD_B = 16, 701, 942
-CARD_CY, CARD_MAXH, CARD_MAXW = 990, 720, 1240   # где и каким размером карточка стоит в кадре
+CARD_BOX = ([(312, 966)] * 3 + [(362, 955)] * 3 + [(367, 921)] * 3 + [(365, 938)] * 3 +
+            [(392, 921)] * 3 + [(458, 846)] * 2)          # (верх, низ) карточки по группам страниц
+CARD_L, CARD_R = 16, 701
+CARD_CX, CARD_CY, CARD_MAXH, CARD_MAXW = 460, 850, 480, 860   # карточка между HUD и субтитрами, в безопасной зоне
 
 # ------------------------------------------------------------------ сценарий
 SCENES = [
     ("Ночью тебе приходит сообщение. Заражённые в двухстах километрах. У вас двадцать четыре часа.", "У ТЕБЯ 24 ЧАСА", "24"),
     ("Что ты сделаешь первым?", "ЧТО ПЕРВЫМ?", "ПЕРВЫМ?"),
     ("Утром магазины пустеют за час. Ты успеваешь взять только воду.", "МАГАЗИНЫ ПУСТЫ", "ПУСТЫ"),
+    ("И за эту воду тебя уже готовы бить.", "ЗА ВОДУ ДЕРУТСЯ", "ДЕРУТСЯ"),
     ("Банкоматы не работают. Карты — просто пластик.", "КАРТЫ НЕ РАБОТАЮТ", "НЕ РАБОТАЮТ"),
-    ("Дома ты собираешь рюкзак: вода, спички, аптечка, радио, документы.", "ТОЛЬКО САМОЕ НУЖНОЕ", "НУЖНОЕ"),
-    ("Весь город бежит. Трасса стоит намертво.", "ТРАССА СТОИТ", "СТОИТ"),
+    ("Соседи набивают машины вещами. Весь город бежит.", "ГОРОД БЕЖИТ", "БЕЖИТ"),
+    ("Но трасса стоит намертво.", "ТРАССА СТОИТ", "СТОИТ"),
     ("И ты решаешь остаться. Заколачиваешь окна.", "ТЫ ОСТАЁШЬСЯ", "ОСТАЁШЬСЯ"),
     ("Двенадцать часов до прихода. В дверь стучит сосед с дочкой.", "СОСЕД С ДОЧКОЙ", "ДОЧКОЙ"),
-    ("Ты бы пустил?", "ТЫ БЫ ПУСТИЛ?", "ПУСТИЛ?"),
-    ("Ты открываешь. Теперь вас трое. А воды — на двоих.", "ВОДЫ — НА ДВОИХ", "ДВОИХ"),
+    ("Ты бы пустил? У тебя одна бутылка воды.", "ТЫ БЫ ПУСТИЛ?", "ПУСТИЛ?"),
     ("Три часа до прихода. Связь пропадает. По радио — одна фраза: не выходите на улицу.", "НЕ ВЫХОДИТЕ", "НЕ ВЫХОДИТЕ"),
-    ("Полночь. Город гаснет. И становится очень тихо.", "ТИШИНА", "ТИШИНА"),
-    ("А потом во дворе появляется первый.", "ПЕРВЫЙ", "ПЕРВЫЙ"),
-    ("За ним — сотни.", "ЗА НИМ — СОТНИ", "СОТНИ"),
-    ("Вы сидите без света и почти не дышите.", "НИ ЗВУКА", "ЗВУКА"),
-    ("Кто-то скребётся в дверь.", "КТО-ТО ЗА ДВЕРЬЮ", "ДВЕРЬЮ"),
-    ("Но утро наступает. Вы пережили первую ночь.", "ПЕРВАЯ НОЧЬ ПОЗАДИ", "ПОЗАДИ"),
+    ("Полночь. На трассе, где все стояли в пробке, — теперь они. Сотни.", "ИХ СОТНИ", "СОТНИ"),
+    ("Вы сидите без света. И ты сам не замечаешь, как засыпаешь.", "НИ ЗВУКА", "ЗВУКА"),
+    ("Утром тебя будит телефон.", "НОВОЕ СООБЩЕНИЕ", "СООБЩЕНИЕ"),
+    ("Вирус распространён по всей стране. Оставайтесь дома.", "ПО ВСЕЙ СТРАНЕ", "ВСЕЙ СТРАНЕ"),
+    ("Ты смотришь в глазок. Подъезд забит ими.", "ОНИ В ПОДЪЕЗДЕ", "В ПОДЪЕЗДЕ"),
     ("А что бы ты взял в рюкзак? Пиши в комментариях.", "ЧТО ТЫ БЫ ВЗЯЛ?", "ВЗЯЛ?"),
 ]
 # Озвучка. База -8% / -4Hz (как задано). Чтобы звучало по-человечески:
@@ -51,54 +51,58 @@ SCRIPT = [
     [("Ночью тебе приходит сообщение.", -6, -4, 0.45), ("Заражённые в двухстах километрах.", -8, -4, 0.40), ("У вас двадцать четыре часа.", -12, -6, 0)],
     [("Что ты сделаешь первым?", -10, -3, 0)],
     [("Утром магазины пустеют за час. Ты успеваешь взять только воду.", -4, -4, 0)],
+    [("И за эту воду тебя уже готовы бить.", -4, -4, 0)],
     [("Банкоматы не работают.", -6, -4, 0.35), ("Карты — просто пластик.", -10, -5, 0)],
-    [("Дома ты собираешь рюкзак: вода, спички, аптечка, радио, документы.", -8, -4, 0)],
-    [("Весь город бежит.", -2, -3, 0.35), ("Трасса стоит намертво.", -10, -5, 0)],
+    [("Соседи набивают машины вещами.", -4, -4, 0.35), ("Весь город бежит.", -2, -3, 0)],
+    [("Но трасса стоит намертво.", -10, -5, 0)],
     [("И ты решаешь остаться.", -10, -5, 0.35), ("Заколачиваешь окна.", -4, -4, 0)],
     [("Двенадцать часов до прихода.", -8, -5, 0.40), ("В дверь стучит сосед с дочкой.", -6, -4, 0)],
-    [("Ты бы пустил?", -12, -3, 0)],
-    [("Ты открываешь. Теперь вас трое.", -8, -4, 0.40), ("А воды — на двоих.", -12, -6, 0)],
+    [("Ты бы пустил?", -12, -3, 0.50), ("У тебя одна бутылка воды.", -10, -5, 0)],
     [("Три часа до прихода. Связь пропадает.", -8, -5, 0.35), ("По радио — одна фраза:", -8, -4, 0.30), ("не выходите на улицу.", -14, -6, 0)],
-    [("Полночь.", -12, -6, 0.45), ("Город гаснет.", -10, -5, 0.45), ("И становится очень тихо.", -14, -6, 0)],
-    [("А потом во дворе появляется первый.", -10, -5, 0)],
-    [("За ним — сотни.", -10, -6, 0)],
-    [("Вы сидите без света и почти не дышите.", -14, -6, 0)],
-    [("Кто-то скребётся в дверь.", -12, -6, 0)],
-    [("Но утро наступает.", -8, -2, 0.40), ("Вы пережили первую ночь.", -8, -3, 0)],
+    [("Полночь.", -12, -6, 0.45), ("На трассе, где все стояли в пробке, — теперь они.", -8, -5, 0.35), ("Сотни.", -14, -6, 0)],
+    [("Вы сидите без света.", -12, -6, 0.40), ("И ты сам не замечаешь, как засыпаешь.", -14, -6, 0)],
+    [("Утром тебя будит телефон.", -8, -3, 0)],
+    [("Вирус распространён по всей стране.", -10, -5, 0.35), ("Оставайтесь дома.", -14, -6, 0)],
+    [("Ты смотришь в глазок.", -10, -5, 0.45), ("Подъезд забит ими.", -14, -6, 0)],
     [("А что бы ты взял в рюкзак?", -4, -2, 0.35), ("Пиши в комментариях.", -2, -2, 0)],
 ]
-VOICE_GAIN = {12: -1.0, 15: -2.0, 16: -1.0}   # тихие, «шёпотные» сцены чуть тише
+RADIO = ["Внимание. Говорит штаб гражданской обороны.", "Оставайтесь дома.", "Не выходите на улицу."]
+VOICE_GAIN = {13: -2.0, 16: -1.0}   # тихие сцены (засыпает, глазок) чуть тише
 PREROLL = 0.35          # сцена 01: голос вступает после удара-зацепа
 HUD_K = 1.7             # HUD и карточка «ФАКТ» — в 1.7 раза крупнее
-SUB_Y = 1560            # центр субтитров (ниже карточки)
+SUB_Y = 1250            # центр субтитров
+SUB_MAXW = 860          # ширина строки субтитров
+SUB_X = 460             # центр колонки = центр безопасной зоны (0…920): строка 860 px -> x 30…890
+SAFE_R, SAFE_B = 160, 380   # безопасные зоны Shorts: справа и снизу — ничего важного
+FACT_X, FACT_W = 40, 860    # «ФАКТ» целиком в безопасной зоне (x 40…900)
 # Резкие наезды (+8% за 0.15 с) в сценах длиннее 4 с — на ключевых словах (начало слова, по WordBoundary)
-PUNCH_WORDS = {1: ["сообщение", "двухстах", "двадцать"], 3: ["пустеют", "воду"], 4: ["работают", "пластик"],
-               5: ["рюкзак", "аптечка", "документы"], 6: ["бежит", "намертво"], 7: ["остаться", "окна"],
-               8: ["двенадцать", "сосед", "дочкой"], 10: ["открываешь", "трое", "двоих"],
-               11: ["пропадает", "радио", "улицу"], 12: ["полночь", "гаснет", "тихо"], 13: ["первый"],
-               17: ["утро", "пережили"], 18: ["рюкзак", "комментариях"]}
-RADIO = ["Внимание. Говорит штаб гражданской обороны.", "Оставайтесь дома.", "Не выходите на улицу."]
-
-TIMER = ["24:00", "23:58", "18:00", "16:30", "14:00", "13:00", "12:30", "12:00", "11:59", "09:00", "03:00", "00:00",
-         "НОЧЬ 1", "НОЧЬ 1", "НОЧЬ 1", "НОЧЬ 1", "УТРО", "УТРО"]
-PLACE = ["ДОМ", "ДОМ", "МАГАЗИН", "БАНК", "ДОМ", "ТРАССА", "ДОМ", "ДОМ", "ДОМ", "ДОМ", "КУХНЯ", "ГОРОД",
-         "ДВОР", "УЛИЦА", "КВАРТИРА", "КВАРТИРА", "КВАРТИРА", None]
-THREAT = [round(15 + 85 * k / 13) for k in range(14)] + [90, 80, 70, 70]
+PUNCH_WORDS = {1: ["сообщение", "двухстах", "двадцать"], 3: ["пустеют", "воду"], 4: ["бить"], 5: ["работают", "пластик"],
+               6: ["машины", "бежит"], 8: ["остаться", "окна"], 9: ["двенадцать", "сосед", "дочкой"],
+               10: ["пустил", "одна"], 11: ["пропадает", "радио", "улицу"], 12: ["полночь", "пробке", "сотни"],
+               13: ["света", "засыпаешь"], 15: ["вирус", "стране", "дома"], 16: ["глазок", "забит"],
+               17: ["рюкзак", "комментариях"]}
+TIMER = ["24:00", "23:58", "18:00", "17:40", "16:30", "14:00", "13:00", "12:30", "12:00", "11:59", "03:00", "00:00",
+         "НОЧЬ 1", "УТРО", "УТРО", "УТРО", "УТРО"]
+PLACE = ["ДОМ", "УЛИЦА", "МАГАЗИН", "МАГАЗИН", "БАНК", "ДВОР", "ТРАССА", "ДОМ", "ДОМ", "ДОМ", "КУХНЯ", "ТРАССА",
+         "КВАРТИРА", "КВАРТИРА", "КВАРТИРА", "ПОДЪЕЗД", None]
+# 15% -> 100% к орде на трассе (сцена 12), ночью спадает, утром снова 100%
+THREAT = [round(15 + 85 * k / 11) for k in range(12)] + [85, 75, 90, 100, 100]
 FACTS = {2: "Спасатели советуют держать запас около 4 литров воды на человека в сутки",
-         3: "Без электричества не работают банкоматы и терминалы — держи наличные",
+         4: "Без электричества не работают банкоматы и терминалы — держи наличные",
          10: "Радиоприёмник на батарейках работает без интернета и сотовой связи"}
-# центр интереса (x, y в долях картинки), начало -> конец; уточняется по реальным картинкам
-FOCUS = [((0.45, 0.5), (0.42, 0.5)), ((0.5, 0.5), (0.5, 0.48)), ((0.45, 0.55), (0.45, 0.52)), ((0.55, 0.5), (0.6, 0.45)),
-         ((0.5, 0.5), (0.48, 0.48)), ((0.5, 0.6), (0.5, 0.45)), ((0.5, 0.5), (0.55, 0.5)), ((0.5, 0.5), (0.45, 0.5)),
-         ((0.5, 0.5), (0.4, 0.55)), ((0.5, 0.55), (0.5, 0.52)), ((0.45, 0.55), (0.4, 0.55)), ((0.5, 0.6), (0.5, 0.45)),
-         ((0.45, 0.45), (0.45, 0.4)), ((0.5, 0.5), (0.5, 0.45)), ((0.45, 0.5), (0.45, 0.48)), ((0.5, 0.6), (0.5, 0.7)),
-         ((0.5, 0.5), (0.5, 0.48)), ((0.5, 0.45), (0.5, 0.42))]
-PAN_UP = {5, 11}
-RED_VIG = {13}
-SHAKE = {0, 6, 13, 15}
+# центр интереса (доли карточки), начало -> конец
+FOCUS = [((0.45, 0.5), (0.42, 0.5)), ((0.5, 0.5), (0.5, 0.48)), ((0.5, 0.5), (0.62, 0.35)), ((0.45, 0.45), (0.55, 0.45)),
+         ((0.55, 0.45), (0.62, 0.4)), ((0.5, 0.5), (0.55, 0.5)), ((0.5, 0.6), (0.5, 0.45)), ((0.5, 0.5), (0.55, 0.5)),
+         ((0.5, 0.5), (0.4, 0.55)), ((0.5, 0.5), (0.45, 0.55)), ((0.45, 0.55), (0.6, 0.6)), ((0.5, 0.55), (0.5, 0.45)),
+         ((0.45, 0.5), (0.45, 0.48)), ((0.5, 0.5), (0.55, 0.55)), ((0.5, 0.45), (0.5, 0.45)), ((0.5, 0.5), (0.5, 0.5)),
+         ((0.5, 0.45), (0.5, 0.42))]
+PAN_UP = {6, 11}
+RED_VIG = {11, 15}
+SHAKE = {0, 3, 7, 11, 13, 15}
 VIBRO = [(0.45, 0.85), (1.05, 1.45), (1.65, 2.05)]      # 01: вибрация телефона (после удара-зацепа)
-SCRATCH = [(0.15, 0.85), (1.2, 1.9), (2.25, 2.95)]       # 16: скрежет ногтей
-DARK_STEPS = [0.15, 0.75, 1.3, 1.9, 2.5, 3.1]            # 12: окна гаснут рывками
+VIBRO14 = [(0.1, 0.5), (0.7, 1.1), (1.3, 1.7)]          # 14: телефон будит
+SCRATCH = [(0.4, 1.0), (1.5, 2.1), (2.6, 3.2)]          # 16: скребутся в подъезде
+FIGHT = [0.2, 0.9, 1.6]                                  # 04: рывки за воду
 
 
 def hammer_times(du):
@@ -154,32 +158,45 @@ def build_sfx(starts_f, total_f, lens):
 
     st = [s / FPS for s in starts_f]
     du = [(starts_f[i + 1] if i + 1 < len(starts_f) else total_f) / FPS - st[i] for i in range(len(st))]
-    R = lambda i: np.random.default_rng(2000 + i)
+    R = lambda i: np.random.default_rng(3000 + i)
 
-    # 01 вибрация телефона + сигнал тревоги (двухтональный, как у систем оповещения)
+    def vibro(t0, pattern, g=0.22):
+        for a, b in pattern:
+            m = int((b - a) * SR); tt = np.arange(m) / SR
+            bz = np.sign(np.sin(2 * np.pi * 165 * tt)) * (0.6 + 0.4 * np.sin(2 * np.pi * 330 * tt))
+            bz = filt(bz, "bandpass", [120, 2500], 2) * np.minimum(1, np.minimum(tt, tt[-1] - tt) / 0.02)
+            put(bz * g, t0 + a)
+
+    def hit(rng, t0, g=0.5, f0=70):
+        n = int(2.4 * SR); t2 = np.arange(n) / SR
+        sub = np.sin(2 * np.pi * (f0 * np.exp(-t2 * 1.6) + 34) * t2) * np.exp(-t2 / 0.6)
+        crack = filt(rng.standard_normal(n), "bandpass", [300, 6000], 2) * np.exp(-t2 / 0.025)
+        put(reverb(sub * 1.3 + crack + metal_hit(rng, n, 130, 0.8) * 0.4, rng, 1.6, 0.32) * g, t0)
+
+    def horde(rng, n, voices=16):
+        crowd = np.zeros((n, 2))
+        for k in range(voices):
+            crowd += stereo(growl(rng, n, rng.uniform(55, 120), rng.uniform(14, 32), rng.uniform(600, 1300)), rng.uniform(-0.9, 0.9)) * rng.uniform(0.5, 1)
+        crowd += stereo(filt(rng.standard_normal(n), "lowpass", 120, 3)) * 2
+        crowd = np.stack([reverb(crowd[:, c], rng, 1.8, 0.4)[:n, c] for c in range(2)], 1)
+        return crowd / np.abs(crowd).max()
+
+    # 01 удар-зацеп + вибрация + сигнал тревоги
     rng = R(1)
-    for a, b in VIBRO:
-        m = int((b - a) * SR); tt = np.arange(m) / SR
-        bz = np.sign(np.sin(2 * np.pi * 165 * tt)) * (0.6 + 0.4 * np.sin(2 * np.pi * 330 * tt))
-        bz = filt(bz, "bandpass", [120, 2500], 2) * np.minimum(1, np.minimum(tt, tt[-1] - tt) / 0.02)
-        put(bz * 0.22, st[0] + a)
+    hit(rng, st[0], 0.62, 85)
+    vibro(st[0], VIBRO)
     m = int(min(du[0], 3.0) * SR); tt = np.arange(m) / SR
-    gate = ((tt % 0.75) < 0.5).astype(float); gate = filt(gate, "lowpass", 60, 2)
+    gate = filt(((tt % 0.75) < 0.5).astype(float), "lowpass", 60, 2)
     alarm = (np.sin(2 * np.pi * 853 * tt) + np.sin(2 * np.pi * 960 * tt)) * gate
     put(reverb(fade(alarm, 0.02, 0.6), rng, 0.8, 0.25) * 0.10, st[0] + 0.4)
-    # удар-зацеп в самом начале: суб-бум + треск + металл
-    n = int(2.2 * SR); t2 = np.arange(n) / SR
-    boom = np.sin(2 * np.pi * (85 * np.exp(-t2 * 3) + 38) * t2) * np.exp(-t2 / 0.55) * 1.4
-    crack = filt(rng.standard_normal(n), "bandpass", [300, 6000], 2) * np.exp(-t2 / 0.025) * 1.2
-    put(reverb(boom + crack + metal_hit(rng, n, 140, 0.7) * 0.4, rng, 1.4, 0.3) * 0.62, st[0] + 0.0)
-    # 02 тишина + тиканье часов
-    rng = R(2)
-    for k, t0 in enumerate(np.arange(0.2, du[1], 1.0)):
+    # 02 улица в панике: гул толпы + тиканье часов
+    rng = R(2); n = int((du[1] + 0.2) * SR)
+    put(fade2(reverb(babble(rng, n, 14, angry=True)[:, 0], rng, 1.6, 0.45)[:n], 0.2, 0.3) * 0.22, st[1])
+    for k, t0 in enumerate(np.arange(0.2, du[1], 0.5)):
         m = int(0.06 * SR); tt = np.arange(m) / SR
-        f = 3400 if k % 2 == 0 else 2900
-        tk = filt(rng.standard_normal(m), "bandpass", [1800, 5000], 2) * np.exp(-tt / 0.003) + 0.5 * np.sin(2 * np.pi * f * tt) * np.exp(-tt / 0.012)
+        tk = filt(rng.standard_normal(m), "bandpass", [1800, 5000], 2) * np.exp(-tt / 0.003) + 0.5 * np.sin(2 * np.pi * (3400 if k % 2 == 0 else 2900) * tt) * np.exp(-tt / 0.012)
         put(reverb(tk, rng, 0.4, 0.2) * 0.35, st[1] + t0)
-    # 03 гул толпы + тележки
+    # 03 магазин: гул толпы + тележки
     rng = R(3); n = int((du[2] + 0.2) * SR)
     put(fade2(reverb(babble(rng, n, 18)[:, 0], rng, 1.4, 0.4)[:n], 0.3, 0.3) * 0.32, st[2])
     for _ in range(int(du[2] * 2)):
@@ -187,59 +204,60 @@ def build_sfx(starts_f, total_f, lens):
         clicks = (rng.random(m) < 0.004).astype(float)
         rat = filt(clicks, "bandpass", [1500, 5000], 2) * 6 + filt(rng.standard_normal(m), "lowpass", 200, 2) * 0.5
         put(stereo(rat * np.sin(np.pi * tt / tt[-1]), rng.uniform(-0.7, 0.7)) * 0.12, st[2] + rng.uniform(0, du[2] - 0.5))
-    # 04 писк терминала (ошибка) + ропот
+    # 04 драка за воду: злой гул + рывки (глухие удары, хруст пластика)
     rng = R(4); n = int((du[3] + 0.2) * SR)
-    put(fade2(reverb(babble(rng, n, 12, (90, 160), angry=True)[:, 1], rng, 1.0, 0.35)[:n], 0.3, 0.3) * 0.26, st[3])
-    for t0 in (0.3, 0.3 + du[3] * 0.5):
+    put(fade2(reverb(babble(rng, n, 12, (90, 170), angry=True)[:, 1], rng, 1.0, 0.35)[:n], 0.2, 0.3) * 0.30, st[3])
+    for t0 in FIGHT:
+        put(thump(rng, int(0.5 * SR), 90, 0.12) * 0.35, st[3] + t0)
+        m = int(0.25 * SR); tt = np.arange(m) / SR
+        cr = filt((rng.random(m) < 0.02).astype(float), "bandpass", [1500, 6000], 2) * np.exp(-tt / 0.08) * 3
+        put(cr * 0.5, st[3] + t0 + 0.03)
+    # 05 банкомат: писк ошибки + ропот
+    rng = R(5); n = int((du[4] + 0.2) * SR)
+    put(fade2(reverb(babble(rng, n, 12, (90, 160), angry=True)[:, 1], rng, 1.0, 0.35)[:n], 0.3, 0.3) * 0.24, st[4])
+    for t0 in (0.3, 0.3 + du[4] * 0.5):
         for k in range(3):
             m = int(0.11 * SR); tt = np.arange(m) / SR
             bp = filt(np.sign(np.sin(2 * np.pi * 1250 * tt)), "lowpass", 3000, 2) * np.minimum(1, np.minimum(tt, tt[-1] - tt) / 0.005)
-            put(bp * 0.09, st[3] + t0 + k * 0.18)
-    # 05 шорох рюкзака + молния
-    rng = R(5); n = int(du[4] * SR)
-    cr = np.clip(filt(rng.standard_normal(n), "lowpass", 25, 2) * 18, 0, 1) ** 2
-    rus = filt(rng.standard_normal(n), "bandpass", [800, 6000], 2) * cr
-    put(fade(rus, 0.1, 0.3) * 0.35, st[4])
-    m = int(0.6 * SR); tt = np.arange(m) / SR
-    rate = 60 + 110 * tt / 0.6
-    zp = (np.sin(2 * np.pi * np.cumsum(rate) / SR) > 0.95).astype(float)
-    zp = filt(zp + 0.05 * rng.standard_normal(m), "bandpass", [1500, 7000], 2) * np.sin(np.pi * tt / 0.6) ** 0.5
-    put(zp * 1.0, st[4] + du[4] * 0.62)
-    # 06 гудки машин + далёкая сирена
-    rng = R(6); n = int((du[5] + 0.2) * SR); tt = np.arange(n) / SR
-    rumble = filt(rng.standard_normal(n), "lowpass", 150, 3)
-    put(fade(rumble, 0.3, 0.3) * 0.25, st[5])
-    sir_f = 1000 + 350 * np.sin(2 * np.pi * tt / 3.2)
-    siren = np.sin(2 * np.pi * np.cumsum(sir_f) / SR)
-    put(fade2(reverb(filt(siren, "lowpass", 2000, 2), rng, 2.5, 0.7)[:n], 0.6, 0.4) * 0.05, st[5])
-    for _ in range(7):
+            put(bp * 0.09, st[4] + t0 + k * 0.18)
+    # 06 двор: двигатели, хлопки багажников, суета
+    rng = R(6); n = int((du[5] + 0.2) * SR)
+    eng = filt(np.sign(np.sin(2 * np.pi * np.cumsum(32 + 4 * np.sin(2 * np.pi * 0.7 * np.arange(n) / SR)) / SR)), "lowpass", 220, 3)
+    put(fade(eng, 0.3, 0.3) * 0.10, st[5])
+    put(fade2(reverb(babble(rng, n, 10)[:, 0], rng, 1.2, 0.4)[:n], 0.3, 0.3) * 0.16, st[5])
+    for t0 in (0.5, du[5] * 0.55, du[5] * 0.8):
+        put(reverb(thump(rng, int(0.6 * SR), 75, 0.15) * 0.8 + metal_hit(rng, int(0.6 * SR), 210, 0.25) * 0.25, rng, 0.9, 0.3) * 0.38, st[5] + t0)
+    # 07 трасса: гудки машин + далёкая сирена
+    rng = R(7); n = int((du[6] + 0.2) * SR); tt = np.arange(n) / SR
+    put(fade(filt(rng.standard_normal(n), "lowpass", 150, 3), 0.3, 0.3) * 0.25, st[6])
+    siren = np.sin(2 * np.pi * np.cumsum(1000 + 350 * np.sin(2 * np.pi * tt / 3.2)) / SR)
+    put(fade2(reverb(filt(siren, "lowpass", 2000, 2), rng, 2.5, 0.7)[:n], 0.6, 0.4) * 0.05, st[6])
+    for _ in range(6):
         L = rng.uniform(0.2, 0.8); m = int(L * SR); t2 = np.arange(m) / SR; f = rng.uniform(340, 470)
         hn = np.sign(np.sin(2 * np.pi * f * t2)) + 0.7 * np.sign(np.sin(2 * np.pi * f * 1.26 * t2))
-        hn = filt(hn, "lowpass", 1800, 2) * np.minimum(1, np.minimum(t2, t2[-1] - t2) / 0.02)
-        hn = reverb(hn, rng, 1.2, 0.45)
-        put(np.stack([hn[:, 0] * (1 + p) / 2 for p in (rng.uniform(-1, 1),)] * 2, 1) * rng.uniform(0.05, 0.12), st[5] + rng.uniform(0, du[5] - 0.6))
-    # 07 удары молотка
-    rng = R(7)
-    for t0 in hammer_times(du[6]):
+        hn = reverb(filt(hn, "lowpass", 1800, 2) * np.minimum(1, np.minimum(t2, t2[-1] - t2) / 0.02), rng, 1.2, 0.45)
+        put(hn * rng.uniform(0.05, 0.12), st[6] + rng.uniform(0, max(0.1, du[6] - 0.6)))
+    # 08 удары молотка
+    rng = R(8)
+    for t0 in hammer_times(du[7]):
         m = int(0.5 * SR); t2 = np.arange(m) / SR
         h = filt(rng.standard_normal(m), "bandpass", [800, 6000], 2) * np.exp(-t2 / 0.006) * 1.5 \
             + np.sin(2 * np.pi * 2650 * t2) * np.exp(-t2 / 0.06) * 0.25 + thump(rng, m, 95, 0.12) * 0.5
-        put(reverb(h, rng, 0.6, 0.25)[:m] * 0.42, st[6] + t0)
-    # 08 три стука в дверь
-    rng = R(8)
-    for t0 in knock_times(lens[7]):
-        put(reverb(thump(rng, int(0.9 * SR)), rng, 0.7, 0.3) * 0.5, st[7] + t0)
-    # 09 стук сердца
+        put(reverb(h, rng, 0.6, 0.25)[:m] * 0.42, st[7] + t0)
+    # 09 три стука в дверь
     rng = R(9)
-    for k, t0 in enumerate(heart_times(du[8])):
+    for t0 in knock_times(lens[8]):
+        put(reverb(thump(rng, int(0.9 * SR)), rng, 0.7, 0.3) * 0.5, st[8] + t0)
+    # 10 стук сердца + треск свечи
+    rng = R(10)
+    for k, t0 in enumerate(heart_times(du[9])):
         m = int(0.4 * SR); t2 = np.arange(m) / SR
         hb = np.sin(2 * np.pi * (58 if k % 2 == 0 else 50) * t2) * np.exp(-t2 / 0.09) * (1 if k % 2 == 0 else 0.7)
-        put(filt(hb, "lowpass", 160, 2) * 0.9, st[8] + t0)
-    # 10 треск свечи
-    rng = R(10); n = int(du[9] * SR); cr = np.zeros(n)
-    for _ in range(int(du[9] * 5)):
-        s = rng.integers(0, n - 300); cr[s:s + 200] += rng.standard_normal(200) * np.exp(-np.arange(200) / 30) * rng.uniform(0.3, 1)
-    put(filt(cr, "bandpass", [900, 4500], 2) * 0.35, st[9])
+        put(filt(hb, "lowpass", 160, 2) * 0.9, st[9] + t0)
+    n = int(du[9] * SR); cr = np.zeros(n)
+    for _ in range(int(du[9] * 4)):
+        s0 = rng.integers(0, n - 300); cr[s0:s0 + 200] += rng.standard_normal(200) * np.exp(-np.arange(200) / 30) * rng.uniform(0.3, 1)
+    put(filt(cr, "bandpass", [900, 4500], 2) * 0.3, st[9])
     # 11 радиошум + обрывки голоса
     rng = R(11); n = int((du[10] + 0.2) * SR)
     stat = filt(rng.standard_normal(n), "bandpass", [400, 4000], 2) * (0.5 + 0.5 * np.clip(randwalk(rng, n, 0.003, 4), -1, 1))
@@ -252,55 +270,37 @@ def build_sfx(starts_f, total_f, lens):
         gate = (filt(rng.standard_normal(len(rv)), "lowpass", 3, 2) > -0.02).astype(float)
         rv *= filt(gate, "lowpass", 40, 2)
         put(fade(rv[: int(du[10] * SR)], 0.05, 0.3) * 0.22, st[10] + 0.1)
-    # 12 щелчок, тишина 1 с, затем ветер
-    rng = R(12)
-    click = filt(rng.standard_normal(int(0.03 * SR)), "highpass", 1500, 2) * env_ad(int(0.03 * SR), 0.0005, 0.005) \
-        + 0.6 * filt(rng.standard_normal(int(0.03 * SR)), "lowpass", 400, 2) * env_ad(int(0.03 * SR), 0.0005, 0.01)
-    put(click * 0.9, st[11] + DARK_STEPS[0])
-    n = int((du[11] - 1.15 + du[12] * 0) * SR)
-    if n > 0: put(fade2(wind(rng, n, 280, 1000, 0.25), 0.8, 0.3) * 0.12, st[11] + 1.15)
-    # 13 одинокое рычание
-    rng = R(13); n = int((du[12] + 0.2) * SR)
-    put(fade2(reverb(growl(rng, n, 70, 18, 800), rng, 2.0, 0.45)[:n], 0.3, 0.3) * 0.33, st[12])
-    put(fade2(wind(rng, n, 280, 1000, 0.25), 0.1, 0.3) * 0.08, st[12])
-    # 14 рёв толпы
-    rng = R(14); n = int((du[13] + 0.3) * SR); crowd = np.zeros((n, 2))
-    for k in range(16):
-        crowd += stereo(growl(rng, n, rng.uniform(55, 120), rng.uniform(14, 32), rng.uniform(600, 1300)), rng.uniform(-0.9, 0.9)) * rng.uniform(0.5, 1)
-    crowd += stereo(filt(rng.standard_normal(n), "lowpass", 120, 3)) * 2
-    crowd = np.stack([reverb(crowd[:, c], rng, 1.8, 0.4)[:n, c] for c in range(2)], 1)
-    put(fade2(crowd / np.abs(crowd).max(), 0.15, 0.3) * 0.45, st[13])
-    # 15 приглушённое дыхание, всё тише
-    rng = R(15); t0 = 0.1; k = 0
-    while t0 < du[14] - 0.5:
+    # 12 орда на трассе: рёв толпы
+    rng = R(12); n = int((du[11] + 0.3) * SR)
+    put(fade2(horde(rng, n), 0.25, 0.3) * 0.42, st[11])
+    # 13 засыпает: приглушённое дыхание, всё тише
+    rng = R(13); t0 = 0.1; k = 0
+    while t0 < du[12] - 0.5:
         for L, band, g in ((0.9, (600, 2400), 1.0), (1.2, (300, 1700), 0.8)):
             m = int(L * SR); t2 = np.arange(m) / SR
             br = filt(rng.standard_normal(m), "bandpass", list(band), 2) * np.sin(np.pi * t2 / L) ** 1.5
-            put(filt(br, "lowpass", 1800, 2) * g * 0.22 * (0.65 ** k), st[14] + t0)
+            put(filt(br, "lowpass", 1800, 2) * g * 0.2 * (0.65 ** k), st[12] + t0)
             t0 += L + 0.15
         k += 1
-    # 16 скрежет ногтей по металлу
-    rng = R(16)
+    # 14 будит телефон: вибрация
+    vibro(st[13], VIBRO14, 0.28)
+    # 15 сообщение: низкий гул + удар-акцент
+    rng = R(15); n = int((du[14] + 0.2) * SR); tt = np.arange(n) / SR
+    drone = (np.sin(2 * np.pi * 41 * tt) + 0.5 * np.sin(2 * np.pi * 61.5 * tt)) * (0.7 + 0.3 * np.sin(2 * np.pi * 0.4 * tt))
+    put(fade(drone, 0.6, 0.4) * 0.12, st[14])
+    hit(rng, st[14] + 0.02, 0.35, 60)
+    # 16 глазок: орда за дверью (глухо) + скрежет
+    rng = R(16); n = int((du[15] + 0.3) * SR)
+    hd = horde(rng, n, 12); hd = np.stack([filt(hd[:, c], "lowpass", 700, 3) for c in range(2)], 1)
+    put(fade2(hd, 0.3, 0.3) * 0.45, st[15])
     for a, b in SCRATCH:
-        m = int((b - a) * SR); t2 = np.arange(m) / SR
+        if a >= du[15]: continue
+        m = int((min(b, du[15]) - a) * SR); t2 = np.arange(m) / SR
         sc = scrape(rng, m); sq = np.sin(2 * np.pi * np.cumsum(2900 * (1 + 0.08 * np.tanh(randwalk(rng, m, 0.01, 3)))) / SR) * 0.3
         x = filt(sc + sq, "bandpass", [1500, 6500], 2) * np.sin(np.pi * t2 / t2[-1]) ** 0.6
-        put(reverb(filt(x, "lowpass", 5000, 2), rng, 0.6, 0.3)[:m] * 0.5, st[15] + a)
-    # 17 птицы вдалеке
-    rng = R(17); n = int((du[16] + 0.3) * SR); birds = np.zeros(n); t0 = 0.3
-    while t0 < du[16] - 0.3:
-        for c in range(rng.integers(3, 7)):
-            L = rng.uniform(0.05, 0.11); m = int(L * SR); t2 = np.arange(m) / SR
-            f = rng.uniform(2800, 4800) * (1 + rng.uniform(-0.3, 0.3) * t2 / L)
-            ch = np.sin(2 * np.pi * np.cumsum(f) / SR) * np.sin(np.pi * t2 / L) ** 2
-            s = int((t0 + c * rng.uniform(0.08, 0.14)) * SR)
-            if s + m < n: birds[s:s + m] += ch
-        t0 += rng.uniform(0.6, 1.3)
-    put(fade2(reverb(birds, rng, 1.8, 0.55)[:n], 0.4, 0.4) * 0.10, st[16])
-    # 18 удар-акцент
-    rng = R(18); n = int(2.6 * SR); t2 = np.arange(n) / SR
-    sub = np.sin(2 * np.pi * (70 * np.exp(-t2 * 1.3) + 32) * t2) * np.exp(-t2 / 0.7)
-    put(reverb(sub * 1.3 + metal_hit(rng, n, 120, 0.9) * 0.5, rng, 1.8, 0.35) * 0.5, st[17] + 0.02)
+        put(reverb(filt(x, "lowpass", 5000, 2), rng, 0.6, 0.3)[:m] * 0.4, st[15] + a)
+    # 17 удар-акцент на вопросе
+    hit(R(17), st[16] + 0.02, 0.5, 70)
     mix = np.stack([filt(filt(mix[:, c], "lowpass", 9000, 6), "highpass", 30, 2) for c in range(2)], 1)
     return mix
 
@@ -329,9 +329,11 @@ def extract_cards():
     os.makedirs(os.path.join(ROOT, CARDDIR), exist_ok=True)
     for i in range(len(SCENES)):
         im = Image.open(os.path.join(ROOT, IMGDIR, f"{i+1:02d}.png")).convert("RGB")
-        c = np.asarray(im.crop((CARD_L, CARD_TOP[i] + 3, CARD_R, CARD_B)))
+        c = np.asarray(im.crop((CARD_L, CARD_BOX[i][0] + 3, CARD_R, CARD_BOX[i][1] - 3)))
         g = c[:90, :120].astype(np.int16)
-        ys, xs = np.where(g.min(2) > 200)                                # белые цифры номера
+        # номер сцены в этом PDF полупрозрачный — закрываем фиксированную область угла карточки
+        bw_, bh_ = (90, 60) if CARD_BOX[i][1] - CARD_BOX[i][0] < 450 else (140, 90)
+        ys, xs = np.array([0, bh_ - 18]), np.array([0, bw_ - 18])
         out = c.copy(); npx = 0
         if len(ys):
             # прямоугольник номера (с обводкой и тенью): заполнить inpaint'ом и мягко размыть,
@@ -375,7 +377,7 @@ def card_canvas(i, draft):
     cimg = Image.fromarray((np.asarray(cimg, np.float32) * cv[..., None]).astype(np.uint8))
     if cw > CW:   # шире кадра — обрезать бока поровну
         cimg = cimg.crop(((cw - CW) // 2, 0, (cw - CW) // 2 + CW, ch)); cw = CW
-    x0, y0 = (CW - cw) // 2, int(CARD_CY * K - ch / 2)
+    x0, y0 = int(CARD_CX * K - cw / 2), int(CARD_CY * K - ch / 2)
     sh = Image.new("L", (CW, CH), 0); ImageDraw.Draw(sh).rectangle([x0 - 6, y0 + 4, x0 + cw + 6, y0 + ch + 18], fill=200)
     bg.paste(Image.new("RGB", (CW, CH), (0, 0, 0)), (0, 0), sh.filter(ImageFilter.GaussianBlur(22)))
     bg.paste(cimg, (x0, y0))
@@ -386,7 +388,7 @@ def tmin(s):
     h, m = s.split(":"); return int(h) * 60 + int(m)
 
 
-def render_hud(i, t, f, starts_f):
+def render_hud(i, t, f, starts_f, threat=None):
     q = lambda v: int(round(v * HUD_K)); HH = 600
     im = Image.new("RGBA", (W, HH), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
     grad = Image.new("L", (1, HH))
@@ -417,6 +419,18 @@ def render_hud(i, t, f, starts_f):
         d.rounded_rectangle([x0, py, x0 + tw + q(44), py + ph], q(8), fill=(0, 0, 0, 170))
         d.rectangle([x0, py, x0 + q(8), py + ph], fill=(255, 210, 26, 255))
         d.text((x0 + q(26), py + ph // 2), PLACE[i], font=f2, fill=(255, 255, 255, 255), anchor="lm")
+    if threat is not None:   # шкала «УГРОЗА»: под таймером и плашкой, горизонтальная, 300 px
+        by = py + (q(54) if PLACE[i] else 0) + 22
+        fl = font("black", q(30)); lw = text_w(d, "УГРОЗА", fl, q(4))
+        d.text((x0, by + 26), "УГРОЗА", font=fl, fill=(255, 255, 255, 255), stroke_width=q(4), stroke_fill=(0, 0, 0, 255), anchor="lm")
+        bx = x0 + lw + 18; bw, bh = 300, 40
+        d.rounded_rectangle([bx - 5, by + 6 - 5, bx + bw + 5, by + 6 + bh + 5], 12, fill=(0, 0, 0, 170), outline=(255, 255, 255, 220), width=4)
+        fw = int(bw * threat / 100); col = B.threat_col(threat)
+        if fw > 0: d.rounded_rectangle([bx, by + 6, bx + fw, by + 6 + bh], 9, fill=col + (255,))
+        for k in range(1, 10):
+            xx = bx + bw * k // 10; d.line([xx, by + 6 + bh - 12, xx, by + 6 + bh], fill=(0, 0, 0, 120), width=3)
+        d.text((bx + bw + 22, by + 26), f"{int(round(threat))}%", font=font("black", q(40)), fill=col + (255,),
+               stroke_width=q(4), stroke_fill=(0, 0, 0, 255), anchor="lm")
     return im
 
 
@@ -478,14 +492,24 @@ def shake_offset(i, t, du):
         hx, hy = jit(102, t, 22 * math.exp(-t / 0.12), 14)      # удар-зацеп в первые доли секунды
         vx, vy = jit(101, t, 5 if on else 0, 28)
         return hx + vx, hy + vy
-    if i == 6:
+    if i == 3:                                                # рывки в драке за воду
+        dx = dy = 0.0
+        for k in FIGHT:
+            if t >= k:
+                e = math.exp(-(t - k) / 0.13) * 18
+                dx += e * math.sin(2 * math.pi * 11 * (t - k) + 0.4); dy += e * math.sin(2 * math.pi * 14 * (t - k))
+        return dx, dy
+    if i == 13:                                               # вибрация телефона
+        on = any(a <= t <= b for a, b in VIBRO14)
+        return jit(131, t, 5 if on else 0, 28)
+    if i == 7:
         dx = dy = 0.0
         for k in hammer_times(du):
             if t >= k:
                 e = math.exp(-(t - k) / 0.1) * 16
                 dx += e * math.sin(2 * math.pi * 15 * (t - k) + 0.7); dy += e * math.sin(2 * math.pi * 19 * (t - k))
         return dx, dy
-    if i == 13:
+    if i == 11:
         return jit(141, t, 12, 9)
     if i == 15:
         on = any(a <= t <= b for a, b in SCRATCH)
@@ -512,8 +536,8 @@ def render_video(starts_f, total_f, lens, out_path, audio_wav, draft):
     punches = [punch_times(i, (ends0[i] - starts_f[i]) / FPS) for i in range(len(SCENES))]
     print("наезды:", {i + 1: p for i, p in enumerate(punches) if p})
     imgs = [(c, K) for c, K, _ in canv]
-    subs = [render_sub(i, SCENES) for i in range(len(SCENES))]
-    facts = {k: render_fact(v, HUD_K) for k, v in FACTS.items()}
+    subs = [render_sub(i, SCENES, SUB_MAXW) for i in range(len(SCENES))]
+    facts = {k: render_fact(v, HUD_K, FACT_W) for k, v in FACTS.items()}
     cmd = ["ffmpeg", "-y", "-v", "error", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}", "-r", str(FPS),
            "-i", "-", "-i", audio_wav, "-map", "0:v", "-map", "1:a",
            "-c:v", "libx264", "-preset", "slow", "-crf", "15", "-tune", "animation", "-pix_fmt", "yuv420p", "-profile:v", "high",
@@ -524,12 +548,12 @@ def render_video(starts_f, total_f, lens, out_path, audio_wav, draft):
         i = max(k for k in range(len(starts_f)) if starts_f[k] <= f)
         fl = f - starts_f[i]; nf = ends[i] - starts_f[i]; t = fl / FPS; u = fl / max(nf - 1, 1); du = nf / FPS
         base, K = imgs[i]
-        zmax = 0.18 if i == 8 else 0.10                       # 09: медленный глубокий наезд
+        zmax = 0.18 if i == 9 else 0.10                       # 10: «Ты бы пустил?» — медленный глубокий наезд
         z = (1.0 + zmax * u) * (1.06 if i in SHAKE else 1.0)
         z *= 1 + punch_zoom(t, punches[i])
         if i == 0:
             z *= 1 + intro_zoom(t)
-        if i == 8:                                             # пульс в такт сердцу
+        if i == 9:                                             # пульс в такт сердцу
             z *= 1 + sum(0.008 * math.exp(-(t - h) / 0.12) for h in heart_times(du) if t >= h)
         (fx0, fy0), (fx1, fy1) = FOCUS[i]
         e = smooth(u) if i in PAN_UP else u
@@ -538,36 +562,31 @@ def render_video(starts_f, total_f, lens, out_path, audio_wav, draft):
         fx = (rx + fx * rw) / base.width; fy = (ry + fy * rh) / base.height
         cw, ch = W * K / z, H * K / z
         sx, sy = shake_offset(i, t, du); scale = cw / W
-        cx = min(max(fx * base.width + sx * scale, cw / 2), base.width - cw / 2)
-        cy = min(max(fy * base.height + sy * scale, ch / 2), base.height - ch / 2)
+        Fx, Fy = fx * base.width, fy * base.height; C0x, C0y = base.width / 2, base.height / 2
+        zt = (W * K) / cw
+        cx = min(max(Fx + (C0x - Fx) / zt + sx * scale, cw / 2), base.width - cw / 2)
+        cy = min(max(Fy + (C0y - Fy) / zt + sy * scale, ch / 2), base.height - ch / 2)
         a = np.asarray(base.resize((W, H), Image.BICUBIC, box=(cx - cw / 2, cy - ch / 2, cx + cw / 2, cy + ch / 2)), dtype=np.float32)
-        if i == 11:                                            # окна гаснут рывками
-            n = sum(1 for s in DARK_STEPS if t >= s)
-            dip = 0.25 if any(0 <= t - s < 0.07 for s in DARK_STEPS) else 0
-            a *= 1 - min(0.6, 0.1 * n + dip)
         if i == 12:
-            a *= 1 - flicker(fl, 7000, 0.45)                   # мигание фонаря
-        if i == 14:
-            a *= 1 - 0.25 * u                                  # всё тише и темнее
-        if i == 16:                                            # мягкий тёплый свет
-            k = 0.08 + 0.22 * smooth(u)
-            a = a * (1 - k) + np.minimum(255, a * 1.15 + 20) * k * 0.5 + warm * k * 0.5
+            a *= 1 - 0.35 * smooth(u)                          # засыпает: всё темнее
+        if i == 14:                                            # сообщение: краснее к концу
+            k = 0.12 * smooth(u); a = a * (1 - k) + red * k
         if i in RED_VIG:
             pulse = 0.5 + 0.5 * math.sin(2 * math.pi * 1.6 * t - 1.2); al = redm * (0.35 + 0.4 * pulse)
             a = a * (1 - al) + red * al
         a *= vig
         ov = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-        ov.alpha_composite(render_hud(i, t, f, starts_f), (0, 0))
         v0 = THREAT[i - 1] if i > 0 else 0
-        ov.alpha_composite(render_bar_top(v0 + (THREAT[i] - v0) * smooth(t / 0.6)), (W - 440 - 26, 96))
+        ov.alpha_composite(render_hud(i, t, f, starts_f, v0 + (THREAT[i] - v0) * smooth(t / 0.6)), (0, 0))
         if i in facts:
-            fc = facts[i]; k = smooth((t - 0.3) / 0.3) * (1 - smooth((t - (du - 0.45)) / 0.3))
+            fa0 = max(0.3, du - 0.45 - 3.4)                    # «ФАКТ» — последние ~3.4 с сцены, сначала видна картинка
+            fc = facts[i]; k = smooth((t - fa0) / 0.3) * (1 - smooth((t - (du - 0.45)) / 0.3))
             if k > 0:
                 c2 = fc.copy(); c2.putalpha(c2.getchannel("A").point(lambda q: int(q * k)))
-                ov.alpha_composite(c2, (int(-fc.width + ((W - fc.width) // 2 + fc.width) * k), 520))
+                ov.alpha_composite(c2, (int(-fc.width + (FACT_X + fc.width) * k), 600))
         sb = subs[i]; k = min(t / 0.15, 1.0); sc = 0.7 + 0.3 * (1 - (1 - k) ** 3)
         sbi = sb if sc >= 0.999 else sb.resize((max(1, int(sb.width * sc)), max(1, int(sb.height * sc))), Image.BICUBIC)
-        ov.alpha_composite(sbi, (int(W / 2 - sbi.width / 2), int(SUB_Y - sbi.height / 2)))
+        ov.alpha_composite(sbi, (int(SUB_X - sbi.width / 2), int(SUB_Y - sbi.height / 2)))
         o = np.asarray(ov, dtype=np.float32); oa = o[:, :, 3:4] / 255.0
         a = a * (1 - oa) + o[:, :, :3] * oa
         if fl < 4 and (i > 0 or True):                      # вспышка на склейке и на самом первом кадре

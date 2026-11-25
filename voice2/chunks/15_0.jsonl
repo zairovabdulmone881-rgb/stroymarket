@@ -1,8 +1,5 @@
-{"type": "WordBoundary", "offset": 1000000, "duration": 3924580, "text": "\u0412\u044b"}
-{"type": "WordBoundary", "offset": 4924580, "duration": 4796250, "text": "\u0441\u0438\u0434\u0438\u0442\u0435"}
-{"type": "WordBoundary", "offset": 9720830, "duration": 1889580, "text": "\u0431\u0435\u0437"}
-{"type": "WordBoundary", "offset": 11610410, "duration": 6686250, "text": "\u0441\u0432\u0435\u0442\u0430"}
-{"type": "WordBoundary", "offset": 18296660, "duration": 1744160, "text": "\u0438"}
-{"type": "WordBoundary", "offset": 20040830, "duration": 4505830, "text": "\u043f\u043e\u0447\u0442\u0438"}
-{"type": "WordBoundary", "offset": 24546660, "duration": 1307910, "text": "\u043d\u0435"}
-{"type": "WordBoundary", "offset": 25854580, "duration": 6686250, "text": "\u0434\u044b\u0448\u0438\u0442\u0435"}
+{"type": "WordBoundary", "offset": 1000000, "duration": 6388750, "text": "\u0412\u0438\u0440\u0443\u0441"}
+{"type": "WordBoundary", "offset": 7388750, "duration": 8750000, "text": "\u0440\u0430\u0441\u043f\u0440\u043e\u0441\u0442\u0440\u0430\u043d\u0451\u043d"}
+{"type": "WordBoundary", "offset": 16138750, "duration": 1666660, "text": "\u043f\u043e"}
+{"type": "WordBoundary", "offset": 17805410, "duration": 2777910, "text": "\u0432\u0441\u0435\u0439"}
+{"type": "WordBoundary", "offset": 20583330, "duration": 6527910, "text": "\u0441\u0442\u0440\u0430\u043d\u0435"}

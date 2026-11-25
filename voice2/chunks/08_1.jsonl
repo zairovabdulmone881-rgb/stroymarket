@@ -1,6 +1,2 @@
-{"type": "WordBoundary", "offset": 1000000, "duration": 2526660, "text": "\u0412"}
-{"type": "WordBoundary", "offset": 3526660, "duration": 3191250, "text": "\u0434\u0432\u0435\u0440\u044c"}
-{"type": "WordBoundary", "offset": 6717910, "duration": 5186250, "text": "\u0441\u0442\u0443\u0447\u0438\u0442"}
-{"type": "WordBoundary", "offset": 11904160, "duration": 4654160, "text": "\u0441\u043e\u0441\u0435\u0434"}
-{"type": "WordBoundary", "offset": 16558330, "duration": 1196660, "text": "\u0441"}
-{"type": "WordBoundary", "offset": 17755410, "duration": 5717910, "text": "\u0434\u043e\u0447\u043a\u043e\u0439"}
+{"type": "WordBoundary", "offset": 1000000, "duration": 10677080, "text": "\u0417\u0430\u043a\u043e\u043b\u0430\u0447\u0438\u0432\u0430\u0435\u0448\u044c"}
+{"type": "WordBoundary", "offset": 11677080, "duration": 5078330, "text": "\u043e\u043a\u043d\u0430"}

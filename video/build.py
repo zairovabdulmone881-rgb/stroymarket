@@ -344,7 +344,7 @@ def text_w(d, s, f, stroke=0):
     return b[2] - b[0]
 
 
-def render_sub(i, scenes=SCENES):
+def render_sub(i, scenes=SCENES, maxw=1010):
     """Субтитр сцены i: RGBA, центр по горизонтали."""
     text, hl = scenes[i][1], scenes[i][2]
     words = text.split(" "); hw = hl.split(" ")
@@ -365,13 +365,13 @@ def render_sub(i, scenes=SCENES):
         return sum(text_w(tmp, words[k], fnt(flags[k]), stroke) - 2 * stroke for k in idx) + sp * (len(idx) - 1) + 2 * stroke
 
     lines = [list(range(len(words)))]
-    if line_w(lines[0]) > 980 and len(words) > 1:
+    if line_w(lines[0]) > maxw - 30 and len(words) > 1:
         best = None
         for c in range(1, len(words)):
             m = max(line_w(list(range(c))), line_w(list(range(c, len(words)))))
             if best is None or m < best[0]: best = (m, c)
         c = best[1]; lines = [list(range(c)), list(range(c, len(words)))]
-    while max(line_w(l) for l in lines) > 1010:
+    while max(line_w(l) for l in lines) > maxw:
         size -= 4
     asc = fnt(True).getmetrics()[0] if last else fnt(False).getmetrics()[0]
     lh = int(asc * 1.12)
@@ -426,9 +426,9 @@ def wrap(d, text, f, maxw):
     return lines
 
 
-def render_fact(text, k=1.0):
+def render_fact(text, k=1.0, width=None):
     q = lambda v: int(round(v * k))
-    cw = q(620); f = font("extra", q(34)); tmp = ImageDraw.Draw(Image.new("RGBA", (1, 1)))
+    cw = width or q(620); f = font("extra", q(34)); tmp = ImageDraw.Draw(Image.new("RGBA", (1, 1)))
     lines = wrap(tmp, text, f, cw - q(56))
     lh = q(44); chh = q(70) + len(lines) * lh + q(28)
     im = Image.new("RGBA", (cw + q(20), chh + q(20)), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
