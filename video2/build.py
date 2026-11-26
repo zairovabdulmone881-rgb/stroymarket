@@ -118,7 +118,7 @@ for i in range(17):
     accent = RED if SCENES[i].get("red") else YELLOW
     gs = chunks_for(i)
     for gi, g in enumerate(gs):
-        spr, pos = layout(g, accent, SUB_BELOW)
+        spr, pos = layout(g, accent, SCENES[i].get("sub_y", SUB_CY))
         t_on = starts[i] + g[0]["t0"]
         if gi + 1 < len(gs):
             t_off = starts[i] + min(gs[gi + 1][0]["t0"], g[-1]["t1"] + 0.6)
@@ -136,25 +136,18 @@ def card_box(a):
     return c.min() / a.width, r.min() / a.height, c.max() / a.width, r.max() / a.height
 
 
+# горизонтальная панорама по иллюстрации (доля ширины — центр окна 9:16): старт → конец; без зума
+PAN = {1: (0.35, 0.65), 2: (0.35, 0.65), 3: (0.30, 0.75), 4: (0.30, 0.65), 5: (0.30, 0.70), 6: (0.35, 0.70),
+       7: (0.30, 0.70), 8: (0.40, 0.60), 9: (0.30, 0.55), 10: (0.25, 0.70), 11: (0.30, 0.65), 12: (0.35, 0.65),
+       13: (0.30, 0.70), 14: (0.40, 0.65), 15: (0.40, 0.50), 16: (0.35, 0.65), 17: (0.45, 0.55)}
+
+
 def prep_image(i):
-    """иллюстрация целиком во всю ширину (imgs2_hd — чёткая версия без номера), без зума и обрезки;
-    сверху и снизу — размытое затемнённое продолжение той же картинки, как в оригинале"""
-    n = i + 1
-    src = Image.open(os.path.join(ROOT, "imgs2_hd", f"{n:02d}.png")).convert("RGB")
+    """иллюстрация (imgs2_hd — чёткая, без полей и номера) по высоте на весь экран 9:16, без зума"""
+    src = Image.open(os.path.join(ROOT, "imgs2_hd", f"{i + 1:02d}.png")).convert("RGB")
     sw, sh = src.size
-    # фон: картинка на весь кадр (cover), сильно размыта и затемнена
-    k = max(W / sw, H / sh)
-    bg = src.resize((int(sw * k) + 1, int(sh * k) + 1), Image.LANCZOS)
-    bx, by = (bg.width - W) // 2, (bg.height - H) // 2
-    bg = bg.crop((bx, by, bx + W, by + H)).resize((W // 8, H // 8), Image.BILINEAR)
-    bg = bg.filter(ImageFilter.GaussianBlur(6)).resize((W, H), Image.BICUBIC)
-    bg = Image.eval(bg, lambda v: int(v * 0.45))
-    # сама иллюстрация: во всю ширину, пропорции сохранены
-    ch = round(W * sh / sw)
-    card = src.resize((W, ch), Image.LANCZOS)
-    top = int(CARD_CY - ch / 2)
-    bg.paste(card, (0, top))
-    return bg, (0.5, 0.5)
+    img = src.resize((round(sw * H / sh), H), Image.LANCZOS)
+    return img, PAN[i + 1]
 
 
 def punches_for(i):
@@ -220,7 +213,12 @@ def zoom_at(i, t):
 
 
 def render_bg(i, t):
-    return SCN[i]["img"]          # без наездов: картинка стоит ровно, всё видно целиком
+    """медленный проезд камеры слева направо (с плавным стартом и остановкой), масштаб 1:1"""
+    img = SCN[i]["img"]
+    p0, p1 = SCN[i]["anchor"]
+    c = p0 + (p1 - p0) * ease(t / durs[i])
+    x = min(max(0.0, c * img.width - W / 2), img.width - W)
+    return img.resize((W, H), Image.BILINEAR, box=(x, 0, x + W, H))
 
 
 def draw_subs(frame, t):
