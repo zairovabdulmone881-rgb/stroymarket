@@ -126,28 +126,23 @@ for i in range(17):
 
 
 # ---------------- картинки и движение ----------------
+def card_box(a):
+    """границы чёткой иллюстрации внутри оригинала (вокруг — размытые поля)"""
+    g = np.asarray(a.convert("L"), np.float32)
+    rows = np.abs(np.diff(g, axis=0)).mean(1); cols = np.abs(np.diff(g, axis=1)).mean(0)
+    r = np.where(rows > np.percentile(rows, 60))[0]; c = np.where(cols > np.percentile(cols, 40))[0]
+    return c.min() / a.width, r.min() / a.height, c.max() / a.width, r.max() / a.height
+
+
 def prep_image(i):
+    """оригинал imgs2/NN.png целиком (с размытыми полями), как есть, 9:16"""
     n = i + 1
-    if n == 16 and os.path.exists(os.path.join(V2, "16_peephole.webp")):
-        src = Image.open(os.path.join(V2, "16_peephole.webp")).convert("RGB")
-        fx = 0.5
-    else:
-        src = Image.open(os.path.join(ROOT, "imgs2_hd", f"{n:02d}.png")).convert("RGB")
-        fx = SCENES[i]["focus"][0]
-    sw, sh = src.size
-    if sw / sh > 9 / 16:            # обрезаем ширину до 9:16, высота целиком
-        cw = sh * 9 / 16
-        x0 = min(max(0, fx * sw - cw / 2), sw - cw)
-        box = (x0, 0, x0 + cw, sh)
-    else:
-        ch = sw * 16 / 9
-        y0 = (sh - ch) / 2
-        box = (0, y0, sw, y0 + ch)
-    img = src.resize((int(W * BASE), int(H * BASE)), Image.LANCZOS, box=box)
-    # точка наезда в координатах кадра
-    ax = (fx * sw - box[0]) / (box[2] - box[0])
-    ay = SCENES[i]["focus"][1]
-    return img, (min(max(ax, 0.2), 0.8), ay)
+    src = Image.open(os.path.join(ROOT, "imgs2", f"{n:02d}.png")).convert("RGB")
+    img = src.resize((int(W * BASE), int(H * BASE)), Image.LANCZOS)
+    x0, y0, x1, y1 = card_box(src)
+    fx, fy = SCENES[i]["focus"]
+    # точка наезда: фокус внутри иллюстрации → координаты всего кадра
+    return img, (x0 + (x1 - x0) * fx, y0 + (y1 - y0) * fy)
 
 
 def punches_for(i):
@@ -192,14 +187,18 @@ for i in range(17):
 
 # сцена 15: резкий наезд на «ВЧЕРА» в момент слова
 V15 = [w for w in voices[14]["words"] if w["w"].lower().startswith("вчера")][0]["t0"]
-ANCHOR15 = (0.46, 0.20)
+ANCHOR15 = (0.35, 0.41)   # надпись «ВЧЕРА» на оригинале 15.png
 
 
 def zoom_at(i, t):
     d = durs[i]
     z = 1.0 + 0.10 * ease(t / d)
+    # резкий наезд +8% за 0.12 с, затем плавный отход — наезды не копятся
+    pk = 0.0
     for p in SCN[i]["punch"]:
-        z *= 1 + 0.08 * ease((t - p) / 0.12)
+        if t >= p:
+            pk = ease((t - p) / 0.12) * (1 - 0.7 * ease((t - p - 0.12) / 1.6))
+    z *= 1 + 0.08 * pk
     anchor = SCN[i]["anchor"]
     if i == 14:
         k = ease((t - (V15 - 0.05)) / 0.14)
