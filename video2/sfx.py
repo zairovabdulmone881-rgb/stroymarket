@@ -266,3 +266,79 @@ def whoosh(d=0.45):
     g = np.exp(-((np.log(f[:, None] + 1) - np.log(fc[None, :])) ** 2) / 0.5)
     _, y = signal.istft(Z * g * np.sin(np.pi * pos)[None, :] ** 2, SR, nperseg=1024)
     return fade(y[:n].astype(np.float32), 0.02, 0.05)
+
+
+# ---------- «живые» эффекты из голосов (video2/sfx_src) ----------
+import os, subprocess
+SRC = os.path.join(os.path.dirname(os.path.abspath(__file__)), "sfx_src")
+
+
+def load(name):
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", os.path.join(SRC, name), "-f", "f32le", "-ac", "1",
+                          "-ar", str(SR), "-"], capture_output=True, check=True).stdout
+    return np.frombuffer(raw, np.float32).copy()
+
+
+def walla(d, density=1.0, far=True):
+    """гул толпы: наложенные реплики разных голосов, приглушённые и в «помещении»"""
+    names = sorted(f for f in os.listdir(SRC) if f.startswith("walla_"))
+    out = np.zeros(int(d * SR) + SR, np.float32)
+    t = -0.5
+    while t < d:
+        x = load(names[rng.integers(len(names))])
+        x = x * rng.uniform(0.4, 1.0)
+        place(out, fade(x, 0.05, 0.2), t)
+        t += rng.uniform(0.15, 0.45) / density
+    out = out[: int(d * SR)]
+    if far:
+        out = lp(hp(out, 180), 2200)
+        out = reverb(out, 1.0, 0.45)[: len(out)]
+    return fade(out, 0.3, 0.4)
+
+
+def shout_voice():
+    x = load("shout.wav")
+    x = np.tanh(hp(x, 250) * 2.5) * 0.6
+    return reverb(x.astype(np.float32), 0.7, 0.3)
+
+
+def rotor(d):
+    """вертолёт вдали: только низкие удары лопастей, без шипения"""
+    t = t_(d)
+    pulse = np.maximum(0, np.sin(2 * np.pi * 11.5 * t)) ** 8
+    x = np.sin(2 * np.pi * 70 * t) * pulse + np.sin(2 * np.pi * 140 * t) * pulse * 0.3
+    pas = np.exp(-((t - d * 0.55) / (d * 0.35)) ** 2)
+    return fade(lp((x * pas).astype(np.float32), 400), 0.3, 0.5)
+
+
+def horns(d, n=7):
+    out = np.zeros(int(d * SR), np.float32)
+    for _ in range(n):
+        hd = rng.uniform(0.25, 0.7)
+        place(out, horn(rng.uniform(330, 470), hd) * rng.uniform(0.3, 1.0), rng.uniform(0, max(0.1, d - hd)))
+    return reverb(out, 0.9, 0.35)[: len(out)]
+
+
+def radio_burst(d=1.2):
+    """короткий хрип радио в начале, а не шум на всю сцену"""
+    x = bp(noise(d), 700, 3000) * slow_mod(d, 14, 1) ** 2
+    return fade(np.tanh(x * 2).astype(np.float32), 0.05, 0.4)
+
+
+def soft_breath(d):
+    return lp(breathing(d), 1400)
+
+
+def ring_soft(d):
+    t = t_(d)
+    tone = np.sin(2 * np.pi * 2600 * t) * 0.25 + np.sin(2 * np.pi * 55 * t) * 0.6
+    e = np.clip(t / (d * 0.7), 0, 1) ** 2
+    return fade((tone * e).astype(np.float32), 0.05, 0.3)
+
+
+def scratch_soft(d):
+    return lp(scratch(d), 4500)
+
+
+def whoosh_soft(d=0.45):
+    return lp(whoosh(d), 2500)

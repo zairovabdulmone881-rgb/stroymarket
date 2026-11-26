@@ -259,28 +259,32 @@ def build_audio():
 
     W_ = lambda i, word: starts[i] + [w for w in voices[i]["words"] if w["w"].lower().startswith(word)][0]["t0"]
     S, D = starts, durs
+    BED = -10                                   # фоны ещё на 10 дБ тише (итого −20 дБ под голосом)
     add(sfx.vibration(), S[0] + 0.0)
     add(sfx.vibration(), W_(0, "приходит") - 0.2)
-    add(sfx.crowd(D[1]), S[1], -2)
-    add(sfx.helicopter(D[1]), S[1], -1)
-    add(sfx.store(D[2] + D[3]), S[2], -2)
-    add(sfx.shout(), W_(3, "кричит") + 0.05, 2)
+    add(sfx.walla(D[1], 1.3), S[1], BED + 2)
+    add(sfx.rotor(D[1]), S[1], BED)
+    add(sfx.walla(D[2] + D[3], 1.0), S[2], BED)
+    for k in range(3):
+        add(sfx.beep(2350, 0.09), S[2] + 0.8 + k * 1.9, -8)
+    add(sfx.shout_voice(), W_(3, "сзади") - 0.05, -4)
     add(sfx.terminal(), S[4] + 0.05)
     add(sfx.terminal(), W_(4, "цифры") - 0.1, -3)
-    add(sfx.traffic(D[5] + D[6], 9), S[5])
-    add(sfx.hammering(D[7]), S[7])
+    add(sfx.horns(D[5] + D[6], 8), S[5], -4)
+    add(sfx.hammering(D[7]), S[7], -2)
     add(sfx.three_knocks(), S[8] + 0.0, 2)
-    add(sfx.radio(D[10]), S[10], -1)
-    add(sfx.growl(D[11]), S[11], -3)
-    add(sfx.breathing(D[12]), S[12], -2)
-    add(sfx.ringing(D[13] - 0.1), S[13], -2)                   # гаснет к тишине перед 15
-    add(sfx.hit(), S[14] + V15 - 0.02, 3)                       # 15: тишина, затем удар на «вчера»
-    add(sfx.scratch(D[15]), S[15], -1)
-    add(sfx.growl(D[15]), S[15] + 0.3, -2)
-    add(sfx.hit(1.6), S[16], 1)                                 # 17: удар-акцент
+    add(sfx.radio_burst(), S[10] + 0.05, -6)
+    add(sfx.radio_burst(0.8), W_(10, "хрипит") - 0.1, -6)
+    add(sfx.growl(D[11]), S[11], BED + 2)
+    add(sfx.soft_breath(D[12]), S[12], BED)
+    add(sfx.ring_soft(D[13] - 0.1), S[13], BED)
+    add(sfx.hit(), S[14] + V15 - 0.02, 3)
+    add(sfx.scratch_soft(D[15] * 0.6), S[15], -8)
+    add(sfx.growl(D[15]), S[15] + 0.3, BED + 2)
+    add(sfx.hit(1.6), S[16], 1)
     for i in range(1, 17):
-        if i == 14: continue                                    # перед 15 — тишина
-        add(sfx.whoosh(), S[i] - 0.2, -2)
+        if i == 14: continue
+        add(sfx.whoosh_soft(), S[i] - 0.2, -6)
     mix = voice + fx
     mix = mix[: int(TOTAL * SR)]
     pre = os.path.join(V2, "mix_pre.wav")
@@ -289,7 +293,7 @@ def build_audio():
     # громкость: два прохода loudnorm → −14 LUFS
     comp = os.path.join(V2, "mix_comp.wav")
     subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", pre, "-af",
-                    "acompressor=threshold=-20dB:ratio=3:attack=5:release=120:makeup=2,alimiter=limit=0.7:level=false", comp], check=True)
+                    "acompressor=threshold=-18dB:ratio=2.5:attack=5:release=120:makeup=1,alimiter=limit=0.7:level=false", comp], check=True)
     pre = comp
     r = subprocess.run(["ffmpeg", "-hide_banner", "-i", pre, "-af", "loudnorm=I=-14:TP=-1.5:LRA=11:print_format=json",
                         "-f", "null", "-"], capture_output=True, text=True).stderr
