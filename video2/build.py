@@ -1,0 +1,320 @@
+#!/usr/bin/env python3
+"""Сборка final_video_2.mp4: 1080x1920, 30 fps, H.264 + AAC.
+Картинка на весь экран, поверх только субтитры. Без музыки: голос + звуковые эффекты.
+Запуск: python3 video2/tts.py && python3 video2/build.py [--preview]"""
+import json, os, re, subprocess, sys
+import numpy as np
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from script import SCENES
+import sfx
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+V2 = os.path.join(ROOT, "video2")
+W, H, FPS, SR = 1080, 1920, 30, 48000
+BASE = 1.2                      # запас разрешения подготовленного кадра под наезды
+FONT = os.path.join(ROOT, "fonts", "Montserrat_900Black.ttf")
+if not os.path.exists(FONT):
+    FONT = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
+FS, STROKE = 90, 12
+SUB_CX, SUB_CY, SUB_MAXW = 460, 1250, 840   # центр безопасной зоны (0..920), справа 160 px и снизу 380 px пусто
+YELLOW, RED, WHITE = (255, 210, 26), (255, 43, 28), (255, 255, 255)
+GAP, LAST_TAIL, PRE15 = 0.3, 1.5, 0.6
+OUT = os.path.join(ROOT, "final_video_2.mp4")
+
+
+def ease(x):
+    x = min(1.0, max(0.0, x)); return x * x * (3 - 2 * x)
+
+
+# ---------------- тайминг ----------------
+voices = [json.load(open(os.path.join(V2, "voice", f"{n:02d}.json"))) for n in range(1, 18)]
+durs = []
+for i, v in enumerate(voices):
+    d = v["dur"] + GAP
+    if i == 13: d = v["dur"] + PRE15          # 0.6 с тишины перед сценой 15
+    if i == 16: d += LAST_TAIL
+    durs.append(d)
+starts = np.concatenate([[0], np.cumsum(durs)[:-1]])
+TOTAL = float(sum(durs))
+NF = int(round(TOTAL * FPS))
+
+
+# ---------------- слова → фразы субтитров ----------------
+def tokens(text):
+    """слова исходного текста + знак препинания после них"""
+    out = []
+    for m in re.finditer(r"[\w][\w\-]*", text):
+        tail = text[m.end():m.end() + 3]
+        out.append((m.group(0), bool(re.match(r"\s*[.,:!?…—»]", tail))))
+    return out
+
+
+def chunks_for(i):
+    sc, words = SCENES[i], voices[i]["words"]
+    toks = tokens(sc["text"])
+    assert len(toks) == len(words), (i, toks, [w["w"] for w in words])
+    keys = [k.lower() for k in sc["keys"]]
+    items = []
+    for (tok, brk), w in zip(toks, words):
+        items.append({"w": tok.upper(), "t0": w["t0"], "t1": w["t1"], "brk": brk, "key": tok.lower() in keys})
+    groups, cur = [], []
+    for k, it in enumerate(items):
+        cur.append(it)
+        nxt = items[k + 1] if k + 1 < len(items) else None
+        if it["brk"] or len(cur) == 3 or nxt is None or nxt["t0"] - it["t1"] > 0.3:
+            groups.append(cur); cur = []
+    return groups
+
+
+font_cache = {}
+def font(sz):
+    if sz not in font_cache: font_cache[sz] = ImageFont.truetype(FONT, sz)
+    return font_cache[sz]
+
+
+def word_sprite(text, color, sz):
+    f = font(sz)
+    l, t, r, b = f.getbbox(text, stroke_width=STROKE)
+    pad = 18
+    im = Image.new("RGBA", (r - l + 2 * pad, b - t + 2 * pad), (0, 0, 0, 0))
+    # мягкая тень под обводкой — для читаемости на светлом фоне (не плашка)
+    sh = Image.new("L", im.size, 0)
+    ImageDraw.Draw(sh).text((pad - l, pad - t), text, font=f, fill=255, stroke_width=STROKE + 4)
+    sh = sh.filter(ImageFilter.GaussianBlur(9)).point(lambda v: int(v * 0.75))
+    im.putalpha(sh)
+    ImageDraw.Draw(im).text((pad - l, pad - t), text, font=f, fill=color, stroke_width=STROKE, stroke_fill=(0, 0, 0))
+    return im
+
+
+def layout(group, accent):
+    """фиксированная раскладка фразы: слова не сдвигаются, пока появляются"""
+    for sz in range(FS, 50, -2):
+        spr = [word_sprite(it["w"], accent if it["key"] else WHITE, sz) for it in group]
+        sp = int(sz * 0.18)
+        lines = [[0]]
+        for k in range(1, len(spr)):
+            lw = sum(spr[j].width - 36 for j in lines[-1]) + sp * len(lines[-1]) + spr[k].width - 36
+            if lw > SUB_MAXW: lines.append([k])
+            else: lines[-1].append(k)
+        widths = [sum(spr[j].width - 36 for j in ln) + sp * (len(ln) - 1) for ln in lines]
+        if max(widths) <= SUB_MAXW and len(lines) <= 2: break
+    lh = int(sz * 1.12)
+    y0 = SUB_CY - lh * len(lines) / 2
+    pos = [None] * len(spr)
+    for li, ln in enumerate(lines):
+        x = SUB_CX - widths[li] / 2
+        for j in ln:
+            pos[j] = (x + (spr[j].width - 36) / 2, y0 + li * lh + lh / 2)   # центр слова
+            x += spr[j].width - 36 + sp
+    return spr, pos
+
+
+SUBS = []   # (t_on, t_off, [(t_word, sprite, center)])
+for i in range(17):
+    accent = RED if SCENES[i].get("red") else YELLOW
+    gs = chunks_for(i)
+    for gi, g in enumerate(gs):
+        spr, pos = layout(g, accent)
+        t_on = starts[i] + g[0]["t0"]
+        if gi + 1 < len(gs):
+            t_off = starts[i] + min(gs[gi + 1][0]["t0"], g[-1]["t1"] + 0.6)
+        else:
+            t_off = starts[i] + min(durs[i], g[-1]["t1"] + (LAST_TAIL if i == 16 else 0.6))
+        SUBS.append((t_on, t_off, [(starts[i] + it["t0"], s, p) for it, s, p in zip(g, spr, pos)]))
+
+
+# ---------------- картинки и движение ----------------
+def prep_image(i):
+    n = i + 1
+    if n == 16 and os.path.exists(os.path.join(V2, "16_peephole.webp")):
+        src = Image.open(os.path.join(V2, "16_peephole.webp")).convert("RGB")
+        fx = 0.5
+    else:
+        src = Image.open(os.path.join(ROOT, "imgs2_hd", f"{n:02d}.png")).convert("RGB")
+        fx = SCENES[i]["focus"][0]
+    sw, sh = src.size
+    if sw / sh > 9 / 16:            # обрезаем ширину до 9:16, высота целиком
+        cw = sh * 9 / 16
+        x0 = min(max(0, fx * sw - cw / 2), sw - cw)
+        box = (x0, 0, x0 + cw, sh)
+    else:
+        ch = sw * 16 / 9
+        y0 = (sh - ch) / 2
+        box = (0, y0, sw, y0 + ch)
+    img = src.resize((int(W * BASE), int(H * BASE)), Image.LANCZOS, box=box)
+    # точка наезда в координатах кадра
+    ax = (fx * sw - box[0]) / (box[2] - box[0])
+    ay = SCENES[i]["focus"][1]
+    return img, (min(max(ax, 0.2), 0.8), ay)
+
+
+def punches_for(i):
+    """резкие наезды +8% за 0.12 с на ключевых словах; ни один отрезок без изменения не длиннее 2.5 с"""
+    d = durs[i]
+    words = voices[i]["words"]
+    keys = [k.lower() for k in SCENES[i]["keys"]]
+    toks = tokens(SCENES[i]["text"])
+    kt = [w["t0"] for (tok, _), w in zip(toks, words) if tok.lower() in keys and w["t0"] > 0.9]
+    if i == 14: return []                                   # у сцены 15 свой наезд
+    pts = sorted(kt)
+    # заполняем пробелы > 2.5 с наездом на ближайшее к середине слово
+    changed = True
+    while changed:
+        changed = False
+        ev = [0.0] + pts + [d]
+        for a, b in zip(ev, ev[1:]):
+            if b - a > 2.5:
+                mid = (a + b) / 2
+                cand = [w["t0"] for w in words if a + 0.6 < w["t0"] < b - 0.6] or [mid]
+                pts.append(min(cand, key=lambda t: abs(t - mid))); pts.sort(); changed = True
+                break
+    # не чаще раза в 0.8 с
+    res = []
+    for p in pts:
+        if not res or p - res[-1] > 0.8: res.append(p)
+    # убираем лишние наезды, если без них правило 2.5 с всё равно выполняется
+    ok = lambda ps: all(b - a <= 2.5 for a, b in zip([0.0] + ps, ps + [d]))
+    k = 0
+    while k < len(res):
+        trial = res[:k] + res[k + 1:]
+        if ok(trial): res = trial
+        else: k += 1
+    return res
+
+
+SCN = []
+for i in range(17):
+    img, anchor = prep_image(i)
+    SCN.append({"img": img, "anchor": anchor, "punch": punches_for(i)})
+    print("scene", i + 1, "dur %.2f" % durs[i], "punches", [round(p, 2) for p in SCN[-1]["punch"]], flush=True)
+
+# сцена 15: резкий наезд на «ВЧЕРА» в момент слова
+V15 = [w for w in voices[14]["words"] if w["w"].lower().startswith("вчера")][0]["t0"]
+ANCHOR15 = (0.46, 0.20)
+
+
+def zoom_at(i, t):
+    d = durs[i]
+    z = 1.0 + 0.10 * ease(t / d)
+    for p in SCN[i]["punch"]:
+        z *= 1 + 0.08 * ease((t - p) / 0.12)
+    anchor = SCN[i]["anchor"]
+    if i == 14:
+        k = ease((t - (V15 - 0.05)) / 0.14)
+        z *= 1 + 0.55 * k
+        anchor = tuple(a + (b - a) * k for a, b in zip(anchor, ANCHOR15))
+    return z, anchor
+
+
+def render_bg(i, t):
+    img = SCN[i]["img"]
+    z, (ax, ay) = zoom_at(i, t)
+    bw, bh = img.size
+    vw, vh = bw / z, bh / z
+    x0, y0 = ax * bw * (1 - 1 / z), ay * bh * (1 - 1 / z)
+    return img.resize((W, H), Image.BILINEAR, box=(x0, y0, x0 + vw, y0 + vh))
+
+
+def draw_subs(frame, t):
+    for t_on, t_off, ws in SUBS:
+        if not (t_on <= t < t_off): continue
+        for tw, spr, (cx, cy) in ws:
+            if t < tw: continue
+            k = min(1.0, (t - tw) / 0.12)
+            s = 0.7 + 0.3 * (1 - (1 - k) ** 3)
+            sp = spr if s >= 0.999 else spr.resize((max(1, int(spr.width * s)), max(1, int(spr.height * s))), Image.BICUBIC)
+            frame.alpha_composite(sp, (int(round(cx - sp.width / 2)), int(round(cy - sp.height / 2))))
+    return frame
+
+
+def frame_at(fi):
+    t = fi / FPS
+    i = int(np.searchsorted(starts, t, side="right") - 1)
+    lt = t - starts[i]
+    fr = render_bg(i, lt).convert("RGBA")
+    if i > 0 and lt < 0.1:                     # белый блик 0.1 с, 25%
+        a = int(255 * 0.25 * (1 - lt / 0.1))
+        fr = Image.alpha_composite(fr, Image.new("RGBA", (W, H), (255, 255, 255, a)))
+    return draw_subs(fr, t).convert("RGB")
+
+
+# ---------------- звук ----------------
+def build_audio():
+    n = int(TOTAL * SR) + SR
+    voice = np.zeros(n, np.float32); fx = np.zeros(n, np.float32)
+    for i in range(17):
+        raw = subprocess.run(["ffmpeg", "-v", "error", "-i", os.path.join(V2, "voice", f"{i+1:02d}.wav"),
+                              "-f", "f32le", "-ac", "1", "-ar", str(SR), "-"], capture_output=True, check=True).stdout
+        sfx.place(voice, np.frombuffer(raw, np.float32), starts[i])
+    act = np.abs(voice) > 0.02
+    vr = float(np.sqrt(np.mean(voice[act] ** 2)))
+    tgt = vr * 10 ** (-10 / 20)                # эффекты на −10 дБ под голосом
+
+    def add(x, at, rel_db=0.0):
+        a = np.abs(x) > np.abs(x).max() * 0.05
+        r = float(np.sqrt(np.mean(x[a] ** 2))) + 1e-9
+        sfx.place(fx, x * (tgt / r) * 10 ** (rel_db / 20), at)
+
+    W_ = lambda i, word: starts[i] + [w for w in voices[i]["words"] if w["w"].lower().startswith(word)][0]["t0"]
+    S, D = starts, durs
+    add(sfx.vibration(), S[0] + 0.0)
+    add(sfx.vibration(), W_(0, "приходит") - 0.2)
+    add(sfx.crowd(D[1]), S[1], -2)
+    add(sfx.helicopter(D[1]), S[1], -1)
+    add(sfx.store(D[2] + D[3]), S[2], -2)
+    add(sfx.shout(), W_(3, "кричит") + 0.05, 2)
+    add(sfx.terminal(), S[4] + 0.05)
+    add(sfx.terminal(), W_(4, "цифры") - 0.1, -3)
+    add(sfx.traffic(D[5] + D[6], 9), S[5])
+    add(sfx.hammering(D[7]), S[7])
+    add(sfx.three_knocks(), S[8] + 0.0, 2)
+    add(sfx.radio(D[10]), S[10], -1)
+    add(sfx.growl(D[11]), S[11], -3)
+    add(sfx.breathing(D[12]), S[12], -2)
+    add(sfx.ringing(D[13] - 0.1), S[13], -2)                   # гаснет к тишине перед 15
+    add(sfx.hit(), S[14] + V15 - 0.02, 3)                       # 15: тишина, затем удар на «вчера»
+    add(sfx.scratch(D[15]), S[15], -1)
+    add(sfx.growl(D[15]), S[15] + 0.3, -2)
+    add(sfx.hit(1.6), S[16], 1)                                 # 17: удар-акцент
+    for i in range(1, 17):
+        if i == 14: continue                                    # перед 15 — тишина
+        add(sfx.whoosh(), S[i] - 0.2, -2)
+    mix = voice + fx
+    mix = mix[: int(TOTAL * SR)]
+    pre = os.path.join(V2, "mix_pre.wav")
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-f", "f32le", "-ar", str(SR), "-ac", "1", "-i", "-", pre],
+                   input=mix.astype(np.float32).tobytes(), check=True)
+    # громкость: два прохода loudnorm → −14 LUFS
+    comp = os.path.join(V2, "mix_comp.wav")
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", pre, "-af",
+                    "acompressor=threshold=-20dB:ratio=3:attack=5:release=120:makeup=2,alimiter=limit=0.7:level=false", comp], check=True)
+    pre = comp
+    r = subprocess.run(["ffmpeg", "-hide_banner", "-i", pre, "-af", "loudnorm=I=-14:TP=-1.5:LRA=11:print_format=json",
+                        "-f", "null", "-"], capture_output=True, text=True).stderr
+    m = json.loads(r[r.rindex("{"):r.rindex("}") + 1])
+    af = ("loudnorm=I=-14:TP=-1.5:LRA=11:linear=true:measured_I={input_i}:measured_TP={input_tp}:"
+          "measured_LRA={input_lra}:measured_thresh={input_thresh}:offset={target_offset}").format(**m)
+    fin = os.path.join(V2, "mix.wav")
+    subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", pre, "-af", af + ",aresample=48000", "-ac", "2", fin], check=True)
+    return fin
+
+
+if __name__ == "__main__":
+    if "--frames" in sys.argv:                 # кадры из середины каждой сцены для проверки
+        od = sys.argv[sys.argv.index("--frames") + 1]; os.makedirs(od, exist_ok=True)
+        for i in range(17):
+            frame_at(int((starts[i] + durs[i] / 2) * FPS)).save(os.path.join(od, f"mid_{i+1:02d}.png"))
+        sys.exit()
+    wav = build_audio(); print("audio ok", flush=True)
+    ff = subprocess.Popen(["ffmpeg", "-v", "error", "-y", "-f", "rawvideo", "-pix_fmt", "rgb24", "-s", f"{W}x{H}",
+                           "-r", str(FPS), "-i", "-", "-i", wav, "-map", "0:v", "-map", "1:a",
+                           "-c:v", "libx264", "-preset", "medium", "-crf", "19", "-pix_fmt", "yuv420p", "-profile:v", "high",
+                           "-c:a", "aac", "-b:a", "192k", "-ar", "48000", "-shortest", "-movflags", "+faststart", OUT],
+                          stdin=subprocess.PIPE)
+    for fi in range(NF):
+        ff.stdin.write(frame_at(fi).tobytes())
+        if fi % 300 == 0: print("frame", fi, "/", NF, flush=True)
+    ff.stdin.close(); ff.wait()
+    print("done", OUT, "%.2f s" % TOTAL)
