@@ -18,6 +18,8 @@ FONT = os.path.join(ROOT, "fonts", "Montserrat_900Black.ttf")
 if not os.path.exists(FONT):
     FONT = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
 FS, STROKE = 90, 12
+CARD_CY = 760        # центр иллюстрации по вертикали
+SUB_BELOW = 1400     # субтитры — на фоне под иллюстрацией (не на лицах), выше нижних 380 px
 SUB_CX, SUB_CY, SUB_MAXW = 460, 1250, 840   # центр безопасной зоны (0..920), справа 160 px и снизу 380 px пусто
 YELLOW, RED, WHITE = (255, 210, 26), (255, 43, 28), (255, 255, 255)
 GAP, LAST_TAIL, PRE15 = 0.3, 1.5, 0.6
@@ -88,7 +90,7 @@ def word_sprite(text, color, sz):
     return im
 
 
-def layout(group, accent, sub_cy=SUB_CY):
+def layout(group, accent, sub_cy=1400):
     """фиксированная раскладка фразы: слова не сдвигаются, пока появляются"""
     for sz in range(FS, 50, -2):
         spr = [word_sprite(it["w"], accent if it["key"] else WHITE, sz) for it in group]
@@ -116,7 +118,7 @@ for i in range(17):
     accent = RED if SCENES[i].get("red") else YELLOW
     gs = chunks_for(i)
     for gi, g in enumerate(gs):
-        spr, pos = layout(g, accent, SCENES[i].get("sub_y", SUB_CY))
+        spr, pos = layout(g, accent, SUB_BELOW)
         t_on = starts[i] + g[0]["t0"]
         if gi + 1 < len(gs):
             t_off = starts[i] + min(gs[gi + 1][0]["t0"], g[-1]["t1"] + 0.6)
@@ -135,18 +137,24 @@ def card_box(a):
 
 
 def prep_image(i):
-    """иллюстрация (imgs2_hd — та же картинка без полей и номера) на весь экран 9:16:
-    высота целиком, по ширине — вырез вокруг главного объекта"""
+    """иллюстрация целиком во всю ширину (imgs2_hd — чёткая версия без номера), без зума и обрезки;
+    сверху и снизу — размытое затемнённое продолжение той же картинки, как в оригинале"""
     n = i + 1
     src = Image.open(os.path.join(ROOT, "imgs2_hd", f"{n:02d}.png")).convert("RGB")
-    fx, fy = SCENES[i]["focus"]
     sw, sh = src.size
-    cw = sh * 9 / 16
-    x0 = min(max(0, fx * sw - cw / 2), sw - cw)
-    box = (x0, 0, x0 + cw, sh)
-    img = src.resize((int(W * BASE), int(H * BASE)), Image.LANCZOS, box=box)
-    ax = (fx * sw - x0) / cw
-    return img, (min(max(ax, 0.2), 0.8), fy)
+    # фон: картинка на весь кадр (cover), сильно размыта и затемнена
+    k = max(W / sw, H / sh)
+    bg = src.resize((int(sw * k) + 1, int(sh * k) + 1), Image.LANCZOS)
+    bx, by = (bg.width - W) // 2, (bg.height - H) // 2
+    bg = bg.crop((bx, by, bx + W, by + H)).resize((W // 8, H // 8), Image.BILINEAR)
+    bg = bg.filter(ImageFilter.GaussianBlur(6)).resize((W, H), Image.BICUBIC)
+    bg = Image.eval(bg, lambda v: int(v * 0.45))
+    # сама иллюстрация: во всю ширину, пропорции сохранены
+    ch = round(W * sh / sw)
+    card = src.resize((W, ch), Image.LANCZOS)
+    top = int(CARD_CY - ch / 2)
+    bg.paste(card, (0, top))
+    return bg, (0.5, 0.5)
 
 
 def punches_for(i):
@@ -212,12 +220,7 @@ def zoom_at(i, t):
 
 
 def render_bg(i, t):
-    img = SCN[i]["img"]
-    z, (ax, ay) = zoom_at(i, t)
-    bw, bh = img.size
-    vw, vh = bw / z, bh / z
-    x0, y0 = ax * bw * (1 - 1 / z), ay * bh * (1 - 1 / z)
-    return img.resize((W, H), Image.BILINEAR, box=(x0, y0, x0 + vw, y0 + vh))
+    return SCN[i]["img"]          # без наездов: картинка стоит ровно, всё видно целиком
 
 
 def draw_subs(frame, t):
