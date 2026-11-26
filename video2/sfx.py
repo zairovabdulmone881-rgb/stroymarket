@@ -342,3 +342,9 @@ def scratch_soft(d):
 
 def whoosh_soft(d=0.45):
     return lp(whoosh(d), 2500)
+
+
+def load_from(path):
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", path, "-f", "f32le", "-ac", "1", "-ar", str(SR), "-"],
+                         capture_output=True, check=True).stdout
+    return np.frombuffer(raw, np.float32).copy()

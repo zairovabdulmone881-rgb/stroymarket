@@ -88,7 +88,7 @@ def word_sprite(text, color, sz):
     return im
 
 
-def layout(group, accent):
+def layout(group, accent, sub_cy=SUB_CY):
     """фиксированная раскладка фразы: слова не сдвигаются, пока появляются"""
     for sz in range(FS, 50, -2):
         spr = [word_sprite(it["w"], accent if it["key"] else WHITE, sz) for it in group]
@@ -101,7 +101,7 @@ def layout(group, accent):
         widths = [sum(spr[j].width - 36 for j in ln) + sp * (len(ln) - 1) for ln in lines]
         if max(widths) <= SUB_MAXW and len(lines) <= 2: break
     lh = int(sz * 1.12)
-    y0 = SUB_CY - lh * len(lines) / 2
+    y0 = sub_cy - lh * len(lines) / 2
     pos = [None] * len(spr)
     for li, ln in enumerate(lines):
         x = SUB_CX - widths[li] / 2
@@ -116,7 +116,7 @@ for i in range(17):
     accent = RED if SCENES[i].get("red") else YELLOW
     gs = chunks_for(i)
     for gi, g in enumerate(gs):
-        spr, pos = layout(g, accent)
+        spr, pos = layout(g, accent, SCENES[i].get("sub_y", SUB_CY))
         t_on = starts[i] + g[0]["t0"]
         if gi + 1 < len(gs):
             t_off = starts[i] + min(gs[gi + 1][0]["t0"], g[-1]["t1"] + 0.6)
@@ -135,14 +135,18 @@ def card_box(a):
 
 
 def prep_image(i):
-    """оригинал imgs2/NN.png целиком (с размытыми полями), как есть, 9:16"""
+    """иллюстрация (imgs2_hd — та же картинка без полей и номера) на весь экран 9:16:
+    высота целиком, по ширине — вырез вокруг главного объекта"""
     n = i + 1
-    src = Image.open(os.path.join(ROOT, "imgs2", f"{n:02d}.png")).convert("RGB")
-    img = src.resize((int(W * BASE), int(H * BASE)), Image.LANCZOS)
-    x0, y0, x1, y1 = card_box(src)
+    src = Image.open(os.path.join(ROOT, "imgs2_hd", f"{n:02d}.png")).convert("RGB")
     fx, fy = SCENES[i]["focus"]
-    # точка наезда: фокус внутри иллюстрации → координаты всего кадра
-    return img, (x0 + (x1 - x0) * fx, y0 + (y1 - y0) * fy)
+    sw, sh = src.size
+    cw = sh * 9 / 16
+    x0 = min(max(0, fx * sw - cw / 2), sw - cw)
+    box = (x0, 0, x0 + cw, sh)
+    img = src.resize((int(W * BASE), int(H * BASE)), Image.LANCZOS, box=box)
+    ax = (fx * sw - x0) / cw
+    return img, (min(max(ax, 0.2), 0.8), fy)
 
 
 def punches_for(i):
@@ -187,7 +191,7 @@ for i in range(17):
 
 # сцена 15: резкий наезд на «ВЧЕРА» в момент слова
 V15 = [w for w in voices[14]["words"] if w["w"].lower().startswith("вчера")][0]["t0"]
-ANCHOR15 = (0.35, 0.41)   # надпись «ВЧЕРА» на оригинале 15.png
+ANCHOR15 = (0.46, 0.20)   # надпись «ВЧЕРА» в кадре сцены 15
 
 
 def zoom_at(i, t):
@@ -258,32 +262,46 @@ def build_audio():
 
     W_ = lambda i, word: starts[i] + [w for w in voices[i]["words"] if w["w"].lower().startswith(word)][0]["t0"]
     S, D = starts, durs
-    BED = -10                                   # фоны ещё на 10 дБ тише (итого −20 дБ под голосом)
-    add(sfx.vibration(), S[0] + 0.0)
-    add(sfx.vibration(), W_(0, "приходит") - 0.2)
-    add(sfx.walla(D[1], 1.3), S[1], BED + 2)
-    add(sfx.rotor(D[1]), S[1], BED)
-    add(sfx.walla(D[2] + D[3], 1.0), S[2], BED)
-    for k in range(3):
-        add(sfx.beep(2350, 0.09), S[2] + 0.8 + k * 1.9, -8)
+    REAL = os.path.join(V2, "sfx_real")
+
+    def R(name, t0=0.0, t1=None, fi=0.03, fo=0.15, lp=None, rate=1.0):
+        """кусок реальной записи (Freesound, CC0) с короткими фейдами"""
+        x = sfx.load_from(os.path.join(REAL, name + ".wav"))
+        x = x[int(t0 * SR): int(t1 * SR) if t1 else None]
+        if rate != 1.0:
+            x = np.interp(np.arange(0, len(x) - 1, rate), np.arange(len(x)), x).astype(np.float32)
+        if lp: x = sfx.lp(x, lp)
+        return sfx.fade(x, fi, fo)
+
+    def bed(name, t0, d, at, rel, **kw):
+        add(R(name, t0, t0 + d, fi=0.25, fo=0.4, **kw), at, rel)
+
+    BED = -10                                   # фоны: итого −20 дБ под голосом; отдельные звуки: −10 дБ
+    add(R("vibrate"), S[0] + 0.05, -2)
+    add(R("vibrate"), S[0] + 1.25, -2)
+    add(R("vibrate"), W_(0, "приходит") - 0.3, -2)
+    bed("crowd_panic", 1.0, D[1], S[1], BED + 2)
+    bed("helicopter", 4.0, D[1], S[1], BED + 1, lp=3000)
+    bed("supermarket", 0.5, D[2] + D[3], S[2], BED + 3)
     add(sfx.shout_voice(), W_(3, "сзади") - 0.05, -4)
     add(sfx.terminal(), S[4] + 0.05)
     add(sfx.terminal(), W_(4, "цифры") - 0.1, -3)
-    add(sfx.horns(D[5] + D[6], 8), S[5], -4)
-    add(sfx.hammering(D[7]), S[7], -2)
-    add(sfx.three_knocks(), S[8] + 0.0, 2)
-    add(sfx.radio_burst(), S[10] + 0.05, -6)
-    add(sfx.radio_burst(0.8), W_(10, "хрипит") - 0.1, -6)
-    add(sfx.growl(D[11]), S[11], BED + 2)
-    add(sfx.soft_breath(D[12]), S[12], BED)
-    add(sfx.ring_soft(D[13] - 0.1), S[13], BED)
-    add(sfx.hit(), S[14] + V15 - 0.02, 3)
-    add(sfx.scratch_soft(D[15] * 0.6), S[15], -8)
-    add(sfx.growl(D[15]), S[15] + 0.3, BED + 2)
-    add(sfx.hit(1.6), S[16], 1)
+    bed("traffic_horns", 122.0, D[5] + D[6], S[5], BED + 4)
+    bed("hammer", 2.2, D[7], S[7], -3)
+    add(R("knock", 0.2, 0.95, fi=0.005, fo=0.08), S[8] + 0.0, 2)
+    bed("radio", 1.0, D[10], S[10], BED + 2, lp=5000)
+    bed("monster_growl", 1.5, D[11], S[11], BED + 2, lp=4000)
+    bed("breathing", 4.0, D[12], S[12], BED + 2, lp=5000)
+    bed("tinnitus", 2.0, D[13] - 0.1, S[13], BED - 2)
+    add(R("boom", 0, 4.0, fi=0.002, fo=1.0), S[14] + V15 - 0.02, 3)   # 15: тишина, затем удар на «вчера»
+    for k, r in enumerate((1.0, 0.85, 1.1, 0.92)):
+        add(R("metal_scrape", rate=r, lp=6000), S[15] + 0.1 + k * 1.5, -6)
+    add(R("zombie_growl", 0.2, 2.7, lp=5000), W_(15, "давно") - 0.3, -4)
+    bed("monster_growl", 9.0, D[15], S[15], BED + 1, lp=4000)
+    add(R("boom", 0, 3.0, fi=0.002, fo=0.8), S[16], 0)               # 17: удар-акцент
     for i in range(1, 17):
-        if i == 14: continue
-        add(sfx.whoosh_soft(), S[i] - 0.2, -6)
+        if i == 14: continue                                          # перед 15 — тишина
+        add(R("whoosh", fi=0.005, fo=0.1), S[i] - 0.25, -5)
     mix = voice + fx
     mix = mix[: int(TOTAL * SR)]
     pre = os.path.join(V2, "mix_pre.wav")

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Озвучка сцен: edge-tts ru-RU-DmitryNeural, куски по «…» и «—», пауза 0.5 с между кусками.
+"""Озвучка сцен: edge-tts ru-RU-DmitryNeural, каждая сцена целиком (естественные паузы самого голоса).
 Выход: voice/NN.wav (48 кГц моно) + voice/NN.json (слова с таймингами)."""
 import asyncio, json, os, re, subprocess, sys
 import numpy as np
@@ -38,9 +38,9 @@ def decode(path):
     return np.frombuffer(raw, np.float32).copy()
 
 def pieces(text):
-    # режем по многоточию и тире внутри фразы; ведущее «…» просто убираем
-    parts = re.split(r"\s*(?:…|\.\.\.|\s—\s)\s*", text.strip())
-    return [p for p in parts if re.search(r"\w", p)]
+    # сцена читается целиком, без нарезки и вставных пауз; ведущее «…» убираем
+    return [re.sub(r"^\s*(?:…|\.\.\.)\s*", "", text.strip())]
+
 
 async def main():
     for n, sc in enumerate(SCENES, 1):
