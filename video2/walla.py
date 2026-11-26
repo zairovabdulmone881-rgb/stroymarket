@@ -41,7 +41,7 @@ async def main():
         p = os.path.join(OUT, f"walla_{i:02d}.wav")
         if not os.path.exists(p): jobs.append(say(line, v, rate, pitch, p))
     p = os.path.join(OUT, "shout.wav")
-    if not os.path.exists(p): jobs.append(say("Эй! Отдай!", "uk-UA-OstapNeural", "+25%", "+25Hz", p))
+    if not os.path.exists(p): jobs.append(say("Эй! Отдай!", "ru-RU-DmitryNeural", "+15%", "+0Hz", p))
     for j in jobs: await j
     print("ok", len(os.listdir(OUT)))
 

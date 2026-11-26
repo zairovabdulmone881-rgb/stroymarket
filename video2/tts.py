@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Озвучка сцен: edge-tts ru-RU-DmitryNeural, каждая сцена целиком (естественные паузы самого голоса).
+"""Озвучка сцен: edge-tts ru-RU-DmitryNeural без изменения темпа и высоты, каждая сцена целиком (естественные паузы самого голоса).
 Выход: voice/NN.wav (48 кГц моно) + voice/NN.json (слова с таймингами)."""
 import asyncio, json, os, re, subprocess, sys
 import numpy as np
@@ -12,7 +12,7 @@ from script import SCENES
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, "video2", "voice"); os.makedirs(OUT, exist_ok=True)
 SR = 48000
-VOICE, RATE, PITCH = "ru-RU-DmitryNeural", "-8%", "-4Hz"
+VOICE, RATE, PITCH = "ru-RU-DmitryNeural", "+0%", "+0Hz"   # чистый голос Дмитрия, без замедления и понижения
 
 async def synth(text, path):
     for attempt in range(12):
