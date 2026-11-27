@@ -90,56 +90,57 @@ def word_sprite(text, color, sz):
     return im
 
 
-HYPH = {"ЗАКОЛАЧИВАЕШЬ": ("ЗАКОЛАЧИ-", "ВАЕШЬ"), "КОММЕНТАРИЯХ": ("КОММЕН-", "ТАРИЯХ")}   # шире 860 px при 92 px
-GAP_W = int(FS * 0.18)
-LINE_H = int(FS * 1.12)
+GAP_K, LINE_K = 0.18, 1.12
 
 
 def text_w(spr):
     return spr.width - 36          # видимая ширина (без полей под тень)
 
 
-def layout(group, accent):
-    """раскладка фразы: шрифт всегда 92 px, центр по горизонтали (540), центр блока на 1250 px,
-    не больше 2 строк, ширина строки ≤ 860 px. Возвращает None, если фраза не помещается."""
-    pieces = []                                    # (индекс слова, текст куска)
-    for k, it in enumerate(group):
-        if it["w"] in HYPH:
-            pieces += [(k, HYPH[it["w"]][0], "br"), (k, HYPH[it["w"]][1], "")]
-        else:
-            pieces.append((k, it["w"], ""))
-    spr = [word_sprite(txt, accent if group[k]["key"] else WHITE, FS) for k, txt, _ in pieces]
+def layout(group, accent, sz=FS):
+    """раскладка фразы: слова целиком (никаких переносов с дефисом), центр по горизонтали (540),
+    центр блока на 1250 px, не больше 2 строк, строка ≤ 860 px. None — если не помещается при этом размере."""
+    spr = [word_sprite(it["w"], accent if it["key"] else WHITE, sz) for it in group]
+    gap, lh = int(sz * GAP_K), int(sz * LINE_K)
+    if max(text_w(x) for x in spr) > SUB_MAXW:
+        return None
     lines = [[0]]
     for j in range(1, len(spr)):
-        lw = sum(text_w(spr[q]) for q in lines[-1]) + GAP_W * len(lines[-1]) + text_w(spr[j])
-        if pieces[j - 1][2] == "br" or lw > SUB_MAXW: lines.append([j])
+        lw = sum(text_w(spr[q]) for q in lines[-1]) + gap * len(lines[-1]) + text_w(spr[j])
+        if lw > SUB_MAXW: lines.append([j])
         else: lines[-1].append(j)
-    widths = [sum(text_w(spr[q]) for q in ln) + GAP_W * (len(ln) - 1) for ln in lines]
-    if len(lines) > 2 or max(widths) > SUB_MAXW:
+    if len(lines) > 2:
         return None
-    y0 = SUB_CY - LINE_H * len(lines) / 2
-    out = []                                       # (индекс слова, спрайт, центр)
+    widths = [sum(text_w(spr[q]) for q in ln) + gap * (len(ln) - 1) for ln in lines]
+    y0 = SUB_CY - lh * len(lines) / 2
+    out = []
     for li, ln in enumerate(lines):
         x = SUB_CX - widths[li] / 2
         for j in ln:
-            out.append((pieces[j][0], spr[j], (x + text_w(spr[j]) / 2, y0 + li * LINE_H + LINE_H / 2)))
-            x += text_w(spr[j]) + GAP_W
+            out.append((j, spr[j], (x + text_w(spr[j]) / 2, y0 + li * lh + lh / 2)))
+            x += text_w(spr[j]) + gap
     return out
 
 
 def fit_groups(groups, accent):
-    """делим фразы, которые не влезают в 2 строки по 860 px"""
+    """92 px, если влезает в 2 строки по 860 px. Слово шире 860 px — уменьшаем шрифт для этой фразы
+    (слово остаётся целым на своей строке). Больше 2 строк — делим фразу."""
     res = []
-    for g in groups:
-        stack = [g]
-        while stack:
-            h = stack.pop(0)
-            lay = layout(h, accent)
-            if lay is None and len(h) > 1:
-                m = (len(h) + 1) // 2
-                stack = [h[:m], h[m:]] + stack
-            else:
-                res.append((h, lay))
+    stack = list(groups)
+    while stack:
+        g = stack.pop(0)
+        lay = layout(g, accent)
+        if lay is None:
+            too_wide = any(text_w(word_sprite(it["w"], WHITE, FS)) > SUB_MAXW for it in g)
+            if too_wide:
+                for sz in range(FS - 2, 40, -2):
+                    lay = layout(g, accent, sz)
+                    if lay is not None: break
+            if lay is None and len(g) > 1:
+                m = (len(g) + 1) // 2
+                stack = [g[:m], g[m:]] + stack
+                continue
+        res.append((g, lay))
     return res
 
 
@@ -175,10 +176,28 @@ PAN = {1: (0.35, 0.65), 2: (0.35, 0.65), 3: (0.30, 0.75), 4: (0.30, 0.65), 5: (0
        13: (0.30, 0.70), 14: (0.40, 0.65), 15: (0.40, 0.50), 16: (0.35, 0.65), 17: (0.45, 0.55)}
 
 
+SCALE17 = None     # сцена 17: картинка целиком во всю ширину (лицо+шапка занимают ~6–97% ширины, 25% мало)
+
+
 def prep_image(i):
     """иллюстрация (imgs2_hd — чёткая, без полей и номера) по высоте на весь экран 9:16, без зума"""
     src = Image.open(os.path.join(ROOT, "imgs2_hd", f"{i + 1:02d}.png")).convert("RGB")
     sw, sh = src.size
+    if i == 16:
+        # по центру, масштаб 0.75 от «во всю высоту»; пустые края — размытая затемнённая копия той же картинки
+        w = W; h = round(sh * W / sw)
+        k = max(W / sw, H / sh)
+        bg = src.resize((round(sw * k) + 1, round(sh * k) + 1), Image.LANCZOS)
+        bx = (bg.width - W) // 2; by = (bg.height - H) // 2
+        bg = bg.crop((bx, by, bx + W, by + H)).resize((W // 8, H // 8), Image.BILINEAR)
+        bg = bg.filter(ImageFilter.GaussianBlur(5)).resize((W, H), Image.BICUBIC)
+        bg = Image.eval(bg, lambda v: int(v * 0.55))
+        pic = src.resize((w, h), Image.LANCZOS)
+        cx = PAN[17][0] * 0 + 0.5
+        left = int(cx * w - W / 2)
+        pic = pic.crop((max(0, left), 0, max(0, left) + min(W, w), h))
+        bg.paste(pic, ((W - pic.width) // 2, 820 - h // 2))   # выше центра: субтитр (1250) — на размытом фоне под картинкой
+        return bg, (0.5, 0.5)
     img = src.resize((round(sw * H / sh), H), Image.LANCZOS)
     return img, PAN[i + 1]
 
@@ -248,6 +267,8 @@ def zoom_at(i, t):
 def render_bg(i, t):
     """медленный проезд камеры слева направо (с плавным стартом и остановкой), масштаб 1:1"""
     img = SCN[i]["img"]
+    if img.size == (W, H):
+        return img
     p0, p1 = SCN[i]["anchor"]
     c = p0 + (p1 - p0) * ease(t / durs[i])
     x = min(max(0.0, c * img.width - W / 2), img.width - W)
@@ -268,11 +289,68 @@ def draw_subs(frame, t):
     return frame
 
 
+def rounded_card():
+    """карточка СМС: тёмно-красный фон, белая скруглённая рамка, красная плашка «ВЧЕРА 03:00» (80 px),
+    ниже белый текст (50 px). Возвращает слой 1080×1920 и центр слова «ВЧЕРА» для наезда."""
+    layer = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+    d = ImageDraw.Draw(layer)
+    cw, x0 = 900, (W - 900) // 2
+    f80, f50 = font(80), font(50)
+    body = ["Вирус распространён", "по всей стране.", "Оставайтесь дома."]
+    bar_h, pad, lh = 130, 50, 68
+    ch = pad + bar_h + 45 + lh * len(body) + pad
+    y0 = (H - ch) // 2 - 80
+    sh = Image.new("L", (W, H), 0)                                   # мягкая тень под карточкой
+    ImageDraw.Draw(sh).rounded_rectangle([x0 + 10, y0 + 24, x0 + cw + 10, y0 + ch + 24], 56, fill=170)
+    layer.putalpha(sh.filter(ImageFilter.GaussianBlur(28)))
+    layer = Image.composite(Image.new("RGBA", (W, H), (0, 0, 0, 255)), Image.new("RGBA", (W, H), (0, 0, 0, 0)), layer.getchannel("A"))
+    d = ImageDraw.Draw(layer)
+    d.rounded_rectangle([x0, y0, x0 + cw, y0 + ch], 56, fill=(92, 8, 12, 255), outline=(255, 255, 255, 255), width=10)
+    bx0, by0 = x0 + pad, y0 + pad
+    d.rounded_rectangle([bx0, by0, x0 + cw - pad, by0 + bar_h], 22, fill=(228, 24, 28, 255))
+    title = "ВЧЕРА 03:00"
+    l, t, r, b = f80.getbbox(title)
+    tx = (W - (r - l)) / 2 - l; ty = by0 + (bar_h - (b - t)) / 2 - t
+    d.text((tx, ty), title, font=f80, fill=(255, 255, 255, 255))
+    lw, _, rw, _ = f80.getbbox("ВЧЕРА")
+    vchera = (tx + (lw + rw) / 2, by0 + bar_h / 2)
+    y = by0 + bar_h + 45
+    for line in body:
+        l, t, r, b = f50.getbbox(line)
+        d.text(((W - (r - l)) / 2 - l, y - t), line, font=f50, fill=(255, 255, 255, 255))
+        y += lh
+    return layer, vchera
+
+
+SMS_CARD, SMS_VCHERA = rounded_card()
+
+
+def scene15(lt, bg):
+    """карточка плавно появляется за 0.3 с, затем резкий наезд на «ВЧЕРА» (в момент слова, вместе с ударом).
+    Фон под карточкой одновременно размывается и темнеет, чтобы карточка читалась."""
+    a = ease(lt / 0.3)
+    soft = bg.convert("RGB").resize((W // 6, H // 6), Image.BILINEAR).filter(ImageFilter.GaussianBlur(4)).resize((W, H), Image.BICUBIC)
+    soft = Image.eval(soft, lambda v: int(v * 0.4)).convert("RGBA")
+    bg = Image.blend(bg, soft, a)
+    card = SMS_CARD.copy()
+    card.putalpha(card.getchannel("A").point(lambda v: int(v * a)))
+    fr = Image.alpha_composite(bg, card)
+    k = ease((lt - max(0.35, V15 - 0.05)) / 0.14)
+    z = 1 + 0.9 * k
+    if z > 1.001:
+        ax, ay = SMS_VCHERA
+        x0, y0 = ax * (1 - 1 / z), ay * (1 - 1 / z)
+        fr = fr.resize((W, H), Image.BICUBIC, box=(x0, y0, x0 + W / z, y0 + H / z))
+    return fr
+
+
 def frame_at(fi):
     t = fi / FPS
     i = int(np.searchsorted(starts, t, side="right") - 1)
     lt = t - starts[i]
     fr = render_bg(i, lt).convert("RGBA")
+    if i == 14:
+        fr = scene15(lt, fr)
     if i > 0 and lt < 0.1:                     # белый блик 0.1 с, 25%
         a = int(255 * 0.25 * (1 - lt / 0.1))
         fr = Image.alpha_composite(fr, Image.new("RGBA", (W, H), (255, 255, 255, a)))
