@@ -179,9 +179,12 @@ PAN = {1: (0.35, 0.65), 2: (0.35, 0.65), 3: (0.30, 0.75), 4: (0.30, 0.65), 5: (0
 SCALE17 = None     # сцена 17: картинка целиком во всю ширину (лицо+шапка занимают ~6–97% ширины, 25% мало)
 
 
+IMG_DIR = "imgs3"    # картинки пользователя 9:16 (941×1672), см. imgs3/README.txt
+
+
 def prep_image(i):
-    """ОРИГИНАЛ imgs2/NN.png без изменений: 720×1280 (9:16) → 1080×1920, без обрезки, зума и панорамы"""
-    src = Image.open(os.path.join(ROOT, "imgs2", f"{i + 1:02d}.png")).convert("RGB")
+    """картинка сцены БЕЗ ИЗМЕНЕНИЙ: 9:16 → 1080×1920 целиком, без обрезки, зума, панорамы и наложений"""
+    src = Image.open(os.path.join(ROOT, IMG_DIR, f"{i + 1:02d}.png")).convert("RGB")
     return src.resize((W, H), Image.LANCZOS), (0.5, 0.5)
 
 
@@ -335,7 +338,7 @@ def frame_at(fi):
     fr = render_bg(i, lt).convert("RGBA")
     if i == 14 and SMS_OVERLAY:
         fr = scene15(lt, fr)
-    if i > 0 and lt < 0.1:                     # белый блик 0.1 с, 25%
+    if i > 0 and i != 9 and lt < 0.1:          # белый блик 0.1 с, 25% (9→10 — та же картинка, без блика)
         a = int(255 * 0.25 * (1 - lt / 0.1))
         fr = Image.alpha_composite(fr, Image.new("RGBA", (W, H), (255, 255, 255, a)))
     return draw_subs(fr, t).convert("RGB")
@@ -398,7 +401,7 @@ def build_audio():
     bed("monster_growl", 9.0, D[15], S[15], BED + 1, lp=4000)
     add(R("boom", 0, 3.0, fi=0.002, fo=0.8), S[16], 0)               # 17: удар-акцент
     for i in range(1, 17):
-        if i == 14: continue                                          # перед 15 — тишина
+        if i in (9, 14): continue                                     # 9→10 та же картинка; перед 15 — тишина
         add(R("whoosh", fi=0.005, fo=0.1), S[i] - 0.25, -5)
     mix = voice + fx
     mix = mix[: int(TOTAL * SR)]
