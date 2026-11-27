@@ -180,26 +180,9 @@ SCALE17 = None     # сцена 17: картинка целиком во всю 
 
 
 def prep_image(i):
-    """иллюстрация (imgs2_hd — чёткая, без полей и номера) по высоте на весь экран 9:16, без зума"""
-    src = Image.open(os.path.join(ROOT, "imgs2_hd", f"{i + 1:02d}.png")).convert("RGB")
-    sw, sh = src.size
-    if i == 16:
-        # по центру, масштаб 0.75 от «во всю высоту»; пустые края — размытая затемнённая копия той же картинки
-        w = W; h = round(sh * W / sw)
-        k = max(W / sw, H / sh)
-        bg = src.resize((round(sw * k) + 1, round(sh * k) + 1), Image.LANCZOS)
-        bx = (bg.width - W) // 2; by = (bg.height - H) // 2
-        bg = bg.crop((bx, by, bx + W, by + H)).resize((W // 8, H // 8), Image.BILINEAR)
-        bg = bg.filter(ImageFilter.GaussianBlur(5)).resize((W, H), Image.BICUBIC)
-        bg = Image.eval(bg, lambda v: int(v * 0.55))
-        pic = src.resize((w, h), Image.LANCZOS)
-        cx = PAN[17][0] * 0 + 0.5
-        left = int(cx * w - W / 2)
-        pic = pic.crop((max(0, left), 0, max(0, left) + min(W, w), h))
-        bg.paste(pic, ((W - pic.width) // 2, 820 - h // 2))   # выше центра: субтитр (1250) — на размытом фоне под картинкой
-        return bg, (0.5, 0.5)
-    img = src.resize((round(sw * H / sh), H), Image.LANCZOS)
-    return img, PAN[i + 1]
+    """ОРИГИНАЛ imgs2/NN.png без изменений: 720×1280 (9:16) → 1080×1920, без обрезки, зума и панорамы"""
+    src = Image.open(os.path.join(ROOT, "imgs2", f"{i + 1:02d}.png")).convert("RGB")
+    return src.resize((W, H), Image.LANCZOS), (0.5, 0.5)
 
 
 def punches_for(i):
@@ -323,6 +306,7 @@ def rounded_card():
 
 
 SMS_CARD, SMS_VCHERA = rounded_card()
+SMS_OVERLAY = False   # оригиналы без изменений: на картинке 15 СМС уже нарисована
 
 
 def scene15(lt, bg):
@@ -349,7 +333,7 @@ def frame_at(fi):
     i = int(np.searchsorted(starts, t, side="right") - 1)
     lt = t - starts[i]
     fr = render_bg(i, lt).convert("RGBA")
-    if i == 14:
+    if i == 14 and SMS_OVERLAY:
         fr = scene15(lt, fr)
     if i > 0 and lt < 0.1:                     # белый блик 0.1 с, 25%
         a = int(255 * 0.25 * (1 - lt / 0.1))
