@@ -17,13 +17,13 @@ BASE = 1.2                      # запас разрешения подгото
 FONT = os.path.join(ROOT, "fonts", "Montserrat_900Black.ttf")
 if not os.path.exists(FONT):
     FONT = "/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"
-FS, STROKE = 90, 12
+FS, STROKE = 92, 12
 CARD_CY = 760        # центр иллюстрации по вертикали
 SUB_BELOW = 1400     # субтитры — на фоне под иллюстрацией (не на лицах), выше нижних 380 px
-SUB_CX, SUB_CY, SUB_MAXW = 460, 1250, 840   # центр безопасной зоны (0..920), справа 160 px и снизу 380 px пусто
+SUB_CX, SUB_CY, SUB_MAXW = 540, 1250, 860   # ВСЕГДА: центр по горизонтали, центр текста на 1250 px, ширина ≤ 860 px
 YELLOW, RED, WHITE = (255, 210, 26), (255, 43, 28), (255, 255, 255)
 GAP, LAST_TAIL, PRE15 = 0.3, 1.5, 0.6
-OUT = os.path.join(ROOT, "final_video_2.mp4")
+OUT = os.path.join(ROOT, sys.argv[sys.argv.index("--out") + 1] if "--out" in sys.argv else "final_video_2.mp4")
 
 
 def ease(x):
@@ -90,41 +90,74 @@ def word_sprite(text, color, sz):
     return im
 
 
-def layout(group, accent, sub_cy=1400):
-    """фиксированная раскладка фразы: слова не сдвигаются, пока появляются"""
-    for sz in range(FS, 50, -2):
-        spr = [word_sprite(it["w"], accent if it["key"] else WHITE, sz) for it in group]
-        sp = int(sz * 0.18)
-        lines = [[0]]
-        for k in range(1, len(spr)):
-            lw = sum(spr[j].width - 36 for j in lines[-1]) + sp * len(lines[-1]) + spr[k].width - 36
-            if lw > SUB_MAXW: lines.append([k])
-            else: lines[-1].append(k)
-        widths = [sum(spr[j].width - 36 for j in ln) + sp * (len(ln) - 1) for ln in lines]
-        if max(widths) <= SUB_MAXW and len(lines) <= 2: break
-    lh = int(sz * 1.12)
-    y0 = sub_cy - lh * len(lines) / 2
-    pos = [None] * len(spr)
+HYPH = {"ЗАКОЛАЧИВАЕШЬ": ("ЗАКОЛАЧИ-", "ВАЕШЬ"), "КОММЕНТАРИЯХ": ("КОММЕН-", "ТАРИЯХ")}   # шире 860 px при 92 px
+GAP_W = int(FS * 0.18)
+LINE_H = int(FS * 1.12)
+
+
+def text_w(spr):
+    return spr.width - 36          # видимая ширина (без полей под тень)
+
+
+def layout(group, accent):
+    """раскладка фразы: шрифт всегда 92 px, центр по горизонтали (540), центр блока на 1250 px,
+    не больше 2 строк, ширина строки ≤ 860 px. Возвращает None, если фраза не помещается."""
+    pieces = []                                    # (индекс слова, текст куска)
+    for k, it in enumerate(group):
+        if it["w"] in HYPH:
+            pieces += [(k, HYPH[it["w"]][0], "br"), (k, HYPH[it["w"]][1], "")]
+        else:
+            pieces.append((k, it["w"], ""))
+    spr = [word_sprite(txt, accent if group[k]["key"] else WHITE, FS) for k, txt, _ in pieces]
+    lines = [[0]]
+    for j in range(1, len(spr)):
+        lw = sum(text_w(spr[q]) for q in lines[-1]) + GAP_W * len(lines[-1]) + text_w(spr[j])
+        if pieces[j - 1][2] == "br" or lw > SUB_MAXW: lines.append([j])
+        else: lines[-1].append(j)
+    widths = [sum(text_w(spr[q]) for q in ln) + GAP_W * (len(ln) - 1) for ln in lines]
+    if len(lines) > 2 or max(widths) > SUB_MAXW:
+        return None
+    y0 = SUB_CY - LINE_H * len(lines) / 2
+    out = []                                       # (индекс слова, спрайт, центр)
     for li, ln in enumerate(lines):
         x = SUB_CX - widths[li] / 2
         for j in ln:
-            pos[j] = (x + (spr[j].width - 36) / 2, y0 + li * lh + lh / 2)   # центр слова
-            x += spr[j].width - 36 + sp
-    return spr, pos
+            out.append((pieces[j][0], spr[j], (x + text_w(spr[j]) / 2, y0 + li * LINE_H + LINE_H / 2)))
+            x += text_w(spr[j]) + GAP_W
+    return out
+
+
+def fit_groups(groups, accent):
+    """делим фразы, которые не влезают в 2 строки по 860 px"""
+    res = []
+    for g in groups:
+        stack = [g]
+        while stack:
+            h = stack.pop(0)
+            lay = layout(h, accent)
+            if lay is None and len(h) > 1:
+                m = (len(h) + 1) // 2
+                stack = [h[:m], h[m:]] + stack
+            else:
+                res.append((h, lay))
+    return res
 
 
 SUBS = []   # (t_on, t_off, [(t_word, sprite, center)])
+LAYOUT_LOG = []
 for i in range(17):
-    accent = RED if SCENES[i].get("red") else YELLOW
-    gs = chunks_for(i)
-    for gi, g in enumerate(gs):
-        spr, pos = layout(g, accent, SCENES[i].get("sub_y", SUB_CY))
+    if i == 14: continue                          # сцена 15: без субтитров — текст СМС уже на картинке
+    accent = YELLOW
+    gs = fit_groups(chunks_for(i), accent)
+    for gi, (g, lay) in enumerate(gs):
         t_on = starts[i] + g[0]["t0"]
         if gi + 1 < len(gs):
-            t_off = starts[i] + min(gs[gi + 1][0]["t0"], g[-1]["t1"] + 0.6)
+            t_off = starts[i] + min(gs[gi + 1][0][0]["t0"], g[-1]["t1"] + 0.6)
         else:
             t_off = starts[i] + min(durs[i], g[-1]["t1"] + (LAST_TAIL if i == 16 else 0.6))
-        SUBS.append((t_on, t_off, [(starts[i] + it["t0"], s, p) for it, s, p in zip(g, spr, pos)]))
+        # фраза появляется целиком (в начале первого слова) — текст всегда в одном месте, по центру 540×1250
+        SUBS.append((t_on, t_off, [(t_on, sp, c) for k, sp, c in lay]))
+        LAYOUT_LOG.append((i + 1, " ".join(it["w"] for it in g), lay))
 
 
 # ---------------- картинки и движение ----------------
@@ -222,14 +255,16 @@ def render_bg(i, t):
 
 
 def draw_subs(frame, t):
+    """«поп» 0.12 с: вся фраза растёт 0.7 → 1 вокруг центра блока (540, 1250), положение не меняется"""
     for t_on, t_off, ws in SUBS:
         if not (t_on <= t < t_off): continue
+        k = min(1.0, (t - t_on) / 0.12)
+        s = 0.7 + 0.3 * (1 - (1 - k) ** 3)
         for tw, spr, (cx, cy) in ws:
-            if t < tw: continue
-            k = min(1.0, (t - tw) / 0.12)
-            s = 0.7 + 0.3 * (1 - (1 - k) ** 3)
-            sp = spr if s >= 0.999 else spr.resize((max(1, int(spr.width * s)), max(1, int(spr.height * s))), Image.BICUBIC)
-            frame.alpha_composite(sp, (int(round(cx - sp.width / 2)), int(round(cy - sp.height / 2))))
+            if s < 0.999:
+                spr = spr.resize((max(1, int(spr.width * s)), max(1, int(spr.height * s))), Image.BICUBIC)
+                cx, cy = SUB_CX + (cx - SUB_CX) * s, SUB_CY + (cy - SUB_CY) * s
+            frame.alpha_composite(spr, (int(round(cx - spr.width / 2)), int(round(cy - spr.height / 2))))
     return frame
 
 
